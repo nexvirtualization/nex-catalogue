@@ -3,7 +3,7 @@
 x-nex:
   name: Piwigo
   summary: Photo gallery software for the web, built by an active community of users and developers
-  category: photos
+  category: media
   description: Photo gallery software for the web, built by an active community of users and developers. Back
     up the application folders together and keep them writable by the container.
   source: https://github.com/Piwigo/Piwigo

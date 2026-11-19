@@ -4,7 +4,7 @@ x-nex:
   summary: Directory-first photo gallery website, with a rich UI, optimised for running on low resource servers
   description: Directory-first photo gallery website, with a rich UI, optimised for running on low resource
     servers.
-  category: photos
+  category: media
   source: https://github.com/bpatrik/pigallery2
   website: https://bpatrik.github.io/pigallery2/
   docs: https://bpatrik.github.io/pigallery2/

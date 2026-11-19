@@ -4,7 +4,7 @@ x-nex:
   summary: Catalog and share outdoor routes and trails
   description: Provision Meilisearch with a private master key and use the trusted HTTPS address. Keep PocketBase
     and web services on one host or use shared storage.
-  category: photos
+  category: productivity
   website: https://github.com/open-wanderer/wanderer
   source: https://github.com/open-wanderer/wanderer
   docs: https://github.com/open-wanderer/wanderer/blob/main/docker-compose.yml

@@ -4,7 +4,7 @@ x-nex:
   summary: Ultimate image sharing software
   description: Ultimate image sharing software. Create your very own personal image hosting website in just
     minutes.
-  category: photos
+  category: media
   source: https://github.com/chevereto/chevereto
   website: https://chevereto.com/
   docs: https://v4-docs.chevereto.com/guides/docker/

@@ -4,7 +4,7 @@ x-nex:
   summary: Personal photo management powered by Go and Google TensorFlow
   description: Personal photo management powered by Go and Google TensorFlow. Browse, organize, and share your
     personal photo collection, using the latest technologies to automatically tag and find pictures.
-  category: photos
+  category: media
   source: https://github.com/photoprism/photoprism
   website: https://photoprism.org
   docs: https://docs.photoprism.app/getting-started/docker-compose/
