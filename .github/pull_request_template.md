@@ -1,11 +1,9 @@
-## Changes
+App or area: [App name or repository tooling]
 
-<!-- Change at most one app per PR. Keep credentials and machine-specific paths out of manifests. Document required setup in nex.yaml. -->
+Summary: [What you added or changed and why]
 
-## Sources
+Container image source: [Registry URL for any container image you added or changed]
 
-<!-- Use a maintained upstream container image. Prefer :latest and explain other tags. Use the project's official app icon. Add the relevant URLs when introducing or replacing an image or icon. -->
+Official app icon source: [Original logo URL if you added or replaced the icon]
 
-Container image source:
-
-Official app icon source:
+Tag choice: [Reason for using a tag other than `:latest`, if applicable]
