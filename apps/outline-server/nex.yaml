@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Outline Server
+  summary: Manage Outline access keys for a private proxy
+  description: Select a registered Primary network reachable by intended clients. Prepare the Outline
+    server config and TLS keypair in the state folder before first start. Configure the public hostname
+    and the access-keys port 4530 in shadowbox_server_config.json, and add the HTTPS API address and certificate
+    fingerprint to Outline Manager.
+  category: networking
+  website: https://getoutline.org/
+  source: https://github.com/OutlineFoundation/outline-server
+  docs: https://github.com/OutlineFoundation/outline-server/blob/master/src/server_manager/install_scripts/install_server.sh
+  scalable: false
+  primary_service: outline-server
+  options:
+    API_PREFIX:
+      label: Management API path secret
+      help: Use Generate to produce a random URL-safe path prefix. Keep it private.
+      type: password
+    API_PORT:
+      label: Api Port
+      help: Host-published HTTPS management API port. Restrict it to authorized administrators.
+    DATA:
+      label: Outline state and certificates
+      help: Select This host. Choose a prepared folder with shadowbox_server_config.json, shadowbox-selfsigned.crt
+        and shadowbox-selfsigned.key. Preserve the generated access keys. Include this folder in a stopped
+        Nex backup.
+services:
+  outline-server:
+    image: quay.io/outline/shadowbox:stable
+    environment:
+      SB_STATE_DIR: /state
+      SB_API_PORT: '34331'
+      SB_API_PREFIX: ${API_PREFIX}
+      SB_CERTIFICATE_FILE: /state/shadowbox-selfsigned.crt
+      SB_PRIVATE_KEY_FILE: /state/shadowbox-selfsigned.key
+    ports:
+    - ${API_PORT:-34331}:34331/tcp
+    expose:
+    - 4530/tcp
+    - 4530/udp
+    volumes:
+    - ${DATA}:/state
+    deploy:
+      replicas: 1

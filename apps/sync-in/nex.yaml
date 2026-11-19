@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sync-in
+  summary: Share and synchronize files across devices
+  description: Prepare environment.yaml in Configuration with a compatible MariaDB connection and the HTTPS
+    browser URL. Sign in with the initial administrator.
+  category: management
+  website: https://sync-in.com
+  source: https://github.com/Sync-in/server
+  docs: https://github.com/Sync-in/server/blob/main/docker/docker-compose.yaml
+  primary_service: sync-in
+  post_install: Prepare environment.yaml in Configuration with a compatible MariaDB connection and the HTTPS
+    browser URL. Sign in with the initial administrator.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    ADMIN_USER:
+      label: Admin user
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    CONFIG:
+      label: Prepared Sync-in configuration
+      help: Managed directory mounted at /app/environment. Choose storage readable by the application.
+    DATA:
+      label: Workspace files
+      help: Managed directory mounted at /app/data. Choose storage writable by the application.
+services:
+  sync-in:
+    image: docker.io/syncin/server:latest
+    ports:
+    - ${PORT:-23582}:8080/tcp
+    volumes:
+    - ${CONFIG}:/app/environment:ro
+    - ${DATA}:/app/data
+    environment:
+      INIT_ADMIN: 'true'
+      INIT_ADMIN_LOGIN: ${ADMIN_USER:-admin}
+      INIT_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    deploy:
+      replicas: 1

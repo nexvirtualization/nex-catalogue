@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mattermost
+  summary: Host team chat and collaboration
+  description: Prepare the PostgreSQL database and a public HTTPS route. Register the initial administrator
+    on a trusted network, then adjust account creation settings and enable email.
+  category: communication
+  website: https://mattermost.com/
+  source: https://github.com/mattermost/mattermost
+  docs: https://docs.mattermost.com/deployment-guide/server/deploy-containers.html
+  scalable: false
+  primary_service: mattermost
+  architectures:
+  - amd64
+  web:
+    service: mattermost
+    scheme: http
+    port: 8065
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8065.
+    DATA:
+      label: Mattermost configuration
+      help: Select This host. Stores site and workspace settings. Include this folder in a stopped Nex
+        backup.
+    FILES:
+      label: Mattermost files
+      help: Select This host. Stores uploaded files and local user assets. Include this folder in a stopped
+        Nex backup.
+    PLUGINS:
+      label: Server plugins
+      help: Select This host. Stores installed plugin code and assets. Include this folder in a stopped
+        Nex backup.
+    CLIENT_PLUGINS:
+      label: Client plugins
+      help: Select This host. Stores browser plugin bundles. Include this folder in a stopped Nex backup.
+services:
+  mattermost:
+    image: mattermost/mattermost-team-edition:latest
+    environment:
+      MM_SQLSETTINGS_DATASOURCE: ${DATABASE_URL}
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SERVICESETTINGS_SITEURL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8400}:8065/tcp
+    volumes:
+    - ${DATA}:/mattermost/config
+    - ${FILES}:/mattermost/data
+    - ${PLUGINS}:/mattermost/plugins
+    - ${CLIENT_PLUGINS}:/mattermost/client/plugins
+    deploy:
+      replicas: 1

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Romestead
+  summary: Build and defend a Roman settlement together
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    The server creates or loads its world on first start. Add the app’s Primary address on UDP 8050
+    in Romestead. A restart checks for new game builds through SteamCMD. Make a stopped backup before
+    applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1805320/
+  source: https://github.com/indifferentbroccoli/romestead-server-docker
+  docs: https://github.com/indifferentbroccoli/romestead-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - multiplayer
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  romestead:
+    image: docker.io/indifferentbroccoli/romestead-server-docker:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      UPDATE_ON_START: 'true'
+      AUTO_CREATE_AND_LOAD_WORLD: 'true'
+      ENABLE_CHEATS: 'false'
+      PASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 8050/udp
+    volumes:
+      - ${DATA}:/home/steam/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

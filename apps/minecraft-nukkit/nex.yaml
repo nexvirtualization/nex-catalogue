@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Nukkit
+  summary: Host a Minecraft Bedrock server with Nukkit plugins
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Use a Bedrock client compatible with the Cloudburst Nukkit build and connect to its
+    Primary address on UDP 19132. Edit server.properties to configure the allowlist. Make a stopped
+    backup before applying updates.
+  category: games
+  website: https://cloudburstmc.org/
+  source: https://github.com/CloudburstMC/Nukkit
+  docs: https://github.com/CloudburstMC/Nukkit#running
+  license: GPL-3.0
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-nukkit:
+    image: ghcr.io/itzg/minecraft-server:java17
+    working_dir: /data
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        chown 1000:1000 /data
+        if [ ! -s /data/nukkit.jar ]; then
+          curl -fsSL --retry 3 -o /data/.server.jar.new 'https://repo.opencollab.dev/api/maven/latest/file/maven-snapshots/cn/nukkit/nukkit/1.0-SNAPSHOT?extension=jar'
+          chown 1000:1000 /data/.server.jar.new
+          mv /data/.server.jar.new /data/nukkit.jar
+        fi
+
+        exec gosu 1000:1000 java -Xmx2G -jar /data/nukkit.jar --language eng
+    healthcheck:
+      disable: true
+    expose:
+      - 19132/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

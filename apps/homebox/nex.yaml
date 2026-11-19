@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Homebox
+  summary: Track household inventory, serial numbers and receipts
+  description: Create an account on a trusted network. Review registration settings before you share
+    access.
+  category: management
+  website: https://github.com/sysadminsmedia/homebox
+  source: https://github.com/sysadminsmedia/homebox
+  docs: https://homebox.software/en/quick-start/
+  primary_service: homebox
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 7745
+  options:
+    DATA:
+      label: Inventory data
+      help: Homebox records and attachments. Stop the app before copying the SQLite data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7745.
+services:
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-7745}:7745/tcp
+    deploy:
+      replicas: 1

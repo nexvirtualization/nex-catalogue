@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/getumbrel/umbrel-apps/blob/HEAD/pyload-ng/docker-compose.yml
+x-nex:
+  name: pyLoad
+  summary: Lightweight, customizable and remotely manageable downloader for 1-click-hosting sites like rapidshare.com
+    or uploaded
+  category: tools
+  description: Lightweight, customizable and remotely manageable downloader for 1-click-hosting sites like
+    rapidshare.com or uploaded.to. Back up the application folders together and keep them writable by the container.
+  source: https://github.com/pyload/pyload
+  website: https://pyload.net/
+  docs: https://pyload.net/
+  primary_service: web
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Downloads folder
+      help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8000/tcp.
+  web:
+    port: 8000
+  post_install: Open pyLoad on a trusted network and replace the upstream initial login before remote use.
+    Download files are written to /downloads.
+services:
+  web:
+    image: lscr.io/linuxserver/pyload-ng:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: Etc/UTC
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/downloads
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8000}:8000/tcp

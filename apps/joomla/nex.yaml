@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Joomla!
+  summary: Publish and manage websites with Joomla
+  description: Prepare a database and run through initial Joomla setup on a trusted network. Provide the
+    administrator details during the installer. Add an HTTPS reverse proxy before publishing.
+  category: productivity
+  website: https://www.joomla.org/
+  source: https://github.com/joomla/joomla-cms
+  docs: https://hub.docker.com/_/joomla
+  scalable: false
+  primary_service: joomla
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: joomla
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is joomla.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Joomla website
+      help: Select This host. Stores themes, media, installed extensions and local configuration. Include
+        this folder in a stopped Nex backup.
+services:
+  joomla:
+    image: joomla:latest
+    environment:
+      JOOMLA_DB_HOST: ${DB_HOST}
+      JOOMLA_DB_USER: ${DB_USER}
+      JOOMLA_DB_PASSWORD: ${DB_PASSWORD}
+      JOOMLA_DB_NAME: ${DB_NAME:-joomla}
+    ports:
+    - ${PORT:-8431}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    deploy:
+      replicas: 1

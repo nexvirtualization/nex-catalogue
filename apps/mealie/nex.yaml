@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mealie
+  summary: Save recipes and plan your meals
+  description: >-
+    Recipe manager with website imports, shopping lists and meal planning. Uses SQLite for a small
+    household; keep its data on This host. Sign in initially as changeme@example.com with password
+    MyPassword on a trusted network and change both immediately. Public sign-up is disabled.
+  category: productivity
+  website: https://mealie.io
+  source: https://github.com/mealie-recipes/mealie
+  license: AGPL-3.0-only
+  scalable: false
+  primary_service: mealie
+  tags: [recipes, meals, household]
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Required full URL used to open Mealie, including scheme and any port, for example http://192.168.1.10:9925. Used in notifications and authentication callbacks.
+    PUID:
+      label: User ID
+      help: Numeric UID for the application; Data must be writable by this UID or the selected group.
+    PGID:
+      label: Group ID
+      help: Numeric GID with write access to Data.
+    TZ:
+      label: Time zone
+      help: IANA time zone name for meal plans and scheduled jobs, such as Etc/UTC.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port. With a dedicated Primary network and host publishing off, use the app address on port 9000 and update Public web address. Change the initial administrator password immediately.
+    DATA:
+      label: Recipes and settings
+      help: SQLite database, images and backups at /app/data. Select This host; SQLite on a network share can corrupt data. Back up this folder.
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    environment:
+      ALLOW_SIGNUP: "false"
+      BASE_URL: "${BASE_URL}"
+      PUID: "${PUID:-1000}"
+      PGID: "${PGID:-1000}"
+      TZ: "${TZ:-Etc/UTC}"
+    ports:
+      - "${PORT:-9925}:9000/tcp"
+    volumes:
+      - "${DATA}:/app/data"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1000M

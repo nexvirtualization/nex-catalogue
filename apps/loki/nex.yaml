@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Loki
+  summary: Collect and query structured log streams
+  description: Use the Loki API with log agents and Grafana. This single-host profile has no built-in
+    authentication. Require authentication before sharing it beyond the intended clients.
+  category: monitoring
+  website: https://github.com/grafana/loki
+  source: https://github.com/grafana/loki
+  docs: https://grafana.com/docs/loki/latest/setup/install/docker/
+  primary_service: loki
+  scalable: false
+  license: AGPL-3.0
+  options:
+    DATA:
+      label: Log data and indexes
+      help: Keep log data and indexes in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3100.
+services:
+  loki:
+    image: docker.io/grafana/loki:latest
+    command:
+    - -config.file=/etc/loki/local-config.yaml
+    volumes:
+    - ${DATA}:/tmp/loki
+    ports:
+    - ${PORT:-3100}:3100/tcp
+    deploy:
+      replicas: 1

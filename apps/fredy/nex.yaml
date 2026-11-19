@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Fredy
+  summary: Monitor housing listings from your selected sites
+  description: Protect the endpoint with a trusted network or an authenticating proxy. Configure permitted
+    listing sources and recipients in Fredy.
+  category: monitoring
+  website: https://github.com/orangecoding/fredy
+  source: https://github.com/orangecoding/fredy
+  docs: https://github.com/orangecoding/fredy
+  primary_service: fredy
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 9998
+  options:
+    CONFIG:
+      label: Fredy configuration
+      help: Keep fredy configuration in this managed folder between restarts.
+    DATA:
+      label: Saved listing history
+      help: Keep saved listing history in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9998.
+services:
+  fredy:
+    image: ghcr.io/orangecoding/fredy:latest
+    volumes:
+    - ${CONFIG}:/conf
+    - ${DATA}:/db
+    ports:
+    - ${PORT:-9998}:9998/tcp
+    deploy:
+      replicas: 1

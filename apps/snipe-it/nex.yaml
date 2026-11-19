@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Snipe-IT
+  summary: IT asset manager for tracking hardware, licenses, accessories, users, and checkouts
+  description: IT asset manager for tracking hardware, licenses, accessories, users, and checkouts.
+  category: management
+  source: https://github.com/grokability/snipe-it
+  website: https://snipeitapp.com/
+  docs: https://snipe-it.readme.io/docs/docker
+  primary_service: snipe-it
+  options:
+    APP_KEY:
+      label: App key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    STORAGE:
+      label: Storage folder
+      help: Choose the Nex-managed folder mounted at /var/lib/snipeit.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision a MySQL or MariaDB database. Generate the Laravel application key as described upstream,
+    then complete the installer. Back up the database and Storage folder together.
+  web:
+    port: 80
+services:
+  snipe-it:
+    image: docker.io/snipe/snipe-it:latest
+    deploy:
+      replicas: 1
+    environment:
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${PUBLIC_URL}
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mysql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_NAME:-snipeit}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${STORAGE}:/var/lib/snipeit
+    ports:
+    - ${PORT:-19543}:80/tcp

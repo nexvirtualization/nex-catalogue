@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wakapi
+  summary: Track programming time from compatible editors
+  description: Register on a trusted network, then connect compatible editors using your API key and
+    configured public URL. Retain the salt across restarts and restores.
+  category: productivity
+  website: https://github.com/muety/wakapi
+  source: https://github.com/muety/wakapi
+  docs: https://github.com/muety/wakapi
+  primary_service: wakapi
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    PASSWORD_SALT:
+      label: Password salt
+      type: password
+      help: Use Nex Generate and preserve this value across restores.
+    DATA:
+      label: Coding activity data
+      help: Wakapi database and application data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  wakapi:
+    image: ghcr.io/muety/wakapi:latest
+    environment:
+      WAKAPI_PASSWORD_SALT: ${PASSWORD_SALT}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

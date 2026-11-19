@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Audiobookshelf
+  summary: Listen to your audiobooks and podcasts
+  description: Audiobook and podcast library with playback progress, user accounts and podcast downloads. Create
+    the root administrator during first-run setup. Keep the configuration database on This host rather than a network
+    share. One copy only. Uses the upstream image default user so new Nex This host folders initialize without a
+    host permission step. In Nex, keep one chosen host when using This host folders; local data has no automatic
+    host failover.
+  category: media
+  website: https://www.audiobookshelf.org
+  source: https://github.com/advplyr/audiobookshelf
+  license: GPL-3.0
+  scalable: false
+  tags:
+  - audiobooks
+  - podcasts
+  - streaming
+  options:
+    PORT:
+      label: Web port
+      help: Published HTTP port. Finish first-run administrator setup immediately on a trusted network. With Network
+        → Docker and host publishing enabled, use the chosen host web port. On a registered VLAN or private Primary
+        network with its own address, use that address and internal port 80; host publishing is a separate switch.
+    CONFIG:
+      label: Settings and database
+      help: 'Persistent /config. Choose This host: the SQLite database requires local storage. Must be writable
+        by the image default root user; back up this folder.'
+    METADATA:
+      label: Metadata and covers
+      help: Persistent /metadata for covers, streams, backups and downloaded metadata. Must be writable by the image
+        default root user.
+    AUDIOBOOKS:
+      label: Audiobooks
+      help: Audiobook library at /audiobooks. Must be writable by the image default root user for uploads, metadata
+        edits and embedded chapter tools.
+    PODCASTS:
+      label: Podcasts
+      help: Podcast library and downloads at /podcasts. Must be writable by the image default root user.
+  primary_service: audiobookshelf
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    ports:
+    - ${PORT:-13378}:80/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${METADATA}:/metadata
+    - ${AUDIOBOOKS}:/audiobooks
+    - ${PODCASTS}:/podcasts
+    deploy:
+      replicas: 1

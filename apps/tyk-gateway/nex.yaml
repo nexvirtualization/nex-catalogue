@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tyk
+  summary: Fast and scalable API Gateway
+  description: Fast and scalable API Gateway. Out of the box, Tyk offers an API Management Platform with an
+    API Gateway, API Analytics, Developer Portal and API Management Dashboard.
+  category: networking
+  source: https://github.com/TykTechnologies/tyk
+  website: https://tyk.io
+  docs: https://tyk.io/docs/tyk-oss/ce-docker/
+  primary_service: tyk-gateway
+  options:
+    ADMIN_SECRET:
+      label: Admin secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_HOST:
+      label: Redis host
+    REDIS_PORT:
+      label: Redis port
+    REDIS_PASSWORD:
+      label: Redis password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /opt/tyk-gateway/apps.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision Redis before installing. Configure API definitions through the Gateway API or prepare
+    the Apps folder. Keep the administration secret private.
+services:
+  tyk-gateway:
+    image: docker.io/tykio/tyk-gateway:latest
+    deploy:
+      replicas: 1
+    environment:
+      TYK_GW_SECRET: ${ADMIN_SECRET}
+      TYK_GW_STORAGE_TYPE: redis
+      TYK_GW_STORAGE_HOST: ${REDIS_HOST}
+      TYK_GW_STORAGE_PORT: ${REDIS_PORT:-6379}
+      TYK_GW_STORAGE_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+    - ${CONFIG}:/opt/tyk-gateway/apps
+    ports:
+    - ${PORT:-19877}:8080/tcp

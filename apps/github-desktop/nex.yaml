@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GitHub Desktop
+  summary: Open GitHub Desktop in a private browser session
+  description: Sign in to the desktop session over HTTPS, then connect your Git provider as needed. Choose
+    a managed repository folder and keep access restricted to trusted users.
+  category: development
+  website: https://github.com/desktop/desktop
+  source: https://github.com/desktop/desktop
+  docs: https://docs.linuxserver.io/images/docker-github-desktop/
+  scalable: false
+  primary_service: github-desktop
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: github-desktop
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: App Username
+      help: Username for the browser desktop.
+    PUID:
+      label: Puid
+      help: Numeric UID for app files.
+    PGID:
+      label: Pgid
+      help: Numeric GID for app files.
+    TZ:
+      label: Tz
+      help: IANA time zone for the desktop.
+    APP_PASSWORD:
+      label: Desktop password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Desktop settings
+      help: Select This host. Stores Git configuration and desktop state. Include this folder in a stopped
+        Nex backup.
+    REPOSITORIES:
+      label: Repositories
+      help: Select This host. Stores checked-out Git repositories. Include this folder in a stopped Nex
+        backup.
+services:
+  github-desktop:
+    image: lscr.io/linuxserver/github-desktop:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8799}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${REPOSITORIES}:/repositories
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

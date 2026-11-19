@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ImgCompress
+  summary: Compress and transform images on your own server
+  description: Resize, convert, and compress uploaded images. Uploaded files and results are handled by the
+    server. This profile disables storage browsing and limits the size of individual uploads.
+  category: tools
+  website: https://imgcompress.karimzouine.com
+  source: https://github.com/karimz1/imgcompress
+  docs: https://github.com/karimz1/imgcompress/blob/main/docker-compose.yml
+  license: GPL-3.0
+  primary_service: imgcompress
+  architectures:
+  - amd64
+  - arm64
+  post_install: Keep access restricted to trusted users. Collect output before replacing the container because
+    this package has no managed job folder.
+  web:
+    port: 5000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 5000. This setting is used when host port publishing is enabled.
+services:
+  imgcompress:
+    image: docker.io/karimz1/imgcompress:latest
+    ports:
+    - ${PORT:-18117}:5000/tcp
+    environment:
+      DISABLE_STORAGE_MANAGEMENT: 'true'
+      DISABLE_UPDATE_CHECK: 'true'
+      MAX_UPLOAD_SIZE_MB: '256'
+      WEB_WORKERS: '2'
+    deploy:
+      replicas: 1

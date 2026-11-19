@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Plunk
+  summary: Manage transactional email and campaigns from your own dashboard
+  description: Prepare PostgreSQL and Redis and authorize your AWS SES sender. Use distinct client-facing
+    dashboard and API addresses, with HTTPS enabled at your proxies.
+  category: communication
+  website: https://github.com/useplunk/plunk
+  source: https://github.com/useplunk/plunk
+  docs: https://docs.useplunk.com/self-hosting
+  primary_service: plunk
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    API_DOMAIN:
+      label: API hostname
+      help: Hostname for the Plunk API proxy.
+    API_URI:
+      label: API HTTPS address
+      help: Full client-facing API address.
+    DASHBOARD_DOMAIN:
+      label: Dashboard hostname
+      help: Hostname for the dashboard proxy.
+    DASHBOARD_URI:
+      label: Dashboard HTTPS address
+      help: Full browser-facing dashboard address.
+    AWS_SES_REGION:
+      label: SES region
+      help: Region for verified SES sending.
+    AWS_SES_ACCESS_KEY_ID:
+      label: SES access key ID
+      help: Authorized SES key identity.
+    AWS_SES_SECRET_ACCESS_KEY:
+      label: SES access key secret
+      type: password
+      help: Secret for the configured SES account.
+    DATA:
+      label: Plunk application data
+      help: Keep plunk application data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+    API_PORT:
+      label: Email API port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  plunk:
+    image: ghcr.io/useplunk/plunk:latest
+    environment:
+      SERVICE: all
+      NODE_ENV: production
+      DIRECT_DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      API_DOMAIN: ${API_DOMAIN}
+      API_URI: ${API_URI}
+      DASHBOARD_DOMAIN: ${DASHBOARD_DOMAIN}
+      DASHBOARD_URI: ${DASHBOARD_URI}
+      AWS_SES_REGION: ${AWS_SES_REGION}
+      AWS_SES_ACCESS_KEY_ID: ${AWS_SES_ACCESS_KEY_ID}
+      AWS_SES_SECRET_ACCESS_KEY: ${AWS_SES_SECRET_ACCESS_KEY}
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    - ${API_PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

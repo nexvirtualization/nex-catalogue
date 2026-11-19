@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RSSHub
+  summary: Easy to use, and extensible RSS feed aggregator capable of generating RSS feeds from pretty much
+    everything
+  description: Easy to use, and extensible RSS feed aggregator capable of generating RSS feeds from pretty much
+    everything ranging from social media to university departments.
+  category: reading
+  source: https://github.com/DIYgod/RSSHub
+  website: https://docs.rsshub.app
+  docs: https://docs.rsshub.app/deploy/
+  primary_service: rsshub
+  options:
+    PORT:
+      label: Published 1200/tcp port
+      help: Host port for application listener 1200/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Use a feed reader to subscribe to a documented route. This package uses the built-in memory
+    cache. Routes needing an extra browser or private API credentials require separate configuration.
+  web:
+    port: 1200
+services:
+  rsshub:
+    image: docker.io/diygod/rsshub:latest
+    deploy:
+      replicas: 1
+    environment:
+      CACHE_TYPE: memory
+    ports:
+    - ${PORT:-19476}:1200/tcp

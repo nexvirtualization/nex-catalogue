@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Paperless-ngx
+  summary: Scan, search and archive your documents
+  description: >-
+    Document archive with OCR, tags and full-text search. Uses SQLite and a private Valkey task broker.
+    Keep the database on This host; back up data and media together. Create the administrator from the
+    supplied credentials on first launch. Office conversion services are not included.
+  category: documents
+  website: https://docs.paperless-ngx.com
+  source: https://github.com/paperless-ngx/paperless-ngx
+  license: GPL-3.0-only
+  scalable: false
+  primary_service: paperless
+  tags: [documents, ocr, archive]
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port. On a dedicated Primary network with host publishing off, connect to the app address on port 8000. Use HTTPS for access beyond your trusted network.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full address used in your browser, including scheme and port, for example https://paperless.example.com. Use the app address and port 8000 for a dedicated Primary network, or the host endpoint and Web port. Required for proxy CSRF and allowed-host checks.
+    SECRET_KEY:
+      label: Signing secret
+      type: password
+      help: Use Nex Generate for a unique signing secret, and keep it unchanged across restarts and restores. This is separate from the administrator password.
+    ADMIN_USER:
+      label: Initial administrator
+      help: Username created on first startup. Existing users are not changed by this setting.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Required strong password for the initial administrator. Changing this field does not reset an existing account.
+    TZ:
+      label: Time zone
+      help: IANA time zone for document dates and scheduled tasks, such as Etc/UTC.
+    USERMAP_UID:
+      label: User ID
+      help: Numeric UID used for document files; all selected folders must be writable by this UID or its group.
+    USERMAP_GID:
+      label: Group ID
+      help: Numeric GID with write access to all selected storage folders.
+    DATA:
+      label: Database and application data
+      help: SQLite database and index at /usr/src/paperless/data. Select This host, not a network share, and back up with Media.
+    MEDIA:
+      label: Document archive
+      help: Originals and generated documents. Back up together with Database and application data.
+    CONSUME:
+      label: Import inbox
+      help: Documents dropped here are imported and removed from this folder. Polling supports shared folders; use a dedicated inbox.
+    EXPORT:
+      label: Document exports
+      help: Destination for exports made with the Paperless document_exporter tool.
+    BROKER_DATA:
+      label: Task broker data
+      help: Persistent task queue data for Valkey at /data. Use a separate writable folder on This host.
+services:
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    environment:
+      PAPERLESS_URL: "${PUBLIC_URL}"
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBENGINE: sqlite
+      PAPERLESS_SECRET_KEY: "${SECRET_KEY}"
+      PAPERLESS_ADMIN_USER: "${ADMIN_USER:-admin}"
+      PAPERLESS_ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      PAPERLESS_TIME_ZONE: "${TZ:-Etc/UTC}"
+      PAPERLESS_CONSUMER_POLLING: "10"
+      USERMAP_UID: "${USERMAP_UID:-1000}"
+      USERMAP_GID: "${USERMAP_GID:-1000}"
+    ports:
+      - "${PORT:-8000}:8000/tcp"
+    volumes:
+      - "${DATA}:/usr/src/paperless/data"
+      - "${MEDIA}:/usr/src/paperless/media"
+      - "${CONSUME}:/usr/src/paperless/consume"
+      - "${EXPORT}:/usr/src/paperless/export"
+    deploy:
+      replicas: 1
+  broker:
+    image: docker.io/valkey/valkey:latest
+    command: [valkey-server, --appendonly, "yes"]
+    volumes:
+      - "${BROKER_DATA}:/data"
+    deploy:
+      replicas: 1

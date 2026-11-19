@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hoppscotch Community Edition
+  summary: Design and share API requests in Hoppscotch
+  description: Prepare PostgreSQL and run the upstream migrations before deployment. Use the configured HTTPS
+    origin and the administration endpoint for setup.
+  category: development
+  website: https://hoppscotch.io
+  source: https://github.com/hoppscotch/hoppscotch
+  docs: https://docs.hoppscotch.io/documentation/self-host/community-edition/install-and-build
+  primary_service: hoppscotch
+  post_install: Prepare PostgreSQL and run the upstream migrations before deployment. Use the configured
+    HTTPS origin and the administration endpoint for setup.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    JWT_SECRET:
+      label: Jwt secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SESSION_SECRET:
+      label: Session secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_URL:
+      label: Smtp url
+      help: Enter the deployment value described in the upstream setup guide.
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+services:
+  hoppscotch:
+    image: docker.io/hoppscotch/hoppscotch:latest
+    ports:
+    - ${PORT:-23525}:80/tcp
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      VITE_BASE_URL: ${PUBLIC_URL}
+      VITE_ALLOWED_AUTH_PROVIDERS: EMAIL
+      JWT_SECRET: ${JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      DATA_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      VITE_SHORTCODE_BASE_URL: ${PUBLIC_URL}
+      VITE_ADMIN_URL: ${PUBLIC_URL}/admin
+      VITE_BACKEND_GQL_URL: ${PUBLIC_URL}/backend/graphql
+      VITE_BACKEND_API_URL: ${PUBLIC_URL}/backend/v1
+      VITE_BACKEND_WS_URL: wss://${PUBLIC_HOST}/backend/graphql
+      ENABLE_SUBPATH_BASED_ACCESS: 'true'
+      WHITELISTED_ORIGINS: ${PUBLIC_URL}
+      MAILER_SMTP_URL: ${SMTP_URL}
+      MAILER_ADDRESS_FROM: ${FROM_EMAIL}
+    deploy:
+      replicas: 1

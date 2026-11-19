@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hermes Agent
+  summary: Host Hermes Agent and its authenticated dashboard
+  description: This deployment runs the built-in dashboard and gateway with local Hermes state. It does not
+    mount a Docker socket or host home directory.
+  category: ai
+  website: https://hermes-agent.nousresearch.com/
+  source: https://github.com/nousresearch/hermes-agent
+  docs: https://hermes-agent.nousresearch.com/docs/user-guide/docker
+  primary_service: hermes-agent
+  post_install: Use a trusted HTTPS reverse proxy. Sign in with the configured dashboard account and configure
+    a model or messaging account in Hermes.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9119
+  options:
+    USER:
+      label: Email or login name
+      help: Account identifier supplied to the application.
+    PASSWORD:
+      label: Account password
+      help: Choose a strong password for this deployment.
+      type: password
+    SECRET_KEY:
+      label: Signing secret
+      help: Generate and retain a random secret for this deployment.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9119 inside Nex.
+    DATA:
+      label: Hermes state and configuration
+      help: Managed directory mounted at /opt/data. Choose storage writable by the application.
+services:
+  hermes-agent:
+    image: docker.io/nousresearch/hermes-agent:latest
+    ports:
+    - ${PORT:-20198}:9119/tcp
+    volumes:
+    - ${DATA}:/opt/data
+    environment:
+      HERMES_HOME: /opt/data
+      HERMES_DASHBOARD: '1'
+      HERMES_DASHBOARD_HOST: 0.0.0.0
+      HERMES_DASHBOARD_PORT: '9119'
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${USER:-hermes}
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${PASSWORD}
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${SECRET_KEY}
+      HERMES_REDACT_SECRETS: 'true'
+    command:
+    - gateway
+    - run
+    deploy:
+      replicas: 1

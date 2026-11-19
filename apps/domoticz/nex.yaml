@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Domoticz
+  summary: Manage network-connected home automation devices
+  description: Configure supported IP or MQTT integrations in the web UI. This package uses standard container
+    networking for integrations reached by address. Set the administrator password before install.
+  category: home-automation
+  website: https://www.domoticz.com/
+  source: https://github.com/domoticz/domoticz
+  docs: https://github.com/domoticz/domoticz#readme
+  scalable: false
+  primary_service: domoticz
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: domoticz
+    scheme: http
+    port: 8080
+  options:
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ADMIN_USERNAME:
+      label: Administrator login
+      help: Account name provisioned on first run.
+    TZ:
+      label: Time zone
+      help: IANA time zone used by home-automation schedules.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Automation data
+      help: Select This host. Stores the Domoticz SQLite database, settings and scripts. Include this
+        folder in a stopped Nex backup.
+services:
+  domoticz:
+    image: domoticz/domoticz:latest
+    environment:
+      DOMOTICZ_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DOMOTICZ_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8135}:8080/tcp
+    volumes:
+    - ${DATA}:/opt/domoticz/userdata
+    deploy:
+      replicas: 1

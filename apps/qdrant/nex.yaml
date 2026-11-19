@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Qdrant
+  summary: Store vector embeddings for semantic search and retrieval
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 6333 for REST or
+    6334 for gRPC on the application network. Set the api-key header. Use This host for persistent data and
+    choose one eligible host. Swarm can restart the process on that host. Qdrant clustering requires explicit
+    peer setup and replica placement.
+  category: ai
+  website: https://qdrant.tech/documentation/operations/configuration/
+  source: https://github.com/qdrant/qdrant
+  docs: https://qdrant.tech/documentation/operations/configuration/
+  license: Apache-2.0
+  primary_service: qdrant
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    API_KEY:
+      label: API key
+      help: Generate a key and configure clients to send it in the api-key header.
+      type: password
+    DATA:
+      label: Vector data
+      help: Use This host with a local block-backed filesystem. Back up snapshots before upgrades.
+services:
+  qdrant:
+    image: docker.io/qdrant/qdrant:latest
+    ports:
+      - ${PORT:-6333}:6333/tcp
+    environment:
+      QDRANT__SERVICE__API_KEY: ${API_KEY}
+    volumes:
+      - ${DATA}:/qdrant/storage
+    deploy:
+      replicas: 1

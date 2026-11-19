@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AliasVault
+  summary: Store credentials and receive mail through private aliases
+  description: Use a trusted HTTPS reverse proxy for web, mobile and extension access. Create the administrator
+    at /admin. To receive mail on your own domains, configure the MX records, certificate and SMTP endpoints.
+  category: security
+  website: https://github.com/aliasvault/aliasvault
+  source: https://github.com/aliasvault/aliasvault
+  docs: https://docs.aliasvault.com/installation/docker-compose/
+  primary_service: aliasvault
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    DATABASE:
+      label: Vault database
+      help: Keep vault database in this managed folder between restarts.
+    LOGS:
+      label: Service logs
+      help: Keep service logs in this managed folder between restarts.
+    SECRETS:
+      label: Vault recovery keys
+      help: Keep vault recovery keys in this managed folder between restarts.
+    CERTIFICATES:
+      label: SMTP certificates
+      help: Keep smtp certificates in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+    SMTP_PORT:
+      label: SMTP inbound port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 25.
+    SMTP_TLS_PORT:
+      label: SMTP submission port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 587.
+services:
+  aliasvault:
+    image: ghcr.io/aliasvault/aliasvault:latest
+    environment:
+      FORCE_HTTPS_REDIRECT: 'false'
+      PUBLIC_REGISTRATION_ENABLED: 'true'
+    volumes:
+    - ${DATABASE}:/database
+    - ${LOGS}:/logs
+    - ${SECRETS}:/secrets
+    - ${CERTIFICATES}:/certificates
+    ports:
+    - ${PORT:-80}:80/tcp
+    - ${SMTP_PORT:-25}:25/tcp
+    - ${SMTP_TLS_PORT:-587}:587/tcp
+    deploy:
+      replicas: 1

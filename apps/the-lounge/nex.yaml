@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: The Lounge
+  summary: Connect to IRC from a persistent web client
+  description: The default private mode requires an account. Run the upstream user creation command
+    in the application container before first sign-in. Use HTTPS for remote access.
+  category: communication
+  website: https://github.com/thelounge/thelounge
+  source: https://github.com/thelounge/thelounge
+  docs: https://thelounge.chat/docs/install-and-upgrade/docker
+  primary_service: the-lounge
+  scalable: false
+  license: MIT
+  web:
+    port: 9000
+  options:
+    DATA:
+      label: IRC accounts and state
+      help: User configuration, server connections and persisted logs.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9000.
+services:
+  the-lounge:
+    image: ghcr.io/thelounge/thelounge:latest
+    volumes:
+    - ${DATA}:/var/opt/thelounge
+    ports:
+    - ${PORT:-9000}:9000/tcp
+    deploy:
+      replicas: 1

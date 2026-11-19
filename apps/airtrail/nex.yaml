@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AirTrail
+  summary: Track personal flights and aviation statistics
+  description: Prepare PostgreSQL and create your account on a trusted network. An HTTPS proxy can provide
+    remote access. Keep media and database backups together.
+  category: productivity
+  website: https://airtrail.johan.ohly.dk
+  source: https://github.com/johanohly/AirTrail
+  docs: https://github.com/johanohly/AirTrail#readme
+  scalable: false
+  primary_service: airtrail
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: airtrail
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Flight uploads
+      help: Select This host. Stores local profile or shared flight-related media. Include this folder
+        in a stopped Nex backup.
+services:
+  airtrail:
+    image: johly/airtrail:latest
+    environment:
+      DB_URL: ${DATABASE_URL}
+      UPLOAD_LOCATION: /app/uploads
+    ports:
+    - ${PORT:-8449}:3000/tcp
+    volumes:
+    - ${DATA}:/app/uploads
+    deploy:
+      replicas: 1

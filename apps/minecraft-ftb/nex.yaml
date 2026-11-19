@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Feed The Beast
+  summary: Install a Java Edition modpack from Feed The Beast
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Choose an FTB modpack
+    compatible with Java 21. Install the same modpack and version in each client. Make a stopped
+    backup before applying updates.
+  category: games
+  website: https://www.feed-the-beast.com/modpacks
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/mod-platforms/ftb/
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    PACK_ID:
+      label: Feed The Beast modpack ID
+      help: >-
+        Enter the numeric pack ID shown in its Feed The Beast modpack page URL.
+    PACK_VERSION:
+      label: Feed The Beast version ID
+      help: >-
+        Enter the numeric server file version ID to choose a release, or leave empty for the newest
+        release.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-ftb:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: FTBA
+      MEMORY: 6G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      FTB_MODPACK_ID: ${PACK_ID}
+      FTB_MODPACK_VERSION_ID: ${PACK_VERSION:-}
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 30m

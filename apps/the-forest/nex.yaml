@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: The Forest
+  summary: Host a co-op survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join Nex The Forest in the dedicated-server browser. The game uses UDP 27015, Steam uses UDP 8766,
+    and queries use UDP 27016. The two passwords initialize config/config.cfg. Edit that file with
+    the app stopped to change them after first boot. First start downloads the dedicated server from
+    Steam. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/242760/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/theforest
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/theforest#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - co-op
+    - survival
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -. Applied on first boot.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use letters, digits, or _ @ . + -. Applied on first boot.
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  the-forest:
+    image: ghcr.io/ich777/steamcmd:theforest
+    environment:
+      GAME_ID: '556450'
+      GAME_PARAMS: ''
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+      - 8766/udp
+      - 27015/udp
+      - 27016/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$${JOIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ||
+              ! "$${ADMIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, numbers or _ @ . + - in both passwords." >&2
+          exit 1
+        fi
+        config=/serverdata/serverfiles/config/config.cfg
+        if [ ! -e "$$config" ]; then
+          mkdir -p "$${config%/*}"
+          umask 077
+          cat > "$$config" <<EOF
+        serverIP 0.0.0.0
+        serverSteamPort 8766
+        serverGamePort 27015
+        serverQueryPort 27016
+        serverName Nex The Forest
+        serverPlayers 8
+        serverPassword $$JOIN_PASSWORD
+        serverPasswordAdmin $$ADMIN_PASSWORD
+        serverAutoSaveInterval 30
+        difficulty Normal
+        initType Continue
+        slot 1
+        allowCheats off
+        EOF
+        fi
+        exec /opt/scripts/start.sh

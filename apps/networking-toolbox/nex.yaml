@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Networking Toolbox
+  summary: Use browser tools for everyday networking tasks
+  description: Calculate addresses and CIDR ranges, decode network values, and use reference tools from the
+    browser. Some lookups call external public services.
+  category: networking
+  website: https://www.networkingtoolbox.net/
+  source: https://github.com/lissy93/networking-toolbox
+  docs: https://github.com/lissy93/networking-toolbox
+  license: MIT
+  primary_service: networking-toolbox
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the web app, or use its health endpoint to monitor availability.
+  web:
+    port: 3000
+  scale:
+  - networking-toolbox
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+services:
+  networking-toolbox:
+    image: ghcr.io/lissy93/networking-toolbox:latest
+    ports:
+    - ${PORT:-18119}:3000/tcp
+    deploy:
+      replicas: 1

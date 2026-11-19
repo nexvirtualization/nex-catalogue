@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Java
+  summary: Host a private vanilla Minecraft Java Edition world
+  description: >-
+    Run one copy on a selected host with its world stored on This host. In Network, choose a cluster
+    VLAN or routed private network reachable by your players. The first startup downloads the current
+    release. In Java Edition, choose Multiplayer and add the app's Primary address on TCP 25565.
+    Keep clients on the same game version and back up the world before updating.
+  category: games
+  website: https://www.minecraft.net/en-us/download/server
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/
+  license: Proprietary game server (Apache-2.0 container)
+  architectures: [amd64, arm64, riscv64]
+  tags: [sandbox, survival, multiplayer]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: Read the Minecraft EULA at https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: Comma-separated Java Edition usernames. Update this list in Nex to grant or revoke access.
+    DATA:
+      label: World and settings
+      help: Choose This host and include this folder in a stopped backup before updating.
+services:
+  minecraft-java:
+    image: ghcr.io/itzg/minecraft-server:latest
+    environment:
+      EULA: ${EULA}
+      MEMORY: 2G
+      ENABLE_WHITELIST: "true"
+      ENFORCE_WHITELIST: "true"
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      ENABLE_RCON: "false"
+    expose:
+      - "25565/tcp"
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

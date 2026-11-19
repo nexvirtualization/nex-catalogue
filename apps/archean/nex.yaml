@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Archean
+  summary: Host a shared space engineering world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Connect to the app’s Primary address on port 8881 using an Archean client that matches the server
+    build. A new world starts in creative mode with direct connections enabled. Stop the app before
+    editing server.ini in the data folder.
+  category: games
+  website: https://store.steampowered.com/app/2941660/
+  source: https://archean.space/assets/user_scripts/run_server_with_docker.sh
+  docs: https://wiki.archean.space/en/multiplayer/settingup.html
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - sandbox
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  archean:
+    image: docker.io/xenon3d/archean-server-alpha:latest
+    expose:
+    - 8881/tcp
+    - 8881/udp
+    volumes:
+    - ${DATA}:/Archean-data/server
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      config=/Archean-data/server/server.ini
+      if [ ! -e "$$config" ]; then
+        umask 077
+        tmp=$$(mktemp /Archean-data/server/server.ini.XXXXXX)
+        cat > "$$tmp" <<'EOF'
+      [server]
+      server_public_name = Nex Archean
+      game_mode = 0
+      server_online = no
+      accept_remote_connections = yes
+      [networking]
+      listen_port = 8881
+      EOF
+        mv "$$tmp" "$$config"
+      fi
+      exec ./Archean_server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

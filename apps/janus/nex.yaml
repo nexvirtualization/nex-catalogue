@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Janus WebRTC Gateway
+  summary: Host a WebRTC gateway with a prepared configuration
+  description: Prepare the supported Janus gateway configuration and configure its HTTP or WebSocket control
+    listener on port 8088. Use a client-reachable dedicated network and configure authorized media ranges
+    and NAT addresses.
+  category: communication
+  website: https://janus.conf.meetecho.com/
+  source: https://github.com/meetecho/janus-gateway
+  docs: https://github.com/canyan/janus-gateway-docker
+  scalable: false
+  primary_service: janus
+  architectures:
+  - amd64
+  web:
+    service: janus
+    scheme: http
+    port: 8088
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8088.
+    DATA:
+      label: Prepared Janus configuration
+      help: Select This host. Contains janus.jcfg, transport plugin settings and access configuration.
+        Include this folder in a stopped Nex backup.
+services:
+  janus:
+    image: canyan/janus-gateway:latest
+    command:
+    - --configs-folder=/settings
+    - --config=/settings/janus.jcfg
+    ports:
+    - ${PORT:-8926}:8088/tcp
+    volumes:
+    - ${DATA}:/settings:ro
+    deploy:
+      replicas: 1

@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LittleLink
+  summary: Publish a profile page with links and social buttons
+  description: The first start downloads and verifies the upstream v3.11.0 starter site. The app keeps your
+    site edits in a managed folder and serves them with NGINX.
+  category: development
+  website: https://littlelink.io/
+  source: https://github.com/sethcottle/littlelink
+  docs: https://github.com/sethcottle/littlelink/releases/tag/v3.11.0
+  license: MIT
+  primary_service: littlelink
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the example page, then edit site/index.html and its assets in Site files. Back up this
+    folder. Use an HTTPS proxy for public access.
+  web:
+    port: 80
+  options:
+    SITE:
+      label: Site files
+      help: Writable folder for the published site. An existing site/index.html is preserved on restart.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+  version: 3.11.0
+services:
+  littlelink:
+    image: docker.io/library/nginx:latest
+    ports:
+    - ${PORT:-18125}:80/tcp
+    volumes:
+    - ${SITE}:/nex-site
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - |-
+      if [ ! -s /nex-site/site/index.html ]; then
+        stage=$$(mktemp -d /nex-site/.littlelink.XXXXXX)
+        trap 'rm -rf "$$stage"' EXIT
+        curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --retry 2 --max-time 60 --max-filesize 4194304     https://codeload.github.com/sethcottle/littlelink/tar.gz/refs/tags/v3.11.0 -o "$$stage/upstream.tgz"
+        (
+          cd "$$stage"
+          printf '%s\n' 'd88756f8e43240ede66041edff39ef268c8a47118b4297ee08363c9421201b91  upstream.tgz' | sha256sum -c -
+        )
+        mkdir "$$stage/site"
+        tar -xzf "$$stage/upstream.tgz" -C "$$stage/site" --strip-components=1     littlelink-3.11.0/index.html littlelink-3.11.0/privacy.html littlelink-3.11.0/LICENSE.md     littlelink-3.11.0/css littlelink-3.11.0/fonts littlelink-3.11.0/images
+        chmod 755 "$$stage/site"
+        if ! mv -T "$$stage/site" /nex-site/site; then
+          test -s /nex-site/site/index.html
+        fi
+        rm -rf "$$stage"
+        trap - EXIT
+      fi
+      sed -i 's|/usr/share/nginx/html|/nex-site/site|g' /etc/nginx/conf.d/default.conf
+      exec /docker-entrypoint.sh nginx -g 'daemon off;'
+    deploy:
+      replicas: 1

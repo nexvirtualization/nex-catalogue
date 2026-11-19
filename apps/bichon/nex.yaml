@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bichon
+  summary: Archive and search mail from IMAP accounts
+  description: Use a trusted endpoint for first sign-in and replace the upstream default password immediately.
+    Enter IMAP account settings in the UI and retain the encryption key with your backups.
+  category: communication
+  website: https://github.com/rustmailer/bichon
+  source: https://github.com/rustmailer/bichon
+  docs: https://bichon.rustmailer.com/docs/quick-start
+  primary_service: bichon
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 15630
+  options:
+    ENCRYPT_PASSWORD:
+      label: Mailbox encryption key
+      type: password
+      help: Use Nex Generate and preserve this value for the life of the archive.
+    DATA:
+      label: Mail archive and indexes
+      help: Keep mail archive and indexes in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 15630.
+services:
+  bichon:
+    image: docker.io/rustmailer/bichon:latest
+    environment:
+      BICHON_ROOT_DIR: /data
+      BICHON_ENCRYPT_PASSWORD: ${ENCRYPT_PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-15630}:15630/tcp
+    deploy:
+      replicas: 1

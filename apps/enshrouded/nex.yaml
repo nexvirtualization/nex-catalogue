@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Enshrouded
+  summary: Explore Embervale in a shared survival and building world
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep the server folder on This host
+    with one eligible x86-64 host. Steam downloads the server on first boot and checks for updates at startup.
+    Add the application's IPv4 address on UDP 15637 in the Enshrouded Join menu using Search for IP, then join
+    with the player password. Back up the server folder with the app stopped before updating.
+  category: games
+  website: https://enshrouded.com/
+  source: https://github.com/indifferentbroccoli/enshrouded-server-docker
+  docs: https://enshrouded.zendesk.com/hc/en-us/articles/16055441447709-Dedicated-Server-Configuration
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+      help: This password grants the Default player group in the server configuration.
+    DATA:
+      label: Server files and saves
+      help: Keep this folder on This host. It holds the world, configuration, and downloaded server files.
+services:
+  enshrouded:
+    image: docker.io/indifferentbroccoli/enshrouded-server-docker:latest
+    expose:
+      - "15637/udp"
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Enshrouded}
+      SERVER_PASSWORD: ${SERVER_PASSWORD}
+      UPDATE_ON_START: "true"
+    volumes:
+      - ${DATA}:/home/steam/enshrouded
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

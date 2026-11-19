@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Caddy
+  summary: Serve static sites and route requests through configured reverse proxies
+  description: This profile initially serves the default site. Edit the Caddyfile in the configuration
+    folder and restart to apply it. For automatic HTTPS, use a reachable dedicated application address
+    and configure DNS.
+  category: networking
+  website: https://github.com/caddyserver/caddy
+  source: https://github.com/caddyserver/caddy
+  docs: https://caddyserver.com/docs/running#docker
+  primary_service: caddy
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Caddy configuration
+      help: Keep caddy configuration in this managed folder between restarts.
+    STATE:
+      label: Certificates and Caddy state
+      help: Keep certificates and caddy state in this managed folder between restarts.
+    AUTOSAVE:
+      label: Caddy autosaved configuration
+      help: Keep caddy autosaved configuration in this managed folder between restarts.
+    SITE:
+      label: Static site files
+      help: Keep static site files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+    HTTPS_PORT:
+      label: HTTPS port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 443.
+services:
+  caddy:
+    image: docker.io/library/caddy:latest
+    volumes:
+    - ${CONFIG}:/etc/caddy
+    - ${STATE}:/data
+    - ${AUTOSAVE}:/config
+    - ${SITE}:/usr/share/caddy
+    ports:
+    - ${PORT:-80}:80/tcp
+    - ${HTTPS_PORT:-443}:443/tcp
+    deploy:
+      replicas: 1

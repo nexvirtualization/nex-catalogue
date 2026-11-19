@@ -1,0 +1,119 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mastodon
+  summary: Run a federated social server for your community
+  description: Prepare PostgreSQL, Redis and SMTP, and reserve a stable public HTTPS domain. Follow
+    upstream key-generation and first-admin setup before opening federation.
+  category: communication
+  website: https://github.com/mastodon/mastodon
+  source: https://github.com/mastodon/mastodon
+  docs: https://docs.linuxserver.io/images/docker-mastodon/
+  primary_service: mastodon
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    LOCAL_DOMAIN:
+      label: Federation domain
+      help: Public hostname used as the server identity. Do not change after setup.
+    DB_HOST:
+      label: PostgreSQL hostname
+      help: Reachable PostgreSQL server.
+    DB_USER:
+      label: Database username
+      help: Dedicated database account.
+    DB_NAME:
+      label: Database name
+      help: Prepared Mastodon database.
+    DB_PASS:
+      label: Database password
+      type: password
+      help: Password of that account.
+    REDIS_HOST:
+      label: Redis hostname
+      help: Reachable Redis service.
+    SMTP_SERVER:
+      label: Mail relay hostname
+      help: Reachable mail provider.
+    SMTP_PORT:
+      label: Mail relay port
+      help: SMTP server port.
+    SMTP_LOGIN:
+      label: Mail relay username
+      help: Authorized SMTP username.
+    SMTP_PASSWORD:
+      label: Mail relay password
+      type: password
+      help: Password from the SMTP provider.
+    SMTP_FROM_ADDRESS:
+      label: From address
+      help: Sender address authorized by the SMTP provider.
+    SECRET_KEY_BASE:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    OTP_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY:
+      label: Primary database encryption key
+      type: password
+      help: Generate with the upstream Rails helper.
+    ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY:
+      label: Deterministic database encryption key
+      type: password
+      help: Generate with the upstream Rails helper.
+    ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT:
+      label: Database key derivation salt
+      type: password
+      help: Generate with the upstream Rails helper.
+    VAPID_PRIVATE_KEY:
+      label: Browser push private key
+      type: password
+      help: Generate the matching Web Push keys using upstream tooling.
+    VAPID_PUBLIC_KEY:
+      label: Browser push public key
+      help: Public key matching the configured private key.
+    DATA:
+      label: Mastodon configuration and media
+      help: Keep mastodon configuration and media in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  mastodon:
+    image: lscr.io/linuxserver/mastodon:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      DB_PORT: '5432'
+      REDIS_PORT: '6379'
+      ES_ENABLED: 'false'
+      S3_ENABLED: 'false'
+      LOCAL_DOMAIN: ${LOCAL_DOMAIN}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: ${REDIS_HOST}
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_LOGIN: ${SMTP_LOGIN}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      OTP_SECRET: ${OTP_SECRET}
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+    volumes:
+    - ${DATA}:/config
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

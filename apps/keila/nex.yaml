@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Keila
+  summary: Reliable and easy-to-use newsletter tool (alternative to Mailchimp and Sendinblue)
+  description: Reliable and easy-to-use newsletter tool (alternative to Mailchimp and Sendinblue).
+  category: communication
+  source: https://github.com/pentacent/keila
+  website: https://www.keila.io
+  docs: https://www.keila.io/docs/installation
+  primary_service: keila
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_HOST:
+      label: Public host
+    SECRET_KEY:
+      label: Secret key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    ADMIN_EMAIL:
+      label: Admin email
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    UPLOADS:
+      label: Uploads folder
+      help: Choose the Nex-managed folder mounted at /opt/app/uploads.
+    PORT:
+      label: Published 4000/tcp port
+      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL and configure an outbound mail provider. Sign in with the initial administrator
+    and retain the database and uploads in backups.
+  web:
+    port: 4000
+services:
+  keila:
+    image: docker.io/pentacent/keila:latest
+    deploy:
+      replicas: 1
+    environment:
+      DB_URL: ${DATABASE_URL}
+      URL_HOST: ${PUBLIC_HOST}
+      SECRET_KEY_BASE: ${SECRET_KEY}
+      KEILA_USER: ${ADMIN_EMAIL}
+      KEILA_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+    - ${UPLOADS}:/opt/app/uploads
+    ports:
+    - ${PORT:-19964}:4000/tcp

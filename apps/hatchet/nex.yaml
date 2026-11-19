@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hatchet
+  summary: Run queued workflows with worker orchestration
+  description: Provision the PostgreSQL database first. This Lite profile is for lower-volume deployments.
+    Sign in on a trusted network with the upstream initial account and immediately replace its password.
+  category: development
+  website: https://github.com/hatchet-dev/hatchet
+  source: https://github.com/hatchet-dev/hatchet
+  docs: https://docs.hatchet.run/self-hosting/hatchet-lite
+  primary_service: hatchet
+  scalable: false
+  license: MIT
+  web:
+    port: 8888
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    SERVER_GRPC_BROADCAST_ADDRESS:
+      label: Worker-facing gRPC address
+      help: Hostname and port reachable from configured workers.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8888.
+    GRPC_PORT:
+      label: Worker API gRPC port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7077.
+services:
+  hatchet:
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
+    environment:
+      SERVER_GRPC_BIND_ADDRESS: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL}
+      SERVER_GRPC_BROADCAST_ADDRESS: ${SERVER_GRPC_BROADCAST_ADDRESS}
+    ports:
+    - ${PORT:-8888}:8888/tcp
+    - ${GRPC_PORT:-7077}:7077/tcp
+    deploy:
+      replicas: 1

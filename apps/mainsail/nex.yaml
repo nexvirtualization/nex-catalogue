@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mainsail
+  summary: Control a configured Moonraker printer from a browser
+  description: Choose the reachable Moonraker instance from Mainsail. Configure Moonraker to authorize
+    this frontend origin and protect printer controls with a trusted network.
+  category: home-automation
+  website: https://github.com/mainsail-crew/mainsail
+  source: https://github.com/mainsail-crew/mainsail
+  docs: https://docs.mainsail.xyz/
+  primary_service: mainsail
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  mainsail:
+    image: ghcr.io/mainsail-crew/mainsail:latest
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

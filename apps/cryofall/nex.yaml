@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CryoFall
+  summary: Host a persistent sci-fi survival colony
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In the CryoFall server browser, connect to the app’s Primary address on UDP 6000. The first start
+    creates a world and a SettingsServer.xml file in the managed folder. Stop the app before changing
+    server settings, including player access and administrator account names.
+  category: games
+  website: https://store.steampowered.com/app/829590/
+  source: https://hub.docker.com/r/atomictorch/cryofall-server
+  docs: https://wiki.atomictorch.com/CryoFall/Server/Setup
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - survival
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  cryofall:
+    image: docker.io/atomictorch/cryofall-server:1.33
+    expose:
+    - 6000/udp
+    volumes:
+    - ${DATA}:/app/Data
+    command:
+    - loadOrNew
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

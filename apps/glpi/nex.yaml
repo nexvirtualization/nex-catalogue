@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GLPI
+  summary: Track IT assets, inventory, and service desk requests
+  description: Create an empty database and a dedicated account in a supported MySQL or MariaDB server.
+    Prepare the application data folder with write access for container UID 33 before deploying. Complete
+    the initial sign-in on a trusted network and change the default GLPI account passwords before making
+    the service available to users.
+  category: productivity
+  website: https://glpi-project.org/
+  source: https://github.com/glpi-project/glpi
+  docs: https://github.com/glpi-project/docker-images#how-to-use-this-image
+  scalable: false
+  primary_service: glpi
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: glpi
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  - mysql
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is glpi.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    DB_PORT:
+      label: Database port
+      help: TCP port of the prepared database server. The default is 3306.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: GLPI configuration and files
+      help: Select This host. Choose a prepared folder writable by UID 33 and GID 33. Holds settings,
+        uploads, and marketplace extensions. Include this folder in a stopped Nex backup.
+services:
+  glpi:
+    image: glpi/glpi:latest
+    environment:
+      GLPI_DB_HOST: ${DB_HOST}
+      GLPI_DB_PORT: ${DB_PORT:-3306}
+      GLPI_DB_NAME: ${DB_NAME:-glpi}
+      GLPI_DB_USER: ${DB_USER}
+      GLPI_DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+    - ${PORT:-8443}:80/tcp
+    volumes:
+    - ${DATA}:/var/glpi
+    deploy:
+      replicas: 1

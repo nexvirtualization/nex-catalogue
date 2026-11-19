@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ganymede
+  summary: Archive Twitch streams and their chat
+  description: Prepare PostgreSQL, and use the web interface to configure Twitch integration. Keep the
+    data folders on a single host and take backups of configuration and saved videos.
+  category: media
+  website: https://github.com/Zibbp/ganymede
+  source: https://github.com/Zibbp/ganymede
+  docs: https://github.com/Zibbp/ganymede#readme
+  scalable: false
+  primary_service: ganymede
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: ganymede
+    scheme: http
+    port: 4000
+  works_with:
+  - postgresql
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 5432.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is ganymede.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4000.
+    DATA:
+      label: Video archive
+      help: Select This host. Stores saved videos. Include this folder in a stopped Nex backup.
+    TEMP_DATA:
+      label: Temporary video data
+      help: Select This host. Holds incomplete downloads. Include this folder in a stopped Nex backup.
+    LOGS:
+      label: Logs
+      help: Select This host. Stores download and application logs. Include this folder in a stopped Nex
+        backup.
+    CONFIG:
+      label: Application configuration
+      help: Select This host. Stores per-instance settings. Include this folder in a stopped Nex backup.
+services:
+  ganymede:
+    image: ghcr.io/zibbp/ganymede:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-ganymede}
+      VIDEOS_DIR: /videos
+      TEMP_DIR: /temp
+      LOGS_DIR: /logs
+      CONFIG_DIR: /config
+      DB_PORT: '5432'
+    ports:
+    - ${PORT:-8465}:4000/tcp
+    volumes:
+    - ${DATA}:/videos
+    - ${TEMP_DATA}:/temp
+    - ${LOGS}:/logs
+    - ${CONFIG}:/config
+    deploy:
+      replicas: 1

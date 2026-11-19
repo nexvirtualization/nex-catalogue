@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HeyForm
+  summary: Build web forms and collect responses
+  description: Provision MongoDB and Redis before starting. Use an HTTPS address, then create your first
+    account and form.
+  category: productivity
+  website: https://heyform.net
+  source: https://github.com/heyform/heyform
+  docs: https://docs.heyform.net/open-source/self-hosting
+  primary_service: heyform
+  post_install: Provision MongoDB and Redis before starting. Use an HTTPS address, then create your first
+    account and form.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    SESSION_KEY:
+      label: Session key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+    UPLOADS:
+      label: Form uploads
+      help: Managed directory mounted at /app/static/upload. Choose storage writable by the application.
+services:
+  heyform:
+    image: docker.io/heyform/community-edition:v3.0.6
+    ports:
+    - ${PORT:-23486}:8000/tcp
+    volumes:
+    - ${UPLOADS}:/app/static/upload
+    environment:
+      APP_HOMEPAGE_URL: ${PUBLIC_URL}
+      SESSION_KEY: ${SESSION_KEY}
+      FORM_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      MONGO_URI: ${MONGO_URI}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    deploy:
+      replicas: 1

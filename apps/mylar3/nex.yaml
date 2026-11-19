@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/runtipi/runtipi-appstore/blob/HEAD/apps/mylar3/docker-compose.yml
+x-nex:
+  name: Mylar3
+  summary: Automated Comic Book
+  category: tools
+  description: Automated Comic Book (cbr/cbz) downloader program for use with NZB and torrents. Back up the
+    application folders together and keep them writable by the container.
+  source: https://github.com/MylarComics/mylar3
+  website: https://mylar.nerdfirehurricane.com/
+  docs: https://mylar.nerdfirehurricane.com/
+  primary_service: mylar3
+  options:
+    TZ:
+      label: Tz
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Comics folder
+      help: Nex-managed folder mounted at /comics. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Downloads folder
+      help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8090/tcp.
+  web:
+    port: 8090
+  post_install: Open Mylar3 and configure the comics library at /comics, download folder at /downloads, and
+    your indexer.
+services:
+  mylar3:
+    image: lscr.io/linuxserver/mylar3:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: ${TZ}
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/comics
+    - ${FOLDER_3}:/downloads
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8090}:8090/tcp

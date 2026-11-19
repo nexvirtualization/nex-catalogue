@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Anubis
+  summary: Protect your own web service with an HTTP proof-of-work proxy
+  description: Set the destination to your own reachable upstream service, then configure the reverse
+    proxy to send traffic through Anubis.
+  category: networking
+  website: https://github.com/TecharoHQ/anubis
+  source: https://github.com/TecharoHQ/anubis
+  docs: https://anubis.techaro.lol/docs/admin/installation/docker/
+  primary_service: anubis
+  scalable: false
+  license: MIT
+  web:
+    port: 8923
+  options:
+    TARGET:
+      label: Upstream website URL
+      help: Full URL of your service, reachable from the application network.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8923.
+services:
+  anubis:
+    image: ghcr.io/techarohq/anubis:latest
+    environment:
+      TARGET: ${TARGET}
+      BIND: :8923
+    ports:
+    - ${PORT:-8923}:8923/tcp
+    deploy:
+      replicas: 1

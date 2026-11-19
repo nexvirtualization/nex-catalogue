@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Convex
+  summary: Develop applications with a self-hosted reactive backend
+  description: Route separate HTTPS addresses for the dashboard, public API and HTTP actions. Generate the
+    initial administrator key using the backend container and enter it in the dashboard. Back up Data and
+    retain the instance secret.
+  category: development
+  website: https://docs.convex.dev/
+  source: https://github.com/convex/convex-backend
+  docs: https://github.com/convex/convex-backend/tree/main/self-hosted
+  primary_service: convex
+  post_install: Route separate HTTPS addresses for the dashboard, public API and HTTP actions. Generate the
+    initial administrator key using the backend container and enter it in the dashboard. Back up Data and
+    retain the instance secret.
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 6791
+  options:
+    API_URL:
+      label: Api url
+      help: Enter the deployment value described in the upstream setup guide.
+    ACTIONS_URL:
+      label: Actions url
+      help: Enter the deployment value described in the upstream setup guide.
+    INSTANCE_SECRET:
+      label: Instance secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 6791 inside Nex.
+    API_PORT:
+      label: Published public API port
+      help: Host-published port for the internal 3210/tcp endpoint.
+    ACTIONS_PORT:
+      label: Published HTTP actions port
+      help: Host-published port for the internal 3211/tcp endpoint.
+    DATA:
+      label: Convex data
+      help: Managed directory mounted at /convex/data. Choose storage writable by the backend.
+services:
+  convex:
+    image: docker.io/library/caddy:latest
+    ports:
+    - ${PORT:-23513}:6791/tcp
+    - ${API_PORT:-24513}:3210/tcp
+    - ${ACTIONS_PORT:-25513}:3211/tcp
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      printf '%s\n' '{
+        auto_https off
+      }
+      :6791 {
+        reverse_proxy dashboard:6791
+      }
+      :3210 {
+        reverse_proxy backend:3210
+      }
+      :3211 {
+        reverse_proxy backend:3211
+      }' | exec caddy run --config - --adapter caddyfile
+    deploy:
+      replicas: 1
+  backend:
+    image: ghcr.io/convex/convex-backend:latest
+    environment:
+      CONVEX_CLOUD_ORIGIN: ${API_URL}
+      CONVEX_SITE_ORIGIN: ${ACTIONS_URL}
+      INSTANCE_SECRET: ${INSTANCE_SECRET}
+      DISABLE_BEACON: 'true'
+    volumes:
+    - ${DATA}:/convex/data
+    deploy:
+      replicas: 1
+  dashboard:
+    image: ghcr.io/convex/convex-dashboard:latest
+    environment:
+      NEXT_PUBLIC_DEPLOYMENT_URL: ${API_URL}
+    deploy:
+      replicas: 1

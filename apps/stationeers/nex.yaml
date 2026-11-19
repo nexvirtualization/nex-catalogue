@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stationeers
+  summary: Host a shared engineering and survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads the dedicated server and generates a Lunar world. Join through the browser
+    or connect to the Primary address on port 27016. Keep UDP 27015 reachable for server discovery.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/544550/
+  source: https://github.com/Ludix0/stationeers
+  docs: https://github.com/Ludix0/stationeers#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - simulation
+    - survival
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players in the multiplayer browser.
+    WORLD_NAME:
+      label: World name
+      help: Keep the same name when restoring the world.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    AUTH_SECRET:
+      label: Server authentication secret
+      type: password
+      help: Set a private secret used to reclaim server ownership.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  stationeers:
+    image: docker.io/ludix0/stationeers:latest
+    environment:
+      UPDATE_ON_START: 'true'
+      SAVE_NAME: ${WORLD_NAME:-NexLunar}
+      SERVER_NAME: ${SERVER_NAME:-Nex Stationeers}
+      SERVER_PASSWORD: ${JOIN_PASSWORD}
+      AUTH_SECRET: ${AUTH_SECRET}
+    expose:
+      - 27016/tcp
+      - 27016/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/steam/stationeers_server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

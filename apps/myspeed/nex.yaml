@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MySpeed
+  summary: Record recurring internet speed test results
+  description: Set the speed-test schedule and interval to match available bandwidth. Keep dashboard
+    access restricted to your intended clients.
+  category: monitoring
+  website: https://github.com/gnmyt/myspeed
+  source: https://github.com/gnmyt/myspeed
+  docs: https://github.com/gnmyt/myspeed
+  primary_service: myspeed
+  scalable: false
+  license: MIT
+  web:
+    port: 5216
+  options:
+    DATA:
+      label: Speed-test history
+      help: MySpeed configuration and recorded measurements.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5216.
+services:
+  myspeed:
+    image: docker.io/germannewsmaker/myspeed:latest
+    volumes:
+    - ${DATA}:/myspeed/data
+    ports:
+    - ${PORT:-5216}:5216/tcp
+    deploy:
+      replicas: 1

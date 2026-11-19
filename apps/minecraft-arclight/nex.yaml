@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Arclight
+  summary: Host Forge mods and compatible Bukkit plugins together
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Includes the Arclight
+    FeudalKings Forge release for Minecraft 1.21.1. Check Arclight’s compatibility for the mods and
+    plugins you install. Make a stopped backup before applying updates.
+  category: games
+  website: https://github.com/IzzelAliz/Arclight
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/server-types/hybrids/#arclight
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-arclight:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: CUSTOM
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: 1.21.1
+      HYBRIDTYPE: forge
+      CUSTOM_SERVER: https://github.com/IzzelAliz/Arclight/releases/download/FeudalKings/1.0.1/arclight-forge-1.21.1-1.0.1-8ec9529.jar
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

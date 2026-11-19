@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Folia
+  summary: Run a region-threaded Minecraft Java Edition server
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Use plugins that
+    explicitly support Folia’s region scheduler. Make a stopped backup before applying updates.
+  category: games
+  website: https://papermc.io/software/folia
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/server-types/paper/#folia
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64, riscv64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    MC_VERSION:
+      label: Minecraft version
+      help: >-
+        Choose a release supported by this server and its Java runtime. Match your clients to the
+        server version.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-folia:
+    image: ghcr.io/itzg/minecraft-server:latest
+    environment:
+      EULA: ${EULA}
+      TYPE: FOLIA
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: ${MC_VERSION:-26.3}
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

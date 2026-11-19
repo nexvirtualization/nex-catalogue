@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wizarr
+  summary: Create invitations for media library accounts
+  description: Create the Wizarr administrator first, then connect Jellyfin or another supported media
+    server. Set the public address to the client-reachable HTTPS URL used in invitations.
+  category: media
+  website: https://docs.wizarr.dev/
+  source: https://github.com/wizarrrr/wizarr
+  docs: https://docs.wizarr.dev/
+  scalable: false
+  primary_service: wizarr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: wizarr
+    scheme: http
+    port: 5690
+  works_with:
+  - jellyfin
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5690.
+    DATA:
+      label: Invitation data
+      help: Select This host. Stores the invite database, settings and server integrations. Include this
+        folder in a stopped Nex backup.
+services:
+  wizarr:
+    image: ghcr.io/wizarrrr/wizarr:latest
+    environment:
+      DISABLE_BUILTIN_AUTH: 'false'
+    ports:
+    - ${PORT:-5690}:5690/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FreeSWITCH
+  summary: Route SIP calls through a prepared telephony configuration
+  description: Prepare a complete FreeSWITCH configuration with changed credentials before installing.
+    Select a registered Primary network reachable by authorized clients and configure its advertised SIP/RTP
+    addresses. Use a narrow media range suitable for your installation.
+  category: communication
+  website: https://freeswitch.org/
+  source: https://github.com/signalwire/freeswitch
+  docs: https://github.com/safarov/freeswitch-container
+  scalable: false
+  primary_service: freeswitch
+  architectures:
+  - amd64
+  options:
+    CONFIG:
+      label: Prepared telephony configuration
+      help: Select This host. Contains modules, users, dial plans, SIP profiles and media settings. Include
+        this folder in a stopped Nex backup.
+services:
+  freeswitch:
+    image: safarov/freeswitch:latest
+    command:
+    - freeswitch
+    - -nf
+    - -conf
+    - /settings
+    expose:
+    - 5060/tcp
+    - 5060/udp
+    volumes:
+    - ${CONFIG}:/settings:ro
+    deploy:
+      replicas: 1

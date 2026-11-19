@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hasura
+  summary: Serve GraphQL APIs for a prepared database
+  description: Provision PostgreSQL and use a trusted network for the administration console. Create
+    scoped application roles and review permissions before exposing a GraphQL API.
+  category: development
+  website: https://github.com/hasura/graphql-engine
+  source: https://github.com/hasura/graphql-engine
+  docs: https://hasura.io/docs/2.0/deployment/deployment-guides/docker/
+  primary_service: hasura
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    HASURA_GRAPHQL_METADATA_DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    HASURA_GRAPHQL_ADMIN_SECRET:
+      label: GraphQL administrator secret
+      type: password
+      help: Use Nex Generate and provide this secret when opening the console.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  hasura:
+    image: docker.io/hasura/graphql-engine:v2.48.4
+    environment:
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      HASURA_GRAPHQL_DEV_MODE: 'false'
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${HASURA_GRAPHQL_METADATA_DATABASE_URL}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET}
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

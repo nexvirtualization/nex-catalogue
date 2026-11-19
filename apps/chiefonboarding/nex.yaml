@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ChiefOnboarding
+  summary: Coordinate employee onboarding tasks
+  description: Prepare a PostgreSQL database and set the hostname used for the web interface. Open the
+    setup UI through HTTPS to complete onboarding configuration.
+  category: productivity
+  website: https://chiefonboarding.com
+  source: https://github.com/chiefonboarding/ChiefOnboarding
+  docs: https://github.com/chiefonboarding/ChiefOnboarding#readme
+  scalable: false
+  primary_service: chiefonboarding
+  architectures:
+  - amd64
+  web:
+    service: chiefonboarding
+    scheme: http
+    port: 8000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_DOMAIN:
+      label: Public Domain
+      help: Allowed DNS name for the web interface. Supply hostname only.
+    SESSION_SECRET:
+      label: Django signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+services:
+  chiefonboarding:
+    image: chiefonboarding/chiefonboarding:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${SESSION_SECRET}
+      ALLOWED_HOSTS: ${PUBLIC_DOMAIN}
+    ports:
+    - ${PORT:-8458}:8000/tcp
+    deploy:
+      replicas: 1

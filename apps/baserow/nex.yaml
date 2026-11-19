@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Baserow
+  summary: Build and share no-code databases
+  description: The all-in-one deployment includes a database and task runner. Set the public address to
+    the exact URL used to open Baserow. For remote use, terminate HTTPS at your reverse proxy and forward
+    to this app on internal port 80.
+  category: productivity
+  website: https://baserow.io/
+  source: https://gitlab.com/baserow/baserow
+  docs: https://baserow.io/docs/installation/install-with-docker
+  scalable: false
+  primary_service: baserow
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: baserow
+    scheme: http
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full address users will open, including scheme and port when needed.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Database and attachments
+      help: Select This host. Stores database and application state, media, and backups. Include this
+        folder in a stopped Nex backup.
+services:
+  baserow:
+    image: baserow/baserow:latest
+    environment:
+      BASEROW_PUBLIC_URL: ${PUBLIC_URL}
+      BASEROW_CADDY_ADDRESSES: :80
+    ports:
+    - ${PORT:-8145}:80/tcp
+    volumes:
+    - ${DATA}:/baserow/data
+    deploy:
+      replicas: 1

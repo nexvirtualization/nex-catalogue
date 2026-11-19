@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ferron
+  summary: Serve static content with a Rust web server
+  description: Use the upstream container to serve a prepared site. The site folder is read-only to Ferron.
+  category: development
+  website: https://ferron.sh/
+  source: https://github.com/ferronweb/ferron
+  docs: https://github.com/ferronweb/ferron
+  license: MIT
+  primary_service: ferron
+  architectures:
+  - amd64
+  - arm64
+  post_install: Place index.html and web assets in Website files. Use an HTTPS reverse proxy for external access.
+  web:
+    port: 80
+  options:
+    SITE:
+      label: Website files
+      help: Static content directory. Make the directory and its files readable to the server.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  ferron:
+    image: ghcr.io/ferronweb/ferron:latest
+    ports:
+    - ${PORT:-18127}:80/tcp
+    volumes:
+    - ${SITE}:/var/www/ferron:ro
+    deploy:
+      replicas: 1

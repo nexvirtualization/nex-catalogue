@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Fider
+  summary: Collect and prioritize feedback
+  description: Provision PostgreSQL and configure SMTP for sign-in and notifications. Finish the first site
+    setup in the browser.
+  category: productivity
+  website: https://fider.io
+  source: https://github.com/getfider/fider
+  docs: https://getfider.com/docs/hosting-instance
+  primary_service: fider
+  post_install: Provision PostgreSQL and configure SMTP for sign-in and notifications. Finish the first site
+    setup in the browser.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    JWT_SECRET:
+      label: Jwt secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  fider:
+    image: docker.io/getfider/fider:stable
+    ports:
+    - ${PORT:-23532}:3000/tcp
+    environment:
+      BASE_URL: ${PUBLIC_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      EMAIL_NOREPLY: ${FROM_EMAIL}
+      EMAIL_SMTP_HOST: ${SMTP_HOST}
+      EMAIL_SMTP_PORT: ${SMTP_PORT:-587}
+      EMAIL_SMTP_USERNAME: ${SMTP_USER}
+      EMAIL_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_SMTP_ENABLE_STARTTLS: 'true'
+    deploy:
+      replicas: 1

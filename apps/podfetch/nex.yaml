@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PodFetch
+  summary: Download, organize and play podcasts
+  description: Connect using a trusted HTTPS endpoint and the configured credentials. Set the public
+    URL for generated links.
+  category: media
+  website: https://github.com/SamTV12345/PodFetch
+  source: https://github.com/SamTV12345/PodFetch
+  docs: https://github.com/SamTV12345/PodFetch
+  primary_service: podfetch
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8000
+  options:
+    USERNAME:
+      label: Podcast administrator
+      help: Username for HTTP Basic authentication.
+    PASSWORD:
+      label: Podcast access password
+      type: password
+      help: Use Nex Generate.
+    BASE_URL:
+      label: Public web address
+      help: Fully qualified client-facing URL.
+    DATA:
+      label: Podcast database
+      help: Keep podcast database in this managed folder between restarts.
+    PODCASTS:
+      label: Episode downloads
+      help: Keep episode downloads in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  podfetch:
+    image: docker.io/samuel19982/podfetch:latest
+    environment:
+      DATABASE_URL: sqlite:///app/db/podcast.db
+      BASIC_AUTH: 'true'
+      USERNAME: ${USERNAME:-admin}
+      PASSWORD: ${PASSWORD}
+      SERVER_URL: ${BASE_URL}
+      GPODDER_INTEGRATION_ENABLED: 'false'
+    volumes:
+    - ${DATA}:/app/db
+    - ${PODCASTS}:/app/podcasts
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

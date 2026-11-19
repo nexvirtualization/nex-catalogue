@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kanboard
+  summary: Manage tasks on visual Kanban boards
+  description: Sign in on a trusted network with the upstream admin account and immediately replace
+    its password before sharing access.
+  category: productivity
+  website: https://github.com/kanboard/kanboard
+  source: https://github.com/kanboard/kanboard
+  docs: https://docs.kanboard.org/v1/admin/docker/
+  primary_service: kanboard
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Projects and attachments
+      help: Kanboard database, uploaded files and configuration.
+    PLUGINS:
+      label: Kanboard plugins
+      help: Only install extensions that you trust.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  kanboard:
+    image: docker.io/kanboard/kanboard:latest
+    volumes:
+    - ${DATA}:/var/www/app/data
+    - ${PLUGINS}:/var/www/app/plugins
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

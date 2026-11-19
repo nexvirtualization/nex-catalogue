@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Budget Board
+  summary: Track transactions, budgets, and personal spending
+  description: Provision PostgreSQL. Open the site on a trusted HTTPS address and register the configured
+    bootstrap user. Disable new users after setup for private use.
+  category: finance
+  website: https://budgetboard.net/
+  source: https://github.com/teelur/budget-board
+  docs: https://github.com/teelur/budget-board/blob/main/compose.yml
+  primary_service: budget-board
+  post_install: Provision PostgreSQL. Open the site on a trusted HTTPS address and register the configured
+    bootstrap user. Disable new users after setup for private use.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 6253
+  options:
+    DISABLE_SIGNUP:
+      label: Disable signup
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_USER:
+      label: Admin user
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 6253 inside Nex.
+services:
+  budget-board:
+    image: ghcr.io/teelur/budget-board/client:v3
+    ports:
+    - ${PORT:-23554}:6253/tcp
+    environment:
+      PORT: '6253'
+      VITE_SERVER_ADDRESS: budget-board-server
+      VITE_OIDC_ENABLED: 'false'
+      VITE_DISABLE_NEW_USERS: ${DISABLE_SIGNUP:-false}
+    deploy:
+      replicas: 1
+  budget-board-server:
+    image: ghcr.io/teelur/budget-board/server:v3
+    environment:
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DATABASE: ${DB_NAME:-budgetboard}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      SUPERUSER_BOOTSTRAP_USERNAME: ${ADMIN_USER}
+      CLIENT_ADDRESS: budget-board
+      ASPNETCORE_HTTP_PORTS: '8080'
+      AUTO_UPDATE_DB: 'true'
+      OIDC_ENABLED: 'false'
+      DISABLE_NEW_USERS: ${DISABLE_SIGNUP:-false}
+    deploy:
+      replicas: 1

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Backrest
+  summary: Schedule and monitor Restic backups
+  description: Backrest can back up the selected managed source folder to a configured Restic repository.
+    The selected source is mounted read-only.
+  category: management
+  website: https://garethgeorge.github.io/backrest
+  source: https://github.com/garethgeorge/backrest
+  docs: https://github.com/garethgeorge/backrest
+  primary_service: backrest
+  post_install: Set up a local or remote repository, then create a backup plan for /userdata. Keep your repository
+    password outside the backups and test a restore.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9898
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9898 inside Nex.
+    DATA:
+      label: Backup job state
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+    CONFIG:
+      label: Backrest configuration
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    CACHE:
+      label: Cache
+      help: Managed directory mounted at /cache. Choose storage writable by the application.
+    SOURCE:
+      label: Backup source
+      help: Managed directory mounted at /userdata. Choose storage readable by the application.
+    REPOS:
+      label: Local backup repositories
+      help: Managed directory mounted at /repos. Choose storage writable by the application.
+services:
+  backrest:
+    image: ghcr.io/garethgeorge/backrest:latest
+    ports:
+    - ${PORT:-20251}:9898/tcp
+    volumes:
+    - ${DATA}:/data
+    - ${CONFIG}:/config
+    - ${CACHE}:/cache
+    - ${SOURCE}:/userdata:ro
+    - ${REPOS}:/repos
+    environment:
+      BACKREST_DATA: /data
+      BACKREST_CONFIG: /config/config.json
+      XDG_CACHE_HOME: /cache
+    deploy:
+      replicas: 1

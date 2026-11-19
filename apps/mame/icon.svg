@@ -1,0 +1,6 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="13" fill="#553f1e"/>
+  <path d="M11 49h42" stroke="#fce0a4" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+  <text x="32" y="39" text-anchor="middle" fill="#fce0a4" font-family="sans-serif" font-size="24" font-weight="700">MA</text>
+</svg>

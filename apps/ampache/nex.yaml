@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ampache
+  summary: Stream a music and video library through Ampache
+  description: Use the bundled image with its local database. The read-only library folder stays separate
+    from database and app configuration.
+  category: media
+  website: https://ampache.org/
+  source: https://github.com/ampache/ampache
+  docs: https://ampache.org/
+  primary_service: ampache
+  post_install: Run the installer on a trusted network. Add /media as a catalog source and set your initial
+    login before opening the service to other clients.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    CONFIG:
+      label: Ampache configuration
+      help: Managed directory mounted at /var/www/config. Choose storage writable by the application.
+    DB:
+      label: Music catalog database
+      help: Managed directory mounted at /var/lib/mysql. Choose storage writable by the application.
+    MEDIA:
+      label: Music and video library
+      help: Managed directory mounted at /media. Choose storage readable by the application.
+services:
+  ampache:
+    image: docker.io/ampache/ampache:latest
+    ports:
+    - ${PORT:-20227}:80/tcp
+    volumes:
+    - ${CONFIG}:/var/www/config
+    - ${DB}:/var/lib/mysql
+    - ${MEDIA}:/media:ro
+    deploy:
+      replicas: 1

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ryot
+  summary: Track media, exercise and personal activity
+  description: Create a PostgreSQL database and install Ryot. Protect the management interface with HTTPS
+    and use the supplied administrator access token for supported administrative functions.
+  category: productivity
+  website: https://github.com/ignisda/ryot
+  source: https://github.com/ignisda/ryot
+  docs: https://docs.ryot.io/
+  scalable: false
+  primary_service: ryot
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: ryot
+    scheme: http
+    port: 8000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    ADMIN_ACCESS_TOKEN:
+      label: Administrator access token
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+services:
+  ryot:
+    image: ignisda/ryot:v10
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SERVER_ADMIN_ACCESS_TOKEN: ${ADMIN_ACCESS_TOKEN}
+    ports:
+    - ${PORT:-8425}:8000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Restreamer
+  summary: Manage live network video inputs and outputs
+  description: Complete the Restreamer account wizard. Use network-accessible ingest sources or the
+    managed RTMP port. This profile runs without local camera devices or hardware transcoding.
+  category: media
+  website: https://github.com/datarhei/restreamer
+  source: https://github.com/datarhei/restreamer
+  docs: https://docs.datarhei.com/restreamer/installing
+  primary_service: restreamer
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    CONFIG:
+      label: Restreamer configuration
+      help: Application settings and stream definitions.
+    DATA:
+      label: Restreamer data
+      help: Persistent stream application data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    RTMP_PORT:
+      label: RTMP ingest port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1935.
+services:
+  restreamer:
+    image: docker.io/datarhei/restreamer:latest
+    volumes:
+    - ${CONFIG}:/core/config
+    - ${DATA}:/core/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${RTMP_PORT:-1935}:1935/tcp
+    deploy:
+      replicas: 1

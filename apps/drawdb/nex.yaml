@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: drawDB
+  summary: Draw database schemas and generate SQL from a browser
+  description: This profile serves the static diagram editor. Save or export diagrams from your browser.
+    Cross-user sharing requires a separately configured backend.
+  category: development
+  website: https://github.com/drawdb-io/drawdb
+  source: https://github.com/drawdb-io/drawdb
+  docs: https://github.com/drawdb-io/drawdb
+  primary_service: drawdb
+  scalable: true
+  license: AGPL-3.0
+  scale:
+  - drawdb
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  drawdb:
+    image: ghcr.io/drawdb-io/drawdb:latest
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: QloApps
+  summary: Host a hotel booking and reservation website
+  description: Run the web installer on a trusted network using the setup guidance for the upstream image.
+    Complete hotel configuration before publishing to guests via an HTTPS reverse proxy.
+  category: productivity
+  website: https://qloapps.com/
+  source: https://github.com/Qloapps/QloApps
+  docs: https://hub.docker.com/r/webkul/qloapps_docker
+  scalable: false
+  primary_service: qloapps
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: qloapps
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Hotel website
+      help: Select This host. Stores booking files, themes and application configuration. Include this
+        folder in a stopped Nex backup.
+    DB_DATA:
+      label: Hotel database
+      help: Select This host. Stores the bundled database when using the upstream all-in-one image. Include
+        this folder in a stopped Nex backup.
+services:
+  qloapps:
+    image: webkul/qloapps_docker:latest
+    ports:
+    - ${PORT:-8870}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    - ${DB_DATA}:/var/lib/mysql
+    deploy:
+      replicas: 1

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kavita
+  summary: Read ebooks, manga and comics in a browser
+  description: Kavita scans the selected library folder and stores accounts and reading progress separately.
+  category: reading
+  website: https://www.kavitareader.com/
+  source: https://github.com/Kareadita/Kavita
+  docs: https://wiki.kavitareader.com/installation/docker/
+  primary_service: kavita
+  post_install: Create the first administrator, then add /library as a library. Use a share for existing
+    content.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 5000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 5000 inside Nex.
+    CONFIG:
+      label: Accounts and reading progress
+      help: Managed directory mounted at /kavita/config. Choose storage writable by the application.
+    LIBRARY:
+      label: Book library
+      help: Managed directory mounted at /library. Choose storage readable by the application.
+services:
+  kavita:
+    image: ghcr.io/kareadita/kavita:latest
+    ports:
+    - ${PORT:-20192}:5000/tcp
+    volumes:
+    - ${CONFIG}:/kavita/config
+    - ${LIBRARY}:/library:ro
+    deploy:
+      replicas: 1

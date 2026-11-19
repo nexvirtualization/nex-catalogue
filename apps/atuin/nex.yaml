@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Atuin Server
+  summary: Synchronize shell history across Atuin clients
+  description: Provision PostgreSQL first. Connect Atuin clients to the HTTPS route with this server’s
+    connection address. Registration is open for first account setup. Disable it in Nex Settings after
+    adding your accounts.
+  category: development
+  website: https://atuin.sh/
+  source: https://github.com/atuinsh/atuin
+  docs: https://docs.atuin.sh/self-hosting/usage/
+  scalable: false
+  primary_service: atuin
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: atuin
+    scheme: http
+    port: 8888
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    ALLOW_REGISTRATION:
+      label: Allow Registration
+      help: Set false after creating your last user. Existing accounts continue to sync.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8888.
+services:
+  atuin:
+    image: ghcr.io/atuinsh/atuin:latest
+    environment:
+      ATUIN_DB_URI: ${DATABASE_URL}
+      ATUIN_HOST: 0.0.0.0
+      ATUIN_PORT: '8888'
+      ATUIN_OPEN_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+    command:
+    - server
+    - start
+    ports:
+    - ${PORT:-8433}:8888/tcp
+    deploy:
+      replicas: 1

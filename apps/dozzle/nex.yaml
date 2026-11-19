@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dozzle
+  summary: View logs from remote container agents
+  description: Connect to an existing Dozzle agent on a trusted private network. Use an authenticating
+    HTTPS proxy for browser access. This profile reads remote logs through Dozzle rather than mounting
+    a host Docker socket.
+  category: monitoring
+  website: https://dozzle.dev/
+  source: https://github.com/amir20/dozzle
+  docs: https://dozzle.dev/guide/agent
+  scalable: false
+  primary_service: dozzle
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: dozzle
+    scheme: http
+    port: 8080
+  options:
+    AGENT_ADDRESS:
+      label: Agent Address
+      help: Remote Dozzle agent host and port, or a comma-separated list of agents.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    environment:
+      DOZZLE_REMOTE_AGENT: ${AGENT_ADDRESS}
+      DOZZLE_NO_ANALYTICS: 'true'
+      DOZZLE_ENABLE_ACTIONS: 'false'
+    ports:
+    - ${PORT:-8783}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mage
+  summary: Build and schedule data pipelines from a browser workspace
+  description: Keep the Mage workspace on a trusted network or behind an authenticating HTTPS proxy.
+    Editors can execute project code within this app.
+  category: development
+  website: https://github.com/mage-ai/mage-ai
+  source: https://github.com/mage-ai/mage-ai
+  docs: https://docs.mage.ai/getting-started/setup
+  primary_service: mage-ai
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 6789
+  options:
+    DATA:
+      label: Data pipelines and workspace
+      help: Mage projects, code and runtime data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6789.
+services:
+  mage-ai:
+    image: docker.io/mageai/mageai:latest
+    command:
+    - mage
+    - start
+    - nex_project
+    volumes:
+    - ${DATA}:/home/src
+    ports:
+    - ${PORT:-6789}:6789/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Lowcoder
+  summary: Build internal dashboards and forms
+  description: The all-in-one Community Edition. Complete initial account setup on a trusted network and
+    review who can register before sharing the instance. Back up the database stack before upgrading.
+  category: development
+  website: https://www.lowcoder.cloud/
+  source: https://github.com/lowcoder-org/lowcoder
+  docs: https://docs.lowcoder.cloud/lowcoder-documentation/
+  scalable: false
+  primary_service: lowcoder
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: lowcoder
+    scheme: http
+    port: 3000
+  options:
+    ENCRYPTION_PASSWORD:
+      label: Database encryption password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ENCRYPTION_SALT:
+      label: Database encryption salt
+      help: Use Generate for a stable random salt. Keep it with the password in a protected backup.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Application stack data
+      help: Select This host. Holds the embedded databases, server state and application configuration.
+        Include this folder in a stopped Nex backup.
+services:
+  lowcoder:
+    image: lowcoderorg/lowcoder-ce:latest
+    environment:
+      LOWCODER_DB_ENCRYPTION_PASSWORD: ${ENCRYPTION_PASSWORD}
+      LOWCODER_DB_ENCRYPTION_SALT: ${ENCRYPTION_SALT}
+    ports:
+    - ${PORT:-8179}:3000/tcp
+    volumes:
+    - ${DATA}:/lowcoder-stacks
+    deploy:
+      replicas: 1

@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Syncthing
+  summary: Synchronize files privately between your devices
+  description: Peer-to-peer file synchronization using persistent device identities. One Nex folder contains configuration,
+    index and synchronized files; the upstream entrypoint initializes its ownership. This package exposes TCP transfers;
+    configure peers explicitly with the reachable app address and TCP port. Set a GUI password immediately. One
+    copy only. In Nex, keep one chosen host when using This host folders; local data has no automatic host failover.
+  category: productivity
+  website: https://syncthing.net
+  source: https://github.com/syncthing/syncthing
+  license: MPL-2.0
+  scalable: false
+  tags:
+  - sync
+  - files
+  - backup
+  options:
+    PUID:
+      label: User ID
+      help: Numeric UID for the application. The upstream image initializes the root of its dedicated Data folder
+        to this UID; existing share exports must permit this access.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application. The dedicated Data folder is initialized by the upstream image; existing
+        files and NAS export permissions must allow this group access.
+    PORT:
+      label: Web port
+      help: Published HTTP port for the administration UI. Set GUI authentication and HTTPS in Syncthing settings
+        before granting other users access. With Network → Docker and host publishing enabled, use the chosen host
+        web port. On a registered VLAN or private Primary network with its own address, use that address and internal
+        port 8384; host publishing is a separate switch.
+    SYNC_PORT:
+      label: TCP synchronization port
+      help: Host-published TCP port mapped to internal 22000. For Network → Docker, set peer tcp://HOST:PORT using
+        this published port. With an own address on a registered VLAN/private Primary network, use tcp://APP_ADDRESS:22000.
+        No UDP/QUIC or multicast discovery publication is included.
+    DATA:
+      label: Device settings and synchronized files
+      help: Persistent /var/syncthing contains config (device identity, settings and index) and Sync (default synchronized
+        folder). Start with This host; the image initializes the folder owner. Back up the complete folder to preserve
+        identity and data. In the Syncthing UI use /var/syncthing/Sync or subfolders; in Nex File Browser choose
+        this app folder.
+  primary_service: syncthing
+services:
+  syncthing:
+    image: syncthing/syncthing:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      STGUIADDRESS: 0.0.0.0:8384
+    ports:
+    - ${PORT:-8384}:8384/tcp
+    - ${SYNC_PORT:-22000}:22000/tcp
+    volumes:
+    - ${DATA}:/var/syncthing
+    deploy:
+      replicas: 1

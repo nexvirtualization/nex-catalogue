@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Discount Bandit
+  summary: Track product prices and stock across retailers
+  description: Discount Bandit keeps watches and price history in a managed SQLite folder.
+  category: finance
+  website: https://discount-bandit.cybrarist.com/
+  source: https://github.com/Cybrarist/Discount-Bandit
+  docs: https://discount-bandit.cybrarist.com/installation/
+  primary_service: discount-bandit
+  post_install: Use the HTTPS origin configured in the package. Create the first account on a trusted network,
+    then add watched products.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    APP_URL:
+      label: Public URL
+      help: Full browser-facing URL including HTTPS scheme.
+    APP_KEY:
+      label: Laravel application key
+      help: Generate a Laravel base64 application key and keep it with your backup.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Product watches and price history
+      help: Managed directory mounted at /app/database/sqlite. Choose storage writable by the application.
+    LOGS:
+      label: Application logs
+      help: Managed directory mounted at /logs. Choose storage writable by the application.
+services:
+  discount-bandit:
+    image: docker.io/cybrarist/discount-bandit:latest
+    ports:
+    - ${PORT:-20249}:80/tcp
+    volumes:
+    - ${DATA}:/app/database/sqlite
+    - ${LOGS}:/logs
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /app/database/sqlite/database.sqlite
+      APP_URL: ${APP_URL}
+      ASSET_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+    deploy:
+      replicas: 1

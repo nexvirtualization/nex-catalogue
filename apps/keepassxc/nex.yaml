@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: KeePassXC
+  summary: Open and manage password databases in a private browser desktop
+  description: Open the HTTPS desktop from a trusted network, then open a KDBX file from the database
+    folder. Use a strong desktop password and the database’s own master password. Keep remote access behind
+    an authenticated HTTPS proxy.
+  category: tools
+  website: https://keepassxc.org/
+  source: https://github.com/keepassxreboot/keepassxc
+  docs: https://docs.linuxserver.io/images/docker-keepassxc/
+  scalable: false
+  primary_service: keepassxc
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: keepassxc
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    DATABASES:
+      label: Encrypted KDBX files
+      help: Select This host. Holds the database files you choose to open. Include this folder in a stopped
+        Nex backup.
+services:
+  keepassxc:
+    image: lscr.io/linuxserver/keepassxc:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8166}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${DATABASES}:/databases
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

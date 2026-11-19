@@ -1,0 +1,7 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="15" fill="#653b32"/>
+  <path d="M9 12h46M9 52h46" stroke="#fff2df" stroke-opacity=".26" stroke-width="2"/>
+  <path d="M23 52h18" stroke="#fff2df" stroke-width="2"/>
+  <text x="32" y="38" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="22" fill="#fff2df">BI</text>
+</svg>

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tuwunel
+  summary: Host Matrix messages with Tuwunel
+  description: This profile stores accounts and room data on one host. Clients connect through a publicly
+    recognizable Matrix server name.
+  category: communication
+  website: https://tuwunel.chat
+  source: https://github.com/matrix-construct/tuwunel
+  docs: https://tuwunel.chat/
+  primary_service: tuwunel
+  post_install: Map the public HTTPS hostname to the application and configure Matrix discovery as documented.
+    Use the registration token to create initial users.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 6167
+  options:
+    SERVER_NAME:
+      label: Matrix server name
+      help: A hostname used in Matrix user IDs. It should remain stable.
+    REGISTRATION_TOKEN:
+      label: Registration token
+      help: Choose a strong token to restrict creation of new accounts.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 6167 inside Nex.
+    DATA:
+      label: Matrix database
+      help: Managed directory mounted at /var/lib/tuwunel. Choose storage writable by the application.
+services:
+  tuwunel:
+    image: ghcr.io/matrix-construct/tuwunel:latest
+    ports:
+    - ${PORT:-20233}:6167/tcp
+    volumes:
+    - ${DATA}:/var/lib/tuwunel
+    environment:
+      TUWUNEL_SERVER_NAME: ${SERVER_NAME}
+      TUWUNEL_ADDRESS: 0.0.0.0
+      TUWUNEL_PORT: '6167'
+      TUWUNEL_ALLOW_REGISTRATION: 'true'
+      TUWUNEL_REGISTRATION_TOKEN: ${REGISTRATION_TOKEN}
+      TUWUNEL_DATABASE_PATH: /var/lib/tuwunel
+    deploy:
+      replicas: 1

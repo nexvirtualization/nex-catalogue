@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Memcached
+  summary: Cache application data in memory
+  description: Use this memory-only cache from other Nex applications. One copy holds one independent cache.
+    The deployment does not expose this service through host port publishing.
+  category: development
+  website: https://memcached.org/
+  source: https://github.com/memcached/memcached
+  docs: https://docs.memcached.org/serverguide/
+  license: BSD-3-Clause
+  primary_service: memcached
+  architectures:
+  - amd64
+  - arm64
+  post_install: Connect a client over the Nex application network using the app connection name and TCP port
+    11211. Keep Memcached on a trusted network. Cache entries disappear on restart.
+  options:
+    CACHE_MIB:
+      label: Cache size in MiB
+      help: Memory budget for cache entries. The process also needs overhead memory. Default is 64 MiB.
+services:
+  memcached:
+    image: docker.io/library/memcached:latest
+    command:
+    - memcached
+    - -m
+    - ${CACHE_MIB:-64}
+    - -U
+    - '0'
+    deploy:
+      replicas: 1

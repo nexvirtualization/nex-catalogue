@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Conduit
+  summary: Host a lightweight Matrix server
+  description: Conduit stores local Matrix accounts and rooms on one host. The server name must match the
+    Matrix identity used by clients.
+  category: communication
+  website: https://conduit.rs/
+  source: https://gitlab.com/famedly/conduit
+  docs: https://docs.conduit.rs/deploying/docker.html
+  primary_service: matrix-conduit
+  post_install: Route the chosen Matrix hostname over HTTPS. Set up Matrix discovery and use the configured
+    token to allow initial account registration.
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 6167
+  options:
+    SERVER_NAME:
+      label: Matrix server name
+      help: Stable public hostname for Matrix user IDs.
+    REGISTRATION_TOKEN:
+      label: Registration token
+      help: Token required to register new users.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 6167 inside Nex.
+    DATA:
+      label: Conduit database
+      help: Managed directory mounted at /var/lib/matrix-conduit. Choose storage writable by the application.
+services:
+  matrix-conduit:
+    image: registry.gitlab.com/famedly/conduit/matrix-conduit:latest
+    ports:
+    - ${PORT:-20247}:6167/tcp
+    volumes:
+    - ${DATA}:/var/lib/matrix-conduit
+    environment:
+      CONDUIT_SERVER_NAME: ${SERVER_NAME}
+      CONDUIT_DATABASE_PATH: /var/lib/matrix-conduit
+      CONDUIT_DATABASE_BACKEND: rocksdb
+      CONDUIT_PORT: '6167'
+      CONDUIT_ADDRESS: 0.0.0.0
+      CONDUIT_ALLOW_REGISTRATION: 'true'
+      CONDUIT_REGISTRATION_TOKEN: ${REGISTRATION_TOKEN}
+      CONDUIT_CONFIG: ''
+    deploy:
+      replicas: 1

@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Windmill
+  summary: Build private workflows and internal scripts
+  description: Provision PostgreSQL and keep the deployment on trusted infrastructure. Complete ownership
+    setup and restrict workflow authoring to trusted users.
+  category: development
+  website: https://github.com/windmill-labs/windmill
+  source: https://github.com/windmill-labs/windmill
+  docs: https://www.windmill.dev/docs/advanced/self_host
+  primary_service: windmill
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  windmill:
+    image: ghcr.io/windmill-labs/windmill:latest
+    environment:
+      MODE: server
+      DATABASE_URL: ${DATABASE_URL}
+      BASE_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/windmill-labs/windmill:latest
+    environment:
+      MODE: worker
+      DATABASE_URL: ${DATABASE_URL}
+    deploy:
+      replicas: 1

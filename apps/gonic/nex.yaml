@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: gonic
+  summary: Lightweight music streaming server
+  description: Lightweight music streaming server. Subsonic compatible.
+  category: media
+  source: https://github.com/sentriz/gonic
+  website: https://github.com/sentriz/gonic
+  docs: https://github.com/sentriz/gonic#docker
+  primary_service: gonic
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    MUSIC:
+      label: Music folder
+      help: Choose the Nex-managed folder mounted at /music.
+    PORT:
+      label: Published 4747/tcp port
+      help: Host port for application listener 4747/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Mount your music folder as a Nex share and scan it in the administration UI. Replace the upstream
+    initial administrator credentials before remote access.
+  web:
+    port: 4747
+services:
+  gonic:
+    image: docker.io/sentriz/gonic:latest
+    deploy:
+      replicas: 1
+    environment:
+      GONIC_MUSIC_PATH: /music
+      GONIC_DB_PATH: /data/gonic.db
+    volumes:
+    - ${DATA}:/data
+    - ${MUSIC}:/music:ro
+    ports:
+    - ${PORT:-19945}:4747/tcp

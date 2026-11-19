@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open-Meteo
+  summary: Serve forecasts from synchronized weather datasets
+  description: Select one host with sufficient storage for imported weather data. The companion synchronizes
+    the upstream ICON temperature dataset. Forecast requests are populated after synchronization completes.
+    Follow upstream instructions to add more models and variables.
+  category: tools
+  website: https://open-meteo.com/
+  source: https://github.com/open-meteo/open-meteo
+  docs: https://github.com/open-meteo/open-meteo/blob/main/docker-compose.yml
+  scalable: false
+  primary_service: open-meteo
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: open-meteo
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Weather datasets
+      help: Select This host. Stores downloaded forecast data and indexes. Include this folder in a stopped
+        Nex backup.
+services:
+  open-meteo:
+    image: ghcr.io/open-meteo/open-meteo:latest
+    user: '0'
+    environment:
+      LOG_LEVEL: info
+    command:
+    - serve
+    - --env
+    - production
+    - --hostname
+    - 0.0.0.0
+    - --port
+    - '8080'
+    ports:
+    - ${PORT:-8888}:8080/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1
+  sync:
+    image: ghcr.io/open-meteo/open-meteo:latest
+    command:
+    - sync
+    - dwd_icon
+    - temperature_2m
+    - --past-days
+    - '2'
+    - --repeat-interval
+    - '1'
+    - --concurrent
+    - '1'
+    environment:
+      LOG_LEVEL: info
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

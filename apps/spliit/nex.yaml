@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Spliit
+  summary: Split expenses and track group balances
+  description: Create a PostgreSQL database and grant the application user permission to run migrations.
+    Configure an HTTPS route limited to intended groups if sensitive expenditure is entered.
+  category: finance
+  website: https://spliit.app/
+  source: https://github.com/spliit-app/spliit
+  docs: https://github.com/spliit-app/spliit#run-with-docker-compose
+  scalable: false
+  primary_service: spliit
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: spliit
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  spliit:
+    image: ghcr.io/spliit-app/spliit:latest
+    environment:
+      POSTGRES_PRISMA_URL: ${DATABASE_URL}
+      POSTGRES_URL_NON_POOLING: ${DATABASE_URL}
+    ports:
+    - ${PORT:-8460}:3000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Modrinth
+  summary: Install a Java Edition modpack from Modrinth
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Add the app’s Primary address on TCP 25565 in Java Edition. Choose a modpack with a dedicated-server
+    release for Minecraft 1.21 and Java 21, then install that same pack and release in your client.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://modrinth.com/modpacks
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/mod-platforms/modrinth-modpacks/
+  license: Minecraft EULA and upstream server license
+  architectures:
+    - amd64
+    - arm64
+  tags:
+    - minecraft
+    - sandbox
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    MODPACK:
+      label: Modrinth modpack
+      help: Enter the Modrinth project slug or exact modpack release URL.
+    DATA:
+      label: World, extensions and settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  minecraft-modrinth:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: MODRINTH
+      MEMORY: 3G
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      MODRINTH_MODPACK: ${MODPACK}
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

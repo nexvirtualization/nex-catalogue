@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: autobrr
+  summary: Send matched indexer releases to your download clients
+  description: Create a login in the web UI on a trusted network, then add your indexer and download client.
+    Use Nex application DNS names and internal client ports for services on the Nex app network.
+  category: downloads
+  website: https://autobrr.com/introduction
+  source: https://github.com/autobrr/autobrr
+  docs: https://autobrr.com/installation/docker
+  scalable: false
+  primary_service: autobrr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: autobrr
+    scheme: http
+    port: 7474
+  works_with:
+  - qbittorrent
+  - sonarr
+  - radarr
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for logs and scheduled events.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7474.
+    DATA:
+      label: autobrr configuration
+      help: Select This host. Holds the SQLite database, application configuration and indexer credentials.
+        Include this folder in a stopped Nex backup.
+services:
+  autobrr:
+    image: ghcr.io/autobrr/autobrr:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-7474}:7474/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

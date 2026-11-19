@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AssaultCube
+  summary: Host multiplayer AssaultCube matches
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the matching 1.3.0.2 client and direct connect to the app’s Primary address on UDP 28763. UDP
+    28764 serves information queries. This server starts unlisted. With the app stopped, use config/serverpwd.cfg
+    in the managed folder to set a unique game administrator password and edit the map rotation in
+    config/maprot.cfg.
+  category: games
+  website: https://assault.cubers.net/
+  source: https://github.com/assaultcube/AC
+  docs: https://assault.cubers.net/docs/server.html
+  license: Zlib server code with separately licensed game media
+  architectures:
+  - amd64
+  tags:
+  - fps
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  assaultcube:
+    image: ghcr.io/ptero-eggs/yolks:debian
+    expose:
+    - 28763/udp
+    - 28764/udp
+    volumes:
+    - ${DATA}:/home/container
+    user: 1000:1000
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      download() {
+        local url="$$1" sha256="$$2" target="$$3"
+        curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
+        printf '%s  %s\n' "$$sha256" "$$target" | sha256sum --check --status || {
+          echo "The server download did not match the release checksum." >&2
+          return 1
+        }
+      }
+
+
+      cd "$$HOME"
+      if [ ! -x ./bin_unix/linux_64_server ]; then
+        staging=$$(mktemp -d ./.assaultcube-install.XXXXXX)
+        trap 'rm -rf "$$staging"' EXIT
+        download https://github.com/assaultcube/AC/releases/download/v1.3.0.2/AssaultCube_v1.3.0.2_LockdownEdition_RC1.tar.bz2 \
+          9b3118e7929253f0114fa06cad8310faab646d177b4660406011152f34086b55 "$$staging/release.tar.bz2"
+        mkdir -p "$$staging/files" bin_unix
+        tar -xjf "$$staging/release.tar.bz2" -C "$$staging/files" ./bin_unix/linux_64_server ./config ./packages
+        cp -Rn "$$staging/files/config" "$$staging/files/packages" ./
+        chmod 755 "$$staging/files/bin_unix/linux_64_server"
+        mv "$$staging/files/bin_unix/linux_64_server" ./bin_unix/linux_64_server
+        rm -rf "$$staging"
+        trap - EXIT
+      fi
+      exec ./bin_unix/linux_64_server -f28763 -mlocalhost
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

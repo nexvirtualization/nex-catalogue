@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BookLore
+  summary: Organizes ebooks and comics for browsing, reading, metadata editing, and device delivery
+  description: Organizes ebooks and comics for browsing, reading, metadata editing, and device delivery.
+  category: reading
+  source: https://github.com/booklore-app/booklore
+  website: https://github.com/booklore-app/booklore
+  docs: https://booklore.org/docs/installation/
+  primary_service: booklore
+  options:
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /app/data.
+    BOOKS:
+      label: Books folder
+      help: Choose the Nex-managed folder mounted at /books.
+    BOOKDROP:
+      label: Bookdrop folder
+      help: Choose the Nex-managed folder mounted at /bookdrop.
+    PORT:
+      label: Published 6060/tcp port
+      help: Host port for application listener 6060/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a MariaDB database and user before installing. Complete the first-user setup, then
+    add the Books folder as a library.
+  web:
+    port: 6060
+services:
+  booklore:
+    image: ghcr.io/booklore-app/booklore:latest
+    deploy:
+      replicas: 1
+    environment:
+      DATABASE_URL: jdbc:mariadb://${DB_HOST}:${DB_PORT:-3306}/${DB_NAME:-booklore}
+      DATABASE_USERNAME: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DATA}:/app/data
+    - ${BOOKS}:/books
+    - ${BOOKDROP}:/bookdrop
+    ports:
+    - ${PORT:-19472}:6060/tcp

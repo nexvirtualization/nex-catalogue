@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: DailyTxT
+  summary: Keep a private diary in your browser
+  description: DailyTxT keeps journal entries and server configuration in a single managed folder.
+  category: productivity
+  website: https://github.com/PhiTux/DailyTxT
+  source: https://github.com/PhiTux/DailyTxT
+  docs: https://github.com/PhiTux/DailyTxT
+  primary_service: dailytxt
+  post_install: Sign in to the admin panel with the configured password and use it to enable registration
+    for initial account setup. Disable registration when finished.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    SECRET_TOKEN:
+      label: Signing secret
+      help: Use a base64-encoded random 32-byte secret.
+      type: password
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Strong password for the administrator panel.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Journal entries and account data
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  dailytxt:
+    image: docker.io/phitux/dailytxt:latest
+    ports:
+    - ${PORT:-20241}:80/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      SECRET_TOKEN: ${SECRET_TOKEN}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ALLOW_REGISTRATION: 'false'
+    deploy:
+      replicas: 1

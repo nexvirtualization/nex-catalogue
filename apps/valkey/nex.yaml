@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Valkey
+  summary: Run a password-protected cache with append-only persistence
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 6379. Clients authenticate
+    as the default user. Use This host for persistent data and choose one eligible host. Swarm can restart
+    the process on that host.
+  category: development
+  website: https://valkey.io/docs/topics/persistence/
+  source: https://github.com/valkey-io/valkey
+  docs: https://valkey.io/docs/topics/persistence/
+  license: BSD-3-Clause
+  primary_service: valkey
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    ACCESS_PASSWORD:
+      label: Access password
+      help: Generate a password and configure it in each client. Changing it requires updating the clients.
+      type: password
+    DATA:
+      label: Persistent data
+      help: Choose This host and one eligible host. Back up the data before updating.
+services:
+  valkey:
+    image: docker.io/valkey/valkey:latest
+    ports:
+      - ${PORT:-6379}:6379/tcp
+    volumes:
+      - ${DATA}:/data
+    command:
+      - valkey-server
+      - --appendonly
+      - 'yes'
+      - --requirepass
+      - ${ACCESS_PASSWORD}
+    deploy:
+      replicas: 1

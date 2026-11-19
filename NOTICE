@@ -1,0 +1,43 @@
+Third-party artwork
+
+Application names and logos retain their upstream licences and trademarks.
+The catalogue licence covers original repository files.
+
+radarr       https://github.com/Radarr/Radarr/blob/b9afb26be5822fb3e28038f157ac1a0f85611c5b/Logo/Radarr.svg (GPL-3.0)
+sonarr       https://github.com/Sonarr/Sonarr/blob/c018578e4b79ee048575c02d7a8aa2b929e4b837/Logo/Sonarr.svg (GPL-3.0)
+prowlarr     https://github.com/Prowlarr/Prowlarr/blob/d2d1fc0e77664a94b8d3931b7f216eaafd234af4/Logo/Prowlarr.svg (GPL-3.0)
+lidarr       https://github.com/Lidarr/Lidarr/blob/28ab333eafa138a72319e4cd149c965e5a5af3b7/Logo/256.png (GPL-3.0)
+bazarr       https://github.com/morpheus65535/bazarr/blob/bfe4593b04caa16eb4a09c2a233777b0bd7723b6/frontend/public/images/pwa-512x512.png (GPL-3.0)
+qbittorrent  https://github.com/qbittorrent/qBittorrent/blob/d56ce79c99dfffcf43954b81142bc8e7cb81a429/dist/unix/menuicons/scalable/apps/qbittorrent.svg (GPL-2.0-or-later; assets GPL-3.0-or-later)
+sabnzbd      https://github.com/sabnzbd/sabnzbd/blob/b1d844d2d6043ca63fb7268b9945a8bb8705b58b/icons/logo-arrow.svg (GPL-2.0-or-later)
+gitea        https://github.com/go-gitea/gitea/blob/bf5c39b310f99b4254266bebee535d3730daba0a/assets/logo.svg (MIT)
+
+Additional artwork licences
+
+actual-budget         MIT
+adguard-home          GPL-3.0
+audiobookshelf        GPL-3.0
+freshrss              AGPL-3.0
+grafana, grafana-ha   AGPL-3.0
+home-assistant        Apache-2.0
+homepage              GPL-3.0-only
+mealie                AGPL-3.0-only
+navidrome             GPL-3.0
+nextcloud             AGPL-3.0
+nginx-proxy-manager   MIT
+node-red              Apache-2.0
+ntfy                  Apache-2.0 OR GPL-2.0-only
+paperless-ngx         GPL-3.0-only
+pi-hole               MIT (graphics repository)
+searxng, searxng-ha   AGPL-3.0
+syncthing             MPL-2.0
+uptime-kuma           MIT
+vaultwarden           AGPL-3.0
+
+Jellyfin artwork: Jellyfin project, CC-BY-SA-4.0, copied unchanged from
+https://github.com/jellyfin/jellyfin-ux/blob/69a2b7b1237732a134dd501ff55b9404cf2d1601/logos/SVG/jellyfin-icon--color-on-dark.svg
+Licence: https://creativecommons.org/licenses/by-sa/4.0/
+
+Luanti desktop icon: erle, CC BY-SA 3.0. The SVG omits the editor export path.
+Licence: https://creativecommons.org/licenses/by-sa/3.0/
+Upstream notice: https://github.com/luanti-org/luanti/blob/8bb14e85d21a09d37961ed97548f6a9f71349422/LICENSE.txt

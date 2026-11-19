@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Grav
+  summary: Build and manage a flat-file website
+  description: Create the Grav administrator through the initial web setup on a trusted network. Place
+    the site behind an HTTPS reverse proxy for public use.
+  category: productivity
+  website: https://getgrav.org/
+  source: https://github.com/getgrav/grav
+  docs: https://docs.linuxserver.io/images/docker-grav/
+  scalable: false
+  primary_service: grav
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: grav
+    scheme: http
+    port: 80
+  options:
+    PUID:
+      label: User ID
+      help: Numeric UID to run Grav. The configuration folder must be writable by this account.
+    PGID:
+      label: Group ID
+      help: Numeric GID to run Grav.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the web server.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Website and settings
+      help: Select This host. Holds the site, content, themes and application settings. Include this folder
+        in a stopped Nex backup.
+services:
+  grav:
+    image: lscr.io/linuxserver/grav:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8112}:80/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

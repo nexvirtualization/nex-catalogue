@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Guacamole
+  summary: Access remote desktops through an authenticated web gateway
+  description: Provision guacd and initialize PostgreSQL with the upstream Guacamole schema. Open /guacamole
+    and replace the initial credentials.
+  category: management
+  website: https://guacamole.apache.org
+  source: https://github.com/apache/guacamole-server
+  docs: https://guacamole.apache.org/doc/gug/guacamole-docker.html
+  primary_service: guacamole
+  post_install: Provision guacd and initialize PostgreSQL with the upstream Guacamole schema. Open /guacamole
+    and replace the initial credentials.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  web:
+    port: 8080
+  options:
+    GUACD_HOST:
+      label: Guacd host
+      help: Enter the deployment value described in the upstream setup guide.
+    GUACD_PORT:
+      label: Guacd port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  guacamole:
+    image: docker.io/guacamole/guacamole:latest
+    ports:
+    - ${PORT:-23537}:8080/tcp
+    environment:
+      GUACD_HOSTNAME: ${GUACD_HOST}
+      GUACD_PORT: ${GUACD_PORT:-4822}
+      POSTGRESQL_HOSTNAME: ${DB_HOST}
+      POSTGRESQL_PORT: ${DB_PORT:-5432}
+      POSTGRESQL_DATABASE: ${DB_NAME:-guacamole}
+      POSTGRESQL_USER: ${DB_USER}
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 1

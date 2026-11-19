@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: dayGLANCE
+  summary: Plan your day with time blocks and recurring routines
+  description: Organize tasks, schedule time blocks and track routines. The app stores data in the browser.
+    The bundled web proxy blocks private-network sync targets in this profile.
+  category: productivity
+  website: https://dayglance.app
+  source: https://github.com/krelltunez/dayGLANCE
+  docs: https://github.com/krelltunez/dayGLANCE#self-host-with-docker
+  license: MIT
+  primary_service: dayglance
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the planner, then export or sync your data from the app. Keep access behind an authenticated
+    proxy if exposing it beyond a trusted network.
+  web:
+    port: 80
+  scale:
+  - dayglance
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  dayglance:
+    image: ghcr.io/krelltunez/dayglance:latest
+    ports:
+    - ${PORT:-18132}:80/tcp
+    environment:
+      WEBDAV_PROXY_BLOCK_PRIVATE: '1'
+    deploy:
+      replicas: 1

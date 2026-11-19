@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Passbolt
+  summary: Share credentials with your team
+  description: Prepare a MariaDB database and use Passbolt via an HTTPS reverse proxy. Create the first
+    administrator using the upstream CLI procedure, then configure email. Back up the database together
+    with both key folders.
+  category: security
+  website: https://www.passbolt.com/
+  source: https://github.com/passbolt/passbolt_api
+  docs: https://www.passbolt.com/docs/hosting/install/ce/docker/
+  scalable: false
+  primary_service: passbolt
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: passbolt
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is passbolt.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: GPG key material
+      help: Select This host. Stores the server encryption keys. Include this folder in a stopped Nex
+        backup.
+    JWT:
+      label: JWT key material
+      help: Select This host. Stores server authentication signing keys. Include this folder in a stopped
+        Nex backup.
+services:
+  passbolt:
+    image: passbolt/passbolt:latest-ce
+    environment:
+      DATASOURCES_DEFAULT_HOST: ${DB_HOST}
+      DATASOURCES_DEFAULT_USERNAME: ${DB_USER}
+      DATASOURCES_DEFAULT_PASSWORD: ${DB_PASSWORD}
+      DATASOURCES_DEFAULT_DATABASE: ${DB_NAME:-passbolt}
+      APP_FULL_BASE_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8429}:80/tcp
+    volumes:
+    - ${DATA}:/etc/passbolt/gpg
+    - ${JWT}:/etc/passbolt/jwt
+    deploy:
+      replicas: 1

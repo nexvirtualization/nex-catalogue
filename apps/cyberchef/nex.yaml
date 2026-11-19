@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CyberChef
+  summary: Convert and transform data in the browser
+  description: >-
+    Build reusable recipes for encoding, decoding and data transformation. Each copy serves the same static
+    app and the browser runs the recipes. No persistent folders are required.
+  category: tools
+  website: https://github.com/gchq/CyberChef#with-docker
+  source: https://github.com/gchq/CyberChef
+  docs: https://github.com/gchq/CyberChef#with-docker
+  license: Apache-2.0
+  primary_service: cyberchef
+  scale:
+    - cyberchef
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+  post_install: Use the Docker network and set Copies in Basics. Use host publishing or a proxy on the Nex
+    application network to reach the shared endpoint.
+services:
+  cyberchef:
+    image: ghcr.io/gchq/cyberchef:latest
+    ports:
+      - ${PORT:-8093}:8080/tcp
+    deploy:
+      replicas: 1

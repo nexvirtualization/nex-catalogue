@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kaneo
+  summary: Track team projects, work items and statuses
+  description: Start a private PostgreSQL database before setup. Use the client-facing HTTPS address
+    and create your first workspace on a trusted network.
+  category: productivity
+  website: https://github.com/usekaneo/kaneo
+  source: https://github.com/usekaneo/kaneo
+  docs: https://github.com/usekaneo/kaneo
+  primary_service: kaneo
+  scalable: false
+  license: MIT
+  web:
+    port: 5173
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme.
+    DB_URL:
+      label: PostgreSQL database URL
+      type: password
+      help: Provide a reachable connection URL with database credentials.
+    SECRET:
+      label: Authentication signing key
+      type: password
+      help: Use Nex Generate and retain the value across restores.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5173.
+services:
+  kaneo:
+    image: ghcr.io/usekaneo/kaneo:latest
+    environment:
+      DATABASE_URL: ${DB_URL}
+      KANEO_CLIENT_URL: ${BASE_URL}
+      AUTH_SECRET: ${SECRET}
+    ports:
+    - ${PORT:-5173}:5173/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: bewCloud
+  summary: Run a personal cloud for files, notes and feeds
+  description: Provision the supported PostgreSQL database. Use your configured HTTPS origin and complete
+    account setup before adding files.
+  category: productivity
+  website: https://bewcloud.com
+  source: https://github.com/bewcloud/bewcloud
+  docs: https://github.com/bewcloud/bewcloud#running-locally-and-via-docker
+  primary_service: bewcloud
+  post_install: Provision the supported PostgreSQL database. Use your configured HTTPS origin and complete
+    account setup before adding files.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8053
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    JWT_SECRET:
+      label: Jwt secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PASSWORD_SALT:
+      label: Password salt
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8053 inside Nex.
+    DATA:
+      label: Cloud files
+      help: Managed directory mounted at /app/data-files. Choose storage writable by the application.
+services:
+  bewcloud:
+    image: ghcr.io/bewcloud/bewcloud:v4.23.1
+    ports:
+    - ${PORT:-23502}:8053/tcp
+    volumes:
+    - ${DATA}:/app/data-files
+    environment:
+      PORT: '8053'
+      BASE_URL: ${PUBLIC_URL}
+      POSTGRESQL_HOST: ${DB_HOST}
+      POSTGRESQL_USER: ${DB_USER}
+      POSTGRESQL_PASSWORD: ${DB_PASSWORD}
+      POSTGRESQL_DBNAME: ${DB_NAME:-bewcloud}
+      POSTGRESQL_PORT: ${DB_PORT:-5432}
+      JWT_SECRET: ${JWT_SECRET}
+      PASSWORD_SALT: ${PASSWORD_SALT}
+      CONFIG_ALLOW_SIGNUPS: 'true'
+      CONFIG_ENABLED_APPS: news,notes,photos
+      CONFIG_FILES_ROOT_PATH: data-files
+    deploy:
+      replicas: 1

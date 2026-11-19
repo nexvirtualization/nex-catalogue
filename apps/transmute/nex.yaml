@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Transmute
+  summary: Convert documents, media and data in your browser
+  description: A file conversion web app. Set a unique authentication signing secret and complete initial
+    account setup before making it available to other users.
+  category: documents
+  website: https://transmute.sh
+  source: https://github.com/transmute-app/transmute
+  docs: https://github.com/transmute-app/transmute#readme
+  scalable: false
+  primary_service: transmute
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: transmute
+    scheme: http
+    port: 3313
+  options:
+    AUTH_SECRET:
+      label: Authentication signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3313.
+    DATA:
+      label: Transmute data
+      help: Select This host. Holds configuration and locally stored files. Include this folder in a stopped
+        Nex backup.
+services:
+  transmute:
+    image: ghcr.io/transmute-app/transmute:latest
+    environment:
+      AUTH_SECRET_KEY: ${AUTH_SECRET}
+    ports:
+    - ${PORT:-3313}:3313/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

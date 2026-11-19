@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CrowdSec
+  summary: Analyze prepared log sources for suspicious traffic
+  description: Choose a managed folder containing application logs. In the CrowdSec settings folder create
+    an acquisition file for the paths under /input. Keep the Local API private and register only your
+    authorized bouncers.
+  category: security
+  website: https://crowdsec.net/
+  source: https://github.com/crowdsecurity/crowdsec
+  docs: https://docs.crowdsec.net/u/getting_started/installation/docker/
+  scalable: false
+  primary_service: crowdsec
+  architectures:
+  - amd64
+  - arm64
+  options:
+    DATA:
+      label: CrowdSec configuration
+      help: Select This host. Stores the acquisition configuration, collections and credentials. Include
+        this folder in a stopped Nex backup.
+    CROWDSEC_DATA:
+      label: Decision and event database
+      help: Select This host. Stores event history and bouncer state. Include this folder in a stopped
+        Nex backup.
+    LOG_INPUT:
+      label: Log acquisition sources
+      help: Select This host. Select a managed folder containing the logs CrowdSec should analyze. Include
+        this folder in a stopped Nex backup.
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    expose:
+    - 8080/tcp
+    volumes:
+    - ${DATA}:/etc/crowdsec
+    - ${CROWDSEC_DATA}:/var/lib/crowdsec/data
+    - ${LOG_INPUT}:/input:ro
+    deploy:
+      replicas: 1

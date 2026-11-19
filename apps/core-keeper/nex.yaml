@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Core Keeper
+  summary: Host a persistent mining and crafting world for friends
+  description: >-
+    Choose one x86-64 host and a registered client-reachable primary network. First boot downloads
+    the dedicated server from Steam and generates the world. In Core Keeper use Join Game with
+    APP-IP and port 27015, then enter the join password. SteamCMD checks for game updates on
+    startup. Take a stopped Nex backup of World and settings before updates.
+  category: games
+  website: https://corekeepergame.com/
+  source: https://github.com/escapingnetwork/core-keeper-dedicated
+  docs: https://corekeeper.atma.gg/en/How_to_setup_a_dedicated_server
+  license: Proprietary
+  architectures: [amd64]
+  tags: [survival, sandbox, co-op, dedicated-server]
+  options:
+    WORLD_NAME:
+      label: World name
+      help: The name shown to players.
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+      help: Use up to 28 characters and give the password to your players.
+    WORLD_DATA:
+      label: World and settings
+      help: Select This host. Back up this folder to preserve the world and settings.
+    SERVER_FILES:
+      label: Downloaded server files
+      help: Select This host. SteamCMD can recreate the files in this folder.
+services:
+  core-keeper:
+    image: docker.io/escaping/core-keeper-dedicated:latest
+    environment:
+      WORLD_NAME: ${WORLD_NAME:-Nex Core Keeper}
+      SERVER_PORT: '27015'
+      PASSWORD: ${SERVER_PASSWORD}
+    expose: ['27015/udp']
+    volumes:
+      - ${WORLD_DATA}:/home/steam/core-keeper-data
+      - ${SERVER_FILES}:/home/steam/core-keeper-dedicated
+    stop_grace_period: 2m
+    deploy:
+      replicas: 1

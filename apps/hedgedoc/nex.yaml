@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HedgeDoc
+  summary: Collaborate on Markdown documents in real time
+  description: Provision PostgreSQL, configure your public domain, and proxy the web interface and WebSockets
+    through HTTPS. Restrict account registration to your intended editors.
+  category: productivity
+  website: https://hedgedoc.org/
+  source: https://github.com/hedgedoc/hedgedoc
+  docs: https://docs.hedgedoc.org/setup/docker/
+  scalable: false
+  primary_service: hedgedoc
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: hedgedoc
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_DOMAIN:
+      label: Public DNS hostname
+      help: Hostname only, without scheme or port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Note attachments
+      help: Select This host. Stores uploaded images and attachments. Include this folder in a stopped
+        Nex backup.
+services:
+  hedgedoc:
+    image: quay.io/hedgedoc/hedgedoc:1.12.0
+    environment:
+      CMD_DB_URL: ${DATABASE_URL}
+      CMD_DOMAIN: ${PUBLIC_DOMAIN}
+      CMD_PROTOCOL_USESSL: 'true'
+      CMD_SESSION_SECRET: ${SESSION_SECRET}
+      CMD_ALLOW_ANONYMOUS: 'false'
+    ports:
+    - ${PORT:-8404}:3000/tcp
+    volumes:
+    - ${DATA}:/hedgedoc/public/uploads
+    deploy:
+      replicas: 1

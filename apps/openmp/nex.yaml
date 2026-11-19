@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: open.mp
+  summary: Host a San Andreas multiplayer game mode
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the open.mp launcher to join the app’s Primary address on UDP 7777. The first start installs
+    the official Linux server with the bundled GunGame mode. Stop the app to edit server/config.json
+    or replace the game mode. Remote console access is disabled in the initial settings.
+  category: games
+  website: https://open.mp/
+  source: https://github.com/openmultiplayer/open.mp
+  docs: https://open.mp/docs/server/Installation
+  license: MPL-2.0 game server
+  architectures:
+  - amd64
+  tags:
+  - sandbox
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  openmp:
+    image: ghcr.io/ptero-eggs/games:samp
+    expose:
+    - 7777/udp
+    volumes:
+    - ${DATA}:/home/container
+    user: 1000:1000
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      download() {
+        local url="$$1" sha256="$$2" target="$$3"
+        curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
+        printf '%s  %s\n' "$$sha256" "$$target" | sha256sum --check --status || {
+          echo "The server download did not match the release checksum." >&2
+          return 1
+        }
+      }
+
+
+      cd "$$HOME"
+      if [ ! -x ./server/omp-server ]; then
+        staging=$$(mktemp -d ./.openmp-install.XXXXXX)
+        trap 'rm -rf "$$staging"' EXIT
+        download https://github.com/openmultiplayer/open.mp/releases/download/v1.6.7.3218/open.mp-linux-x86.tar.gz \
+          0f7bfe70bb68ea780fe24a910b69412046e53d10feb65a9d4a9de8ff1f7f1329 "$$staging/release.tar.gz"
+        tar -xzf "$$staging/release.tar.gz" -C "$$staging"
+        chmod 755 "$$staging/Server/omp-server"
+        printf '%s\n' '{"name":"Nex open.mp","announce":false,"network":{"port":7777},"pawn":{"main_scripts":["gungame 1"]},"rcon":{"enable":false}}' > "$$staging/Server/config.json"
+        mv "$$staging/Server" ./server
+        rm -rf "$$staging"
+        trap - EXIT
+      fi
+      cd ./server
+      exec ./omp-server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

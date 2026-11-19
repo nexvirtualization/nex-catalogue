@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open Notebook
+  summary: Organize research sources and query them with a model
+  description: Prepare an authenticated SurrealDB 2 instance and its namespace and database. Install Open
+    Notebook, then configure model provider credentials on a trusted network. If you use an HTTPS reverse
+    proxy, set the API URL clients will use.
+  category: ai
+  website: https://www.open-notebook.ai/
+  source: https://github.com/lfnovo/open-notebook
+  docs: https://github.com/lfnovo/open-notebook#readme
+  scalable: false
+  primary_service: open-notebook
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: open-notebook
+    scheme: http
+    port: 8502
+  options:
+    DB_ENDPOINT:
+      label: Db Endpoint
+      help: SurrealDB WebSocket RPC URL, such as ws://surrealdb:8000/rpc.
+    DB_USERNAME:
+      label: Db Username
+      help: Database account.
+    DB_NAMESPACE:
+      label: Db Namespace
+      help: SurrealDB namespace.
+    DB_NAME:
+      label: Db Name
+      help: SurrealDB database name.
+    API_URL:
+      label: Api Url
+      help: Public API URL for the browser, including scheme and port.
+    DB_PASSWORD:
+      label: SurrealDB password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    APP_PASSWORD:
+      label: Web interface password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8502.
+    API_PORT:
+      label: Api Port
+      help: Host-published API port for clients and reverse proxies.
+    DATA:
+      label: Notebook files
+      help: Select This host. Stores locally uploaded research material. Include this folder in a stopped
+        Nex backup.
+services:
+  open-notebook:
+    image: lfnovo/open_notebook:v1-latest
+    environment:
+      SURREAL_URL: ${DB_ENDPOINT}
+      SURREAL_USER: ${DB_USERNAME}
+      SURREAL_PASSWORD: ${DB_PASSWORD}
+      SURREAL_NAMESPACE: ${DB_NAMESPACE:-open_notebook}
+      SURREAL_DATABASE: ${DB_NAME:-production}
+      OPEN_NOTEBOOK_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      OPEN_NOTEBOOK_PASSWORD: ${APP_PASSWORD}
+      API_URL: ${API_URL}
+    ports:
+    - ${PORT:-8424}:8502/tcp
+    - ${API_PORT:-5055}:5055/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

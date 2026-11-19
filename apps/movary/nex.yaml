@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Movary
+  summary: Track movies watched and ratings
+  description: Provision a MySQL database and obtain a TMDB key. Create your first user using the upstream
+    CLI if registration is disabled.
+  category: media
+  website: https://github.com/leepeuker/movary
+  source: https://github.com/leepeuker/movary
+  docs: https://movary.org/installation/docker/
+  primary_service: movary
+  post_install: Provision a MySQL database and obtain a TMDB key. Create your first user using the upstream
+    CLI if registration is disabled.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    TMDB_API_KEY:
+      label: Tmdb api key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Application storage
+      help: Managed directory mounted at /app/storage. Choose storage writable by the application.
+services:
+  movary:
+    image: docker.io/leepeuker/movary:latest
+    ports:
+    - ${PORT:-23497}:80/tcp
+    volumes:
+    - ${DATA}:/app/storage
+    environment:
+      TMDB_API_KEY: ${TMDB_API_KEY}
+      DATABASE_MODE: mysql
+      DATABASE_MYSQL_HOST: ${DB_HOST}
+      DATABASE_MYSQL_PORT: ${DB_PORT:-3306}
+      DATABASE_MYSQL_NAME: ${DB_NAME:-movary}
+      DATABASE_MYSQL_USER: ${DB_USER}
+      DATABASE_MYSQL_PASSWORD: ${DB_PASSWORD}
+      APP_ENV: production
+      APP_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

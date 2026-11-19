@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TVHeadend
+  summary: Receive, record and stream television from network tuners
+  description: Use a supported IP or SAT-IP tuner reachable from the application network, and complete
+    the TVHeadend wizard. Set administrator credentials on a trusted network before adding clients.
+  category: media
+  website: https://tvheadend.org/
+  source: https://github.com/tvheadend/tvheadend
+  docs: https://docs.linuxserver.io/images/docker-tvheadend/
+  scalable: false
+  primary_service: tvheadend
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: tvheadend
+    scheme: http
+    port: 9981
+  options:
+    PUID:
+      label: Puid
+      help: Numeric UID for recording and configuration files.
+    PGID:
+      label: Pgid
+      help: Numeric GID for recording and configuration files.
+    TZ:
+      label: Tz
+      help: IANA time zone for program schedules.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9981.
+    HTSP_PORT:
+      label: Htsp Port
+      help: Host-published HTSP port for compatible clients.
+    DATA:
+      label: Television configuration
+      help: Select This host. Stores channels, tuner settings and program guide configuration. Include
+        this folder in a stopped Nex backup.
+    RECORDINGS:
+      label: Recordings
+      help: Select This host. Stores captured broadcasts. Include this folder in a stopped Nex backup.
+services:
+  tvheadend:
+    image: lscr.io/linuxserver/tvheadend:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-9981}:9981/tcp
+    - ${HTSP_PORT:-9982}:9982/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${RECORDINGS}:/recordings
+    deploy:
+      replicas: 1

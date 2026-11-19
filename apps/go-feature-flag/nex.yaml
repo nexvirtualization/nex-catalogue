@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GO Feature Flag
+  summary: Evaluate feature flags from an OpenFeature relay API
+  description: Select a prepared folder containing your relay configuration and flags. Set the flag
+    file retriever in goff-proxy.yaml to use /goff/flag-config.yaml or your intended backend.
+  category: development
+  website: https://github.com/thomaspoignant/go-feature-flag
+  source: https://github.com/thomaspoignant/go-feature-flag
+  docs: https://gofeatureflag.org/docs/relay-proxy/install_relay_proxy
+  primary_service: go-feature-flag
+  scalable: false
+  license: MIT
+  options:
+    CONFIG:
+      label: Prepared relay configuration
+      help: Folder containing goff-proxy.yaml and the flag data files it refers to.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1031.
+services:
+  go-feature-flag:
+    image: docker.io/gofeatureflag/go-feature-flag:latest
+    volumes:
+    - ${CONFIG}:/goff
+    ports:
+    - ${PORT:-1031}:1031/tcp
+    deploy:
+      replicas: 1

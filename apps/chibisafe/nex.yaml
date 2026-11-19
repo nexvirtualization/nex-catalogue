@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chibisafe
+  summary: Upload, organize and share files through a web interface
+  description: Runs the Chibisafe web client, API and file server behind a single HTTP endpoint. Keep
+    it on a trusted network until you have changed the initial administrator password.
+  category: documents
+  website: https://chibisafe.moe/
+  source: https://github.com/chibisafe/chibisafe
+  docs: https://github.com/chibisafe/guides/blob/main/docs/installation/running-with-docker.md
+  license: MIT
+  architectures: [amd64, arm64]
+  primary_service: chibisafe
+  web:
+    port: 80
+  options:
+    DATABASE:
+      label: Database
+      help: Store the SQLite database in a writable folder on This host. Back up with Uploads.
+    UPLOADS:
+      label: Uploads
+      help: Store uploaded files in a writable folder on the same host as Database.
+    LOGS:
+      label: Logs
+      help: Choose a writable folder on the same host for application logs.
+    PORT:
+      label: Web port
+      help: Published HTTP port when host publishing is enabled.
+  post_install: Sign in using the upstream initial administrator account, admin with password admin.
+    Change this password before enabling public access.
+services:
+  chibisafe:
+    image: docker.io/library/caddy:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        caddy run --config - --adapter caddyfile <<'CADDYFILE'
+        {
+          auto_https off
+        }
+        :80 {
+          route {
+            @api path /api /api/* /docs*
+            reverse_proxy @api backend:8000 {
+              header_up Host {http.reverse_proxy.upstream.hostport}
+            }
+            file_server {
+              root /uploads
+              pass_thru
+            }
+            reverse_proxy web:8001 {
+              header_up Host {http.reverse_proxy.upstream.hostport}
+            }
+          }
+        }
+        CADDYFILE
+    ports:
+      - ${PORT:-23445}:80/tcp
+    volumes:
+      - ${UPLOADS}:/uploads:ro
+    deploy:
+      replicas: 1
+  web:
+    image: docker.io/chibisafe/chibisafe:latest
+    environment:
+      BASE_API_URL: http://backend:8000
+    deploy:
+      replicas: 1
+  backend:
+    image: docker.io/chibisafe/chibisafe-server:latest
+    volumes:
+      - ${DATABASE}:/app/database
+      - ${UPLOADS}:/app/uploads
+      - ${LOGS}:/app/logs
+    deploy:
+      replicas: 1

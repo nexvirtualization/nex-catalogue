@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Lyrion Music Server
+  summary: Server software which controls a wide range of Squeezebox/Slim Devices audio players and compatible
+    hardware
+  description: Server software which controls a wide range of Squeezebox/Slim Devices audio players and compatible
+    hardware (formerly Logitech Media Server).
+  category: media
+  source: https://github.com/lms-community/slimserver
+  website: https://lyrion.org/
+  docs: https://lyrion.org/getting-started/
+  primary_service: lyrion
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    MUSIC:
+      label: Music folder
+      help: Choose the Nex-managed folder mounted at /music.
+    PLAYLISTS:
+      label: Playlists folder
+      help: Choose the Nex-managed folder mounted at /playlist.
+    PORT:
+      label: Published 9000/tcp port
+      help: Host port for application listener 9000/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 9090/tcp port
+      help: Host port for application listener 9090/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_3:
+      label: Published 3483/tcp port
+      help: Host port for application listener 3483/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_4:
+      label: Published 3483/udp port
+      help: Host port for application listener 3483/udp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Connect players to the app address and choose /music as the library folder. For default player
+    discovery and control ports, use a client-reachable dedicated primary network.
+  web:
+    port: 9000
+services:
+  lyrion:
+    image: docker.io/lmscommunity/lyrionmusicserver:latest
+    deploy:
+      replicas: 1
+    environment:
+      HTTP_PORT: '9000'
+    volumes:
+    - ${CONFIG}:/config
+    - ${MUSIC}:/music:ro
+    - ${PLAYLISTS}:/playlist
+    ports:
+    - ${PORT:-19822}:9000/tcp
+    - ${PORT_2:-20822}:9090/tcp
+    - ${PORT_3:-21822}:3483/tcp
+    - ${PORT_4:-22822}:3483/udp

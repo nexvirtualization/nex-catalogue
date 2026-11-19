@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ChartDB
+  summary: Visualize database tables and relationships
+  description: Import a schema into the browser editor and draw an entity relationship diagram. This install
+    disables analytics and runs the editor without an AI provider key.
+  category: development
+  website: https://chartdb.io/
+  source: https://github.com/chartdb/chartdb
+  docs: https://github.com/chartdb/chartdb#run-the-docker-container
+  license: AGPL-3.0
+  primary_service: chartdb
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the editor and import schema metadata. Export diagrams to retain them outside your browser.
+  web:
+    port: 80
+  scale:
+  - chartdb
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  chartdb:
+    image: ghcr.io/chartdb/chartdb:latest
+    ports:
+    - ${PORT:-18123}:80/tcp
+    environment:
+      DISABLE_ANALYTICS: 'true'
+    deploy:
+      replicas: 1

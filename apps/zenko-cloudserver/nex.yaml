@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zenko CloudServer
+  summary: Implementation of the Amazon S3 protocol on the front-end and backend storage capabilities to multiple
+  description: Implementation of the Amazon S3 protocol on the front-end and backend storage capabilities to
+    multiple clouds, including Azure and Google.
+  category: development
+  source: https://github.com/scality/cloudserver
+  website: https://www.zenko.io/cloudserver
+  docs: https://github.com/scality/cloudserver/blob/development/9.3/docs/DOCKER.rst
+  primary_service: zenko-cloudserver
+  options:
+    ACCESS_KEY_ID:
+      label: Access key id
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SECRET_KEY:
+      label: Secret key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /usr/src/app/localData.
+    METADATA:
+      label: Metadata folder
+      help: Choose the Nex-managed folder mounted at /usr/src/app/localMetadata.
+    PORT:
+      label: Published 8000/tcp port
+      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Set the endpoint host used by S3 clients and use path-style addressing when connecting through
+    an app address. Back up object data and metadata together.
+services:
+  zenko-cloudserver:
+    image: docker.io/zenko/cloudserver:latest
+    deploy:
+      replicas: 1
+    environment:
+      SCALITY_ACCESS_KEY_ID: ${ACCESS_KEY_ID}
+      SCALITY_SECRET_ACCESS_KEY: ${SECRET_KEY}
+      REMOTE_MANAGEMENT_DISABLE: '1'
+      ENDPOINT: ${S3_ENDPOINT}
+    volumes:
+    - ${DATA}:/usr/src/app/localData
+    - ${METADATA}:/usr/src/app/localMetadata
+    ports:
+    - ${PORT:-19976}:8000/tcp

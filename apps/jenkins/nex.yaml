@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Jenkins
+  summary: Automation server for building, testing, deploying, and scheduling software jobs
+  description: Automation server for building, testing, deploying, and scheduling software jobs.
+  category: development
+  source: https://github.com/jenkinsci/jenkins
+  website: https://www.jenkins.io/
+  docs: https://www.jenkins.io/doc/book/installing/docker/
+  primary_service: jenkins
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/jenkins_home.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Finish the setup wizard with the initial password from the install log or secrets/initialAdminPassword.
+    Socket access is not required. Connect external build agents separately.
+  web:
+    port: 8080
+services:
+  jenkins:
+    image: docker.io/jenkins/jenkins:lts-jdk21
+    deploy:
+      replicas: 1
+    volumes:
+    - ${DATA}:/var/jenkins_home
+    ports:
+    - ${PORT:-19665}:8080/tcp

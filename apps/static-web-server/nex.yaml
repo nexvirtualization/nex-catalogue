@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Static Web Server
+  summary: Serve static websites from a Nex folder
+  description: Serve HTML, CSS, JavaScript and static assets from a prepared website folder. A read-only mount
+    protects the website content from writes by the server.
+  category: development
+  website: https://static-web-server.net/
+  source: https://github.com/static-web-server/static-web-server
+  docs: https://static-web-server.net/
+  license: MIT OR Apache-2.0
+  primary_service: static-web-server
+  architectures:
+  - amd64
+  - arm64
+  post_install: Upload or prepare index.html and its assets in Website files. Open the HTTP interface or put
+    the app behind an HTTPS reverse proxy.
+  web:
+    port: 80
+  options:
+    SITE:
+      label: Website files
+      help: Static content at /public. Start with index.html. Make all content readable by the server.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  static-web-server:
+    image: docker.io/joseluisq/static-web-server:latest
+    ports:
+    - ${PORT:-18126}:80/tcp
+    environment:
+      SERVER_ROOT: /public
+      SERVER_PORT: '80'
+    volumes:
+    - ${SITE}:/public:ro
+    deploy:
+      replicas: 1

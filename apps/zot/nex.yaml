@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ZOT OCI Registry
+  summary: Serve OCI images and artifacts from a private registry
+  description: Set up your registry authentication and HTTPS before sharing it. Select a prepared configuration
+    if you need custom registry settings.
+  category: development
+  website: https://github.com/project-zot/zot
+  source: https://github.com/project-zot/zot
+  docs: https://zotregistry.dev/latest/admin-guide/admin-configuration/
+  primary_service: zot
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: OCI images and manifests
+      help: Keep oci images and manifests in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  zot:
+    image: ghcr.io/project-zot/zot:latest
+    volumes:
+    - ${DATA}:/var/lib/registry
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: VERT
+  summary: Convert files in your browser
+  description: Convert images, audio and documents with in-browser tools. Video conversion uses the VERT server
+    selected by the browser or built into the upstream image.
+  category: tools
+  website: https://vert.sh/
+  source: https://github.com/VERT-sh/VERT
+  docs: https://github.com/VERT-sh/VERT/blob/main/docs/DOCKER.md
+  license: AGPL-3.0
+  primary_service: vert
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the app and download your converted files. HTTPS may be required for browser features used
+    by individual converters.
+  web:
+    port: 80
+  scale:
+  - vert
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  vert:
+    image: ghcr.io/vert-sh/vert:latest
+    ports:
+    - ${PORT:-18113}:80/tcp
+    deploy:
+      replicas: 1

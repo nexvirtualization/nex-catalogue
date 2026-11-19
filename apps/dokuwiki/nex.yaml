@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dokuwiki
+  summary: Write and share a file-based wiki
+  description: On first access, open the wiki installation page on a trusted network and set up the
+    administrator and wiki permissions.
+  category: documents
+  website: https://github.com/dokuwiki/dokuwiki
+  source: https://github.com/dokuwiki/dokuwiki
+  docs: https://docs.linuxserver.io/images/docker-dokuwiki/
+  primary_service: dokuwiki
+  scalable: false
+  license: GPL-2.0
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Wiki files
+      help: Pages, configuration, plugins and wiki media.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  dokuwiki:
+    image: lscr.io/linuxserver/dokuwiki:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

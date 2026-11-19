@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stringer
+  summary: Collect and read syndicated feeds through a private RSS app
+  description: Create a PostgreSQL database before installing. Open the application on a trusted network
+    and configure its first account. The container applies the upstream database migrations on start.
+  category: reading
+  website: https://github.com/stringer-rss/stringer
+  source: https://github.com/stringer-rss/stringer
+  docs: https://github.com/stringer-rss/stringer
+  primary_service: stringer
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    SECRET_KEY_BASE:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  stringer:
+    image: docker.io/stringerrss/stringer:latest
+    command:
+    - sh
+    - -ec
+    - bundle exec rails db:migrate; exec /app/start.sh
+    environment:
+      RAILS_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

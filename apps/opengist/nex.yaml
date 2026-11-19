@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Opengist
+  summary: Create, search and share Git-backed code snippets
+  description: Create the initial account on a trusted network and review the registration policy. This
+    profile serves git over HTTP through the web endpoint.
+  category: development
+  website: https://github.com/thomiceli/opengist
+  source: https://github.com/thomiceli/opengist
+  docs: https://opengist.io/docs/installation/
+  primary_service: opengist
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 6157
+  options:
+    DATA:
+      label: Snippet repositories and accounts
+      help: Git repositories, configuration and application database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6157.
+services:
+  opengist:
+    image: ghcr.io/thomiceli/opengist:latest
+    volumes:
+    - ${DATA}:/opengist
+    ports:
+    - ${PORT:-6157}:6157/tcp
+    deploy:
+      replicas: 1

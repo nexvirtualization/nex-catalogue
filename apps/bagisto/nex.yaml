@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bagisto
+  summary: Build an ecommerce storefront and product catalogue
+  description: Set up a compatible MySQL database and finish the web installer on a trusted network.
+    Configure your public storefront and administrator credentials before launch.
+  category: management
+  website: https://github.com/bagisto/bagisto
+  source: https://github.com/bagisto/bagisto
+  docs: https://github.com/bagisto/bagisto-docker
+  primary_service: bagisto
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Store files and media
+      help: Keep store files and media in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  bagisto:
+    image: docker.io/webkul/bagisto:latest
+    volumes:
+    - ${DATA}:/var/www/html/storage
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

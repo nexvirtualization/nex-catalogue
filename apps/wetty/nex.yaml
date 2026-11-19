@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: WeTTY
+  summary: Open an SSH terminal from a web browser
+  description: Provide the SSH server you are authorized to access. Users sign in with their normal SSH
+    credentials. The configured browser origin must match the client-facing HTTPS route, including any
+    non-default port.
+  category: development
+  website: https://butlerx.github.io/wetty/#/
+  source: https://github.com/butlerx/wetty
+  docs: https://github.com/butlerx/wetty#readme
+  scalable: false
+  primary_service: wetty
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: wetty
+    scheme: http
+    port: 3000
+    path: /wetty/
+  options:
+    PUBLIC_URL:
+      label: Allowed browser origin
+      help: Full URL clients will open, including scheme and any non-default port.
+    SSH_HOST:
+      label: Ssh Host
+      help: IP address or hostname of an existing SSH server.
+    SSH_PORT:
+      label: Ssh Port
+      help: SSH listener port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  wetty:
+    image: wettyoss/wetty:latest
+    environment:
+      ALLOWEDORIGINS: ${PUBLIC_URL}
+    command:
+    - --ssh-host
+    - ${SSH_HOST}
+    - --ssh-port
+    - ${SSH_PORT:-22}
+    ports:
+    - ${PORT:-8377}:3000/tcp
+    deploy:
+      replicas: 1

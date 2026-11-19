@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bludit
+  summary: Build a site or blog in seconds
+  description: Build a site or blog in seconds. Bludit uses flat-files (text files in JSON format) to store
+    posts and pages.
+  category: productivity
+  source: https://github.com/bludit/bludit
+  website: https://www.bludit.com/
+  docs: https://docs.bludit.com/en/getting-started/installation-guide
+  primary_service: bludit
+  options:
+    CONTENT:
+      label: Content folder
+      help: Choose the Nex-managed folder mounted at /usr/share/nginx/html/bl-content.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Complete the first-run installer and create the administrator. Back up the content folder to
+    keep pages, uploads and user settings.
+  web:
+    port: 80
+services:
+  bludit:
+    image: docker.io/bludit/docker:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONTENT}:/usr/share/nginx/html/bl-content
+    ports:
+    - ${PORT:-19999}:80/tcp

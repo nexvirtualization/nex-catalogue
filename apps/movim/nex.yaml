@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Movim
+  summary: Modern, federated social network based on XMPP, with a fully featured group-chat, subscriptions and
+  description: Modern, federated social network based on XMPP, with a fully featured group-chat, subscriptions
+    and microblogging.
+  category: communication
+  source: https://github.com/movim/movim
+  website: https://movim.eu/
+  docs: https://github.com/delonium/movim-container#deployment
+  primary_service: movim
+  options:
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_USER:
+      label: Db user
+    DB_NAME:
+      label: Db name
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    IMAGES:
+      label: Images folder
+      help: Choose the Nex-managed folder mounted at /var/www/movim/public/images.
+    EMOJIS:
+      label: Emojis folder
+      help: Choose the Nex-managed folder mounted at /var/www/movim/public/emojis.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision PostgreSQL and a compatible XMPP server. Place Movim behind an HTTPS proxy with WebSocket
+    forwarding. Sign in with an XMPP address.
+  web:
+    port: 80
+services:
+  movim:
+    image: ghcr.io/delonium/movim-container:latest
+    deploy:
+      replicas: 1
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USER:-movim}
+      DB_DATABASE: ${DB_NAME:-movim}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DAEMON_URL: ${PUBLIC_URL}
+    volumes:
+    - ${IMAGES}:/var/www/movim/public/images
+    - ${EMOJIS}:/var/www/movim/public/emojis
+    ports:
+    - ${PORT:-19974}:80/tcp

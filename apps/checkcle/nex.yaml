@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CheckCle
+  summary: Track availability and performance of your services
+  description: Before granting access, sign in on a trusted network with the upstream initial administrator
+    credentials from the documentation and immediately change the password. Add services and notification
+    channels from the dashboard.
+  category: monitoring
+  website: https://checkcle.io/
+  source: https://github.com/operacle/checkcle
+  docs: https://github.com/operacle/checkcle#readme
+  scalable: false
+  primary_service: checkcle
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: checkcle
+    scheme: http
+    port: 8090
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8090.
+    DATA:
+      label: Monitoring state
+      help: Select This host. Stores the monitoring database, checks and accounts. Include this folder
+        in a stopped Nex backup.
+services:
+  checkcle:
+    image: operacle/checkcle:latest
+    ports:
+    - ${PORT:-8181}:8090/tcp
+    volumes:
+    - ${DATA}:/mnt/pb_data
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
+    deploy:
+      replicas: 1

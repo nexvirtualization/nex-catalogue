@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rclone
+  summary: Manage cloud-storage transfers over the Rclone remote-control API
+  description: The Rclone remote-control server runs authenticated copy, sync and storage management requests.
+    Use an existing Rclone configuration or configure your remotes through the API.
+  category: management
+  source: https://github.com/rclone/rclone
+  website: https://rclone.org/
+  docs: https://rclone.org/rc/
+  primary_service: rclone
+  options:
+    RC_USER:
+      label: Rc user
+    RC_PASSWORD:
+      label: Rc password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config/rclone.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    PORT:
+      label: Published 5572/tcp port
+      help: Host port for application listener 5572/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Connect with rclone rc using the app address, port 5572, and the configured credentials.
+    Use an HTTPS reverse proxy for access outside your trusted network.
+services:
+  rclone:
+    image: docker.io/rclone/rclone:latest
+    deploy:
+      replicas: 1
+    environment:
+      RCLONE_RC_USER: ${RC_USER:-admin}
+      RCLONE_RC_PASS: ${RC_PASSWORD}
+    volumes:
+    - ${CONFIG}:/config/rclone
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-19957}:5572/tcp
+    command:
+    - rcd
+    - --rc-addr=:5572

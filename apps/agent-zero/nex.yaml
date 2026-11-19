@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Agent Zero
+  summary: Run a personal AI assistant in a container
+  description: Use a trusted HTTPS reverse proxy to access the assistant. This app can execute commands
+    in its own container. Connect a model provider from Settings, then configure only the tools and files
+    the assistant should access.
+  category: ai
+  website: https://github.com/agent0ai/agent-zero
+  source: https://github.com/agent0ai/agent-zero
+  docs: https://github.com/agent0ai/agent-zero#quick-start
+  scalable: false
+  primary_service: agent-zero
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: agent-zero
+    scheme: http
+    port: 80
+  options:
+    APP_LOGIN:
+      label: Web login
+      help: Account name for the application.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Assistant workspace
+      help: Select This host. Contains configuration, files, memory and local customization. Include this
+        folder in a stopped Nex backup.
+services:
+  agent-zero:
+    image: agent0ai/agent-zero:latest
+    environment:
+      AUTH_LOGIN: ${APP_LOGIN:-admin}
+      AUTH_PASSWORD: ${APP_PASSWORD}
+    ports:
+    - ${PORT:-8126}:80/tcp
+    volumes:
+    - ${DATA}:/a0/usr
+    deploy:
+      replicas: 1

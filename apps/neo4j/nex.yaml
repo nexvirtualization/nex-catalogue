@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Neo4j Community Edition
+  summary: Store graph data and query relationships using Cypher
+  description: Connect through the private application network. Sign in as neo4j with the initial password
+    and configure HTTPS for access outside the trusted network.
+  category: development
+  website: https://github.com/neo4j/neo4j
+  source: https://github.com/neo4j/neo4j
+  docs: https://neo4j.com/docs/operations-manual/current/docker/introduction/
+  primary_service: neo4j
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 7474
+  options:
+    PASSWORD:
+      label: Initial Neo4j password
+      type: password
+      help: Use Nex Generate, with at least 8 characters.
+    DATA:
+      label: Graph database
+      help: Keep graph database in this managed folder between restarts.
+    IMPORT:
+      label: Import files
+      help: Keep import files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7474.
+    BOLT_PORT:
+      label: Bolt client port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7687.
+services:
+  neo4j:
+    image: docker.io/library/neo4j:latest
+    environment:
+      NEO4J_AUTH: neo4j/${PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    - ${IMPORT}:/var/lib/neo4j/import
+    ports:
+    - ${PORT:-7474}:7474/tcp
+    - ${BOLT_PORT:-7687}:7687/tcp
+    deploy:
+      replicas: 1

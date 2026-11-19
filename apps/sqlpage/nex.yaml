@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SQLPage
+  summary: SQL-only dynamic website builder
+  description: SQL-only dynamic website builder.
+  category: development
+  source: https://github.com/sqlpage/SQLPage
+  website: https://sql-page.com
+  docs: https://sql-page.com/documentation.sql
+  primary_service: sqlpage
+  options:
+    SITE:
+      label: Site folder
+      help: Choose the Nex-managed folder mounted at /var/www.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Place the SQLPage site files in the Site folder. Use an index.sql file for the home page. Back
+    up the site together with any local SQLite data.
+  web:
+    port: 8080
+services:
+  sqlpage:
+    image: docker.io/lovasoa/sqlpage:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${SITE}:/var/www
+    ports:
+    - ${PORT:-19627}:8080/tcp

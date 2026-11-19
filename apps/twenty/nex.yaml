@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Twenty
+  summary: Manage customer records and sales workflows
+  description: Provision PostgreSQL and Redis. Keep web and worker on one host or use shared storage. Finish
+    the first workspace setup on a trusted HTTPS endpoint.
+  category: productivity
+  website: https://twenty.com
+  source: https://github.com/twentyhq/twenty
+  docs: https://docs.twenty.com/developers/self-host/docker-compose
+  primary_service: twenty
+  post_install: Provision PostgreSQL and Redis. Keep web and worker on one host or use shared storage. Finish
+    the first workspace setup on a trusted HTTPS endpoint.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    APP_SECRET:
+      label: App secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    DATA:
+      label: CRM attachments
+      help: Managed directory mounted at /app/packages/twenty-server/.local-storage. Choose storage writable
+        by the application.
+services:
+  twenty:
+    image: docker.io/twentycrm/twenty:latest
+    ports:
+    - ${PORT:-23598}:3000/tcp
+    volumes:
+    - ${DATA}:/app/packages/twenty-server/.local-storage
+    environment:
+      SERVER_URL: ${PUBLIC_URL}
+      APP_SECRET: ${APP_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      PG_DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      STORAGE_TYPE: local
+      TELEMETRY_ENABLED: 'false'
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/twentycrm/twenty:latest
+    environment:
+      SERVER_URL: ${PUBLIC_URL}
+      APP_SECRET: ${APP_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      PG_DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      STORAGE_TYPE: local
+      TELEMETRY_ENABLED: 'false'
+      DISABLE_DB_MIGRATIONS: 'true'
+      DISABLE_CRON_JOBS_REGISTRATION: 'true'
+    deploy:
+      replicas: 1
+    command:
+    - yarn
+    - worker:prod
+    volumes:
+    - ${DATA}:/app/packages/twenty-server/.local-storage

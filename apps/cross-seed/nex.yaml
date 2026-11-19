@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: cross-seed
+  summary: Find matching torrents across configured clients
+  description: The cross-seed service reads managed configuration and works with an existing authenticated
+    torrent client and indexers.
+  category: downloads
+  website: https://github.com/cross-seed/cross-seed
+  source: https://github.com/cross-seed/cross-seed
+  docs: https://www.cross-seed.org/docs/basics/getting-started
+  primary_service: cross-seed
+  post_install: Before starting, place the upstream config.js in Configuration and add your indexer and client
+    details. Keep all credentials private and use shared staging paths only for authorized media.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  options:
+    CONFIG:
+      label: Prepared cross-seed configuration
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    DATA:
+      label: Shared media and links
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  cross-seed:
+    image: ghcr.io/cross-seed/cross-seed:latest
+    volumes:
+    - ${CONFIG}:/config
+    - ${DATA}:/data
+    command:
+    - daemon
+    deploy:
+      replicas: 1

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stremio Web
+  summary: Open a Stremio web UI and its streaming service
+  description: Open the browser client on an internal trusted network. Use the streaming server address
+    on port 11470 in the Stremio settings when it is not selected automatically. Protect both endpoints
+    if routing them beyond the trusted network.
+  category: media
+  website: https://www.stremio.com/
+  source: https://github.com/Stremio/stremio-web
+  docs: https://github.com/tsaridas/stremio-docker
+  scalable: false
+  primary_service: stremio
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: stremio
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    STREAM_PORT:
+      label: Stream Port
+      help: Host-published streaming port for trusted clients.
+    DATA:
+      label: Streaming state
+      help: Select This host. Stores server preferences and locally cached streaming data. Include this
+        folder in a stopped Nex backup.
+services:
+  stremio:
+    image: tsaridas/stremio-docker:latest
+    ports:
+    - ${PORT:-8801}:8080/tcp
+    - ${STREAM_PORT:-11470}:11470/tcp
+    volumes:
+    - ${DATA}:/root/.stremio-server
+    deploy:
+      replicas: 1

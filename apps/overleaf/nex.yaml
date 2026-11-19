@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Overleaf
+  summary: Edit LaTeX documents collaboratively
+  description: Provision an upstream-compatible MongoDB replica set and Redis. Open /launchpad on a private
+    network to add the initial administrator.
+  category: documents
+  website: https://www.overleaf.com/
+  source: https://github.com/overleaf/overleaf
+  docs: https://github.com/overleaf/overleaf/wiki/Quick-Start-Guide
+  primary_service: overleaf
+  post_install: Provision an upstream-compatible MongoDB replica set and Redis. Open /launchpad on a private
+    network to add the initial administrator.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 80
+  options:
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Document data
+      help: Managed directory mounted at /var/lib/overleaf. Choose storage writable by the application.
+services:
+  overleaf:
+    image: docker.io/sharelatex/sharelatex:latest
+    ports:
+    - ${PORT:-23535}:80/tcp
+    volumes:
+    - ${DATA}:/var/lib/overleaf
+    environment:
+      OVERLEAF_MONGO_URL: ${MONGO_URI}
+      OVERLEAF_REDIS_HOST: ${REDIS_HOST}
+      OVERLEAF_REDIS_PORT: ${REDIS_PORT:-6379}
+      OVERLEAF_SITE_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

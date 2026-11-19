@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Spoolman
+  summary: Track 3D-printing filament spools and inventory
+  description: Open the web UI and add your spools. Keep its SQLite database on a single host and limit
+    the unauthenticated interface to a trusted network or an authenticated front end.
+  category: tools
+  website: https://github.com/Donkie/Spoolman
+  source: https://github.com/Donkie/Spoolman
+  docs: https://github.com/Donkie/Spoolman/wiki/Configuration
+  scalable: false
+  primary_service: spoolman
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: spoolman
+    scheme: http
+    port: 8000
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for records and backups.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Filament inventory
+      help: Select This host. Holds the SQLite database and app backups. Include this folder in a stopped
+        Nex backup.
+services:
+  spoolman:
+    image: ghcr.io/donkie/spoolman:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8119}:8000/tcp
+    volumes:
+    - ${DATA}:/home/app/.local/share/spoolman
+    deploy:
+      replicas: 1

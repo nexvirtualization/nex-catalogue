@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ArchiveBox
+  summary: Archive websites, bookmarks and feeds
+  description: The Docker image stores capture data, metadata and snapshots on one managed Nex folder.
+  category: documents
+  website: https://archivebox.io/
+  source: https://github.com/ArchiveBox/ArchiveBox
+  docs: https://docs.archivebox.io/dev/Docker.html
+  primary_service: archivebox
+  post_install: Open /admin/ on your configured host and finish initial account setup. Keep the archive behind
+    authenticated HTTPS before sharing it.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 5797
+  options:
+    BASE_URL:
+      label: Browser address
+      help: Full URL of this ArchiveBox instance including scheme and port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 5797 inside Nex.
+    DATA:
+      label: Archive data
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  archivebox:
+    image: docker.io/archivebox/archivebox:latest
+    ports:
+    - ${PORT:-20190}:5797/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      BASE_URL: ${BASE_URL}
+      PUBLIC_INDEX: 'false'
+      PUBLIC_SNAPSHOTS: 'false'
+    deploy:
+      replicas: 1

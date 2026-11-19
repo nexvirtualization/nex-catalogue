@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LMS
+  summary: Stream your music library using lightweight web and Subsonic clients
+  description: Select your music folder and create the first administrator from a trusted network. Keep
+    the database folder backed up with the app stopped.
+  category: media
+  website: https://github.com/epoupon/lms
+  source: https://github.com/epoupon/lms
+  docs: https://github.com/epoupon/lms/blob/master/INSTALL.md
+  primary_service: lms
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 5082
+  options:
+    DATA:
+      label: Music database and scan cache
+      help: Keep music database and scan cache in this managed folder between restarts.
+    MUSIC:
+      label: Music files
+      help: Keep music files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5082.
+services:
+  lms:
+    image: docker.io/epoupon/lms:latest
+    volumes:
+    - ${DATA}:/var/lms
+    - ${MUSIC}:/music
+    ports:
+    - ${PORT:-5082}:5082/tcp
+    deploy:
+      replicas: 1

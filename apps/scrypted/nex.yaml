@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Scrypted
+  summary: Manage IP cameras through the Scrypted web interface
+  description: Use HTTPS on the app address and create the initial administrator. Add cameras by their
+    IP endpoints. This bridge-network profile supports manual integrations and CPU operation. Discovery
+    features that need host mDNS and direct GPU or USB access depend on the host integration.
+  category: home-automation
+  website: https://scrypted.app/
+  source: https://github.com/koush/scrypted
+  docs: https://github.com/koush/scrypted/blob/main/install/docker/docker-compose.yml
+  scalable: false
+  primary_service: scrypted
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: scrypted
+    scheme: https
+    port: 10443
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 10443.
+    DATA:
+      label: Camera setup
+      help: Select This host. Stores Scrypted settings, credentials and installed plugins. Include this
+        folder in a stopped Nex backup.
+    RECORDINGS:
+      label: Local recordings
+      help: Select This host. Stores recordings when the NVR plugin is licensed and configured to use
+        /nvr. Include this folder in a stopped Nex backup.
+services:
+  scrypted:
+    image: ghcr.io/koush/scrypted:latest
+    environment:
+      SCRYPTED_DOCKER_AVAHI: 'false'
+    ports:
+    - ${PORT:-10443}:10443/tcp
+    volumes:
+    - ${DATA}:/server/volume
+    - ${RECORDINGS}:/nvr
+    deploy:
+      replicas: 1

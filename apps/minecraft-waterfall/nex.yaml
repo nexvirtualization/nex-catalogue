@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Waterfall
+  summary: Run a legacy BungeeCord-compatible Java Edition proxy
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Connect to the Primary address on TCP 25577. This package uses Waterfall 1.21 build 615
+    for existing Waterfall deployments. Edit config.yml to define private backend servers and secure
+    player forwarding. Restrict backend access to the proxy. Make a stopped backup before applying
+    updates.
+  category: games
+  website: https://papermc.io/downloads/waterfall
+  source: https://github.com/itzg/docker-mc-proxy
+  docs: https://docs.papermc.io/waterfall/
+  license: BSD-3-Clause
+  architectures: [amd64, arm64]
+  tags: [minecraft, proxy]
+  options:
+    DATA:
+      label: Proxy settings and plugins
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-waterfall:
+    image: ghcr.io/itzg/mc-proxy:latest
+    environment:
+      TYPE: WATERFALL
+      ENABLE_RCON: 'false'
+      WATERFALL_VERSION: '1.21'
+      WATERFALL_BUILD_ID: '615'
+    expose:
+      - 25577/tcp
+    volumes:
+      - ${DATA}:/server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 5m

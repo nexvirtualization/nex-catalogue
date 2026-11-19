@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: VersityGW
+  summary: Provide an S3-compatible API with local filesystem storage
+  description: Use the configured root access key and secret for the initial S3 connection. Create limited
+    identities for clients and serve externally over HTTPS.
+  category: development
+  website: https://github.com/versity/versitygw
+  source: https://github.com/versity/versitygw
+  docs: https://github.com/versity/versitygw
+  primary_service: versitygw
+  scalable: false
+  license: Apache-2.0
+  options:
+    ACCESS_KEY:
+      label: Root access key
+      help: Choose an access key ID used by the initial S3 client.
+    SECRET_KEY:
+      label: Root secret key
+      type: password
+      help: Use Nex Generate and store it separately for recovery.
+    DATA:
+      label: Object and gateway data
+      help: Keep object and gateway data in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7070.
+services:
+  versitygw:
+    image: docker.io/versity/versitygw:latest
+    command:
+    - --port
+    - :7070
+    - posix
+    - /data
+    environment:
+      ROOT_ACCESS_KEY: ${ACCESS_KEY}
+      ROOT_SECRET_KEY: ${SECRET_KEY}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-7070}:7070/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: evcc
+  summary: Extensible Electric Vehicle Charge Controller and home energy management system
+  description: Extensible Electric Vehicle Charge Controller and home energy management system.
+  category: home-automation
+  source: https://github.com/evcc-io/evcc
+  website: https://evcc.io/
+  docs: https://docs.evcc.io/en/installation/docker/
+  primary_service: evcc
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /root/.evcc.
+    PORT:
+      label: Published 7070/tcp port
+      help: Host port for application listener 7070/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 8887/tcp port
+      help: Host port for application listener 8887/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Set up charging and meters in the web UI. Enter device IP addresses where multicast discovery
+    is unavailable. Keep Data on This host for SQLite.
+  web:
+    port: 7070
+services:
+  evcc:
+    image: docker.io/evcc/evcc:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${DATA}:/root/.evcc
+    ports:
+    - ${PORT:-19882}:7070/tcp
+    - ${PORT_2:-20882}:8887/tcp

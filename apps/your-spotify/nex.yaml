@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Your Spotify
+  summary: Track and visualize your Spotify listening history
+  description: Set browser-facing URLs for the frontend and API. Register the API URL plus /oauth/spotify/callback
+    as a redirect URI in Spotify. Provide a supported MongoDB service over the application network.
+  category: media
+  website: https://github.com/Yooooomi/your_spotify
+  source: https://github.com/Yooooomi/your_spotify
+  docs: https://github.com/Yooooomi/your_spotify
+  primary_service: your-spotify
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 3000
+  options:
+    API_URL:
+      label: Public API address
+      help: Full browser-facing address of the backend service.
+    CLIENT_URL:
+      label: Public client address
+      help: Full browser-facing address of the frontend service.
+    SPOTIFY_ID:
+      label: Spotify client ID
+      help: ID from your Spotify developer application.
+    SPOTIFY_SECRET:
+      label: Spotify client secret
+      type: password
+      help: Secret from your Spotify developer application.
+    MONGO_URL:
+      label: MongoDB connection URL
+      type: password
+      help: Connection URL for the prepared MongoDB instance.
+    API_PORT:
+      label: Backend host port
+      help: Reachable API port when host publication is enabled.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  your-spotify:
+    image: docker.io/yooooomi/your_spotify_client:latest
+    environment:
+      API_ENDPOINT: ${API_URL}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1
+  server:
+    image: docker.io/yooooomi/your_spotify_server:latest
+    ports:
+    - ${API_PORT:-8080}:8080/tcp
+    environment:
+      API_ENDPOINT: ${API_URL}
+      CLIENT_ENDPOINT: ${CLIENT_URL}
+      SPOTIFY_PUBLIC: ${SPOTIFY_ID}
+      SPOTIFY_SECRET: ${SPOTIFY_SECRET}
+      MONGO_ENDPOINT: ${MONGO_URL}
+    deploy:
+      replicas: 1

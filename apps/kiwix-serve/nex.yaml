@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: kiwix-serve
+  summary: Browse offline reference libraries stored as ZIM archives
+  description: Upload at least one ZIM archive to the library before startup. After importing archives,
+    restart the application to load the available collection.
+  category: reading
+  website: https://github.com/kiwix/kiwix-tools
+  source: https://github.com/kiwix/kiwix-tools
+  docs: https://github.com/kiwix/kiwix-tools/blob/main/docker/server/README.md
+  primary_service: kiwix-serve
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8080
+  options:
+    LIBRARY:
+      label: ZIM archive library
+      help: Offline ZIM archives served through Kiwix.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  kiwix-serve:
+    image: ghcr.io/kiwix/kiwix-serve:latest
+    command:
+    - '*.zim'
+    volumes:
+    - ${LIBRARY}:/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

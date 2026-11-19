@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: DOCAT
+  summary: Publish versioned static documentation sites
+  description: Put an authenticating reverse proxy in front of the documentation server when publishing
+    or browsing private material.
+  category: documents
+  website: https://github.com/docat-org/docat
+  source: https://github.com/docat-org/docat
+  docs: https://github.com/docat-org/docat
+  primary_service: docat
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Documentation and settings
+      help: Keep documentation and settings in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  docat:
+    image: ghcr.io/docat-org/docat:latest
+    volumes:
+    - ${DATA}:/var/docat
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

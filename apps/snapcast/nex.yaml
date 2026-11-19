@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Snapcast
+  summary: Synchronize a network audio stream across rooms
+  description: Prepare snapserver.conf with a network audio source and client-visible settings. Connect
+    Snapclients to the application network address on port 1704. Use the web interface on port 1780 and
+    keep administrative controls private.
+  category: media
+  website: https://github.com/snapcast/snapcast
+  source: https://github.com/snapcast/snapcast
+  docs: https://github.com/kerta1n/snapserver-docker
+  scalable: false
+  primary_service: snapcast
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: snapcast
+    scheme: http
+    port: 1780
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for administrative logs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1780.
+    STREAM_PORT:
+      label: Stream Port
+      help: Audio stream port when host publication is enabled.
+    DATA:
+      label: Prepared audio server configuration
+      help: Select This host. Choose the managed folder containing snapserver.conf. Include this folder
+        in a stopped Nex backup.
+services:
+  snapcast:
+    image: ghcr.io/kerta1n/snapserver-docker:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    command:
+    - snapserver
+    - -c
+    - /config/snapserver.conf
+    ports:
+    - ${PORT:-1780}:1780/tcp
+    - ${STREAM_PORT:-1704}:1704/tcp
+    expose:
+    - 1705/tcp
+    volumes:
+    - ${DATA}:/config:ro
+    deploy:
+      replicas: 1

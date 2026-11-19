@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Web-Check
+  summary: Inspect website DNS, certificates and public configuration
+  description: Keep this operator dashboard private. Check only sites you are authorized to inspect.
+  category: tools
+  website: https://github.com/lissy93/web-check
+  source: https://github.com/lissy93/web-check
+  docs: https://github.com/Lissy93/web-check
+  primary_service: web-check
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  web-check:
+    image: ghcr.io/lissy93/web-check:latest
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

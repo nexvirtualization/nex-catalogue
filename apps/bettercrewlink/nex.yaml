@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BetterCrewLink
+  summary: Host proximity voice coordination for Among Us
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Point BetterCrewLink clients at a public HTTPS URL served by a reverse proxy that forwards HTTP
+    and WebSocket traffic to the app’s Primary address on TCP 9736. The configured hostname is also
+    used for peer coordination. Players still need an Among Us lobby.
+  category: games
+  website: https://github.com/OhMyGuus/BetterCrewLink
+  source: https://github.com/OhMyGuus/BetterCrewLink-server
+  docs: https://github.com/OhMyGuus/BetterCrewLink-server#readme
+  license: GPL-3.0 voice server
+  architectures:
+  - amd64
+  tags:
+  - multiplayer
+  options:
+    PUBLIC_HOSTNAME:
+      label: Public hostname
+      help: DNS hostname for BetterCrewLink clients, without a scheme or port.
+    SERVER_NAME:
+      label: Server name
+      help: Name shown to players in the server browser.
+services:
+  bettercrewlink:
+    image: docker.io/ohmyguus/bettercrewlink-server:latest
+    environment:
+      PORT: '9736'
+      HOSTNAME: ${PUBLIC_HOSTNAME}
+      NAME: ${SERVER_NAME:-Nex BetterCrewLink}
+    expose:
+    - 9736/tcp
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PhotoPrism
+  summary: Personal photo management powered by Go and Google TensorFlow
+  description: Personal photo management powered by Go and Google TensorFlow. Browse, organize, and share your
+    personal photo collection, using the latest technologies to automatically tag and find pictures.
+  category: photos
+  source: https://github.com/photoprism/photoprism
+  website: https://photoprism.org
+  docs: https://docs.photoprism.app/getting-started/docker-compose/
+  primary_service: photoprism
+  options:
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser URL including the scheme and port when applicable.
+    STORAGE:
+      label: Storage folder
+      help: Choose the Nex-managed folder mounted at /photoprism/storage.
+    ORIGINALS:
+      label: Originals folder
+      help: Choose the Nex-managed folder mounted at /photoprism/originals.
+    PORT:
+      label: Published 2342/tcp port
+      help: Host port for application listener 2342/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Sign in as admin. Add photos to Originals and run indexing in the UI. Keep Storage on This host
+    for SQLite and include both folders in backups.
+  web:
+    port: 2342
+services:
+  photoprism:
+    image: docker.io/photoprism/photoprism:latest
+    deploy:
+      replicas: 1
+    environment:
+      PHOTOPRISM_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PHOTOPRISM_SITE_URL: ${PUBLIC_URL}
+      PHOTOPRISM_DATABASE_DRIVER: sqlite
+    volumes:
+    - ${STORAGE}:/photoprism/storage
+    - ${ORIGINALS}:/photoprism/originals
+    ports:
+    - ${PORT:-19524}:2342/tcp

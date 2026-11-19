@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Slink
+  summary: Upload and share images through a browser
+  description: Create the initial account from a trusted network. Set the public URL to your HTTPS endpoint
+    and enforce the registration policy you need.
+  category: media
+  website: https://github.com/andrii-kryvoviaz/slink
+  source: https://github.com/andrii-kryvoviaz/slink
+  docs: https://github.com/andrii-kryvoviaz/slink
+  primary_service: slink
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL including scheme and port as needed.
+    DATA:
+      label: Application database
+      help: Keep application database in this managed folder between restarts.
+    IMAGES:
+      label: Uploaded images
+      help: Keep uploaded images in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  slink:
+    image: docker.io/anirdev/slink:latest
+    environment:
+      ORIGIN: ${BASE_URL}
+    volumes:
+    - ${DATA}:/app/var/data
+    - ${IMAGES}:/app/slink/images
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TerraTech Worlds
+  summary: Host a shared TerraTech Worlds save
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Search the TerraTech Worlds multiplayer browser for the server. Change its defaults in TT2/Saved/Config/WindowsServer
+    on a stopped app. The app’s Primary address uses UDP 7777. First start downloads the dedicated
+    server from Steam. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2313330/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/terratechworlds
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/terratechworlds#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - steam
+  options:
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  terratech-worlds:
+    image: ghcr.io/ich777/steamcmd:terratechworlds
+    environment:
+      GAME_ID: '2533070'
+      GAME_PARAMS: ''
+    expose:
+      - 7777/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

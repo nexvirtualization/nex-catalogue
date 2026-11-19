@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Automad
+  summary: Build a website with a flat-file content editor
+  description: Create the initial administrator on a trusted network. Keep the site folder backed up,
+    and configure HTTPS before exposing administration.
+  category: documents
+  website: https://github.com/marcantondahmen/automad
+  source: https://github.com/marcantondahmen/automad
+  docs: https://automad.org/getting-started
+  primary_service: automad
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    SITE:
+      label: Automad website and themes
+      help: Keep automad website and themes in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  automad:
+    image: docker.io/automad/automad:v2
+    volumes:
+    - ${SITE}:/app
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

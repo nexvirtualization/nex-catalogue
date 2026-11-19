@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Multi Theft Auto
+  summary: Host a scripted San Andreas multiplayer world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join the app’s Primary address on UDP 22003. TCP 22005 serves game resources and UDP 22126 handles
+    server discovery. The server and default resources are downloaded on first boot. Put custom resources
+    in the server data folder and configure permissions in the ACL.
+  category: games
+  website: https://multitheftauto.com/
+  source: https://github.com/ich777/docker-mta-server
+  docs: https://wiki.multitheftauto.com/wiki/Server_Manual
+  license: GPL-3.0 game server
+  architectures:
+  - amd64
+  tags:
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  multi-theft-auto:
+    image: ghcr.io/ich777/mtaserver:latest
+    environment:
+      DOWNLOAD_RESOURCES: 'true'
+      UID: '1000'
+      GID: '1000'
+      UMASK: '027'
+    expose:
+    - 22003/udp
+    - 22005/tcp
+    - 22126/udp
+    volumes:
+    - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

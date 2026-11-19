@@ -1,0 +1,218 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Glitchsoc
+  summary: Run a federated social server with Mastodon Glitch Edition
+  description: Provision PostgreSQL, Redis, and SMTP, then run the upstream database initialization and create
+    the first administrator. Route the federation hostname over HTTPS and retain all signing keys. Keep web
+    and worker on one host or use shared storage.
+  category: communication
+  website: https://glitch-soc.github.io/docs/
+  source: https://github.com/glitch-soc/mastodon
+  docs: https://github.com/glitch-soc/mastodon/blob/main/docker-compose.yml
+  primary_service: glitchsoc
+  post_install: Provision PostgreSQL, Redis, and SMTP, then run the upstream database initialization and
+    create the first administrator. Route the federation hostname over HTTPS and retain all signing keys.
+    Keep web and worker on one host or use shared storage.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DETERMINISTIC_KEY:
+      label: Deterministic key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    KEY_SALT:
+      label: Key salt
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    VAPID_PRIVATE_KEY:
+      label: Vapid private key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    VAPID_PUBLIC_KEY:
+      label: Vapid public key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    MEDIA:
+      label: Shared uploaded media
+      help: Managed directory mounted at /mastodon/public/system. Choose storage writable by the application.
+services:
+  glitchsoc:
+    image: docker.io/library/caddy:latest
+    ports:
+    - ${PORT:-23519}:3000/tcp
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      printf '%s\n' '{
+        auto_https off
+      }
+      :3000 {
+        @stream path /api/v1/streaming /api/v1/streaming/*
+        handle @stream {
+          reverse_proxy streaming:4000
+        }
+        handle {
+          reverse_proxy web:3000
+        }
+      }' | exec caddy run --config - --adapter caddyfile
+    deploy:
+      replicas: 1
+  web:
+    image: ghcr.io/glitch-soc/mastodon:v4.7.5
+    environment:
+      RAILS_ENV: production
+      NODE_ENV: production
+      LOCAL_DOMAIN: ${PUBLIC_HOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mastodon_production}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${KEY_SALT}
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ENCRYPTION_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      SMTP_SERVER: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_LOGIN: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${FROM_EMAIL}
+    volumes: &id001
+    - ${MEDIA}:/mastodon/public/system
+    command:
+    - bundle
+    - exec
+    - puma
+    - -C
+    - config/puma.rb
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/glitch-soc/mastodon:v4.7.5
+    environment:
+      RAILS_ENV: production
+      NODE_ENV: production
+      LOCAL_DOMAIN: ${PUBLIC_HOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mastodon_production}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${KEY_SALT}
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ENCRYPTION_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      SMTP_SERVER: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_LOGIN: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${FROM_EMAIL}
+    volumes: *id001
+    command:
+    - bundle
+    - exec
+    - sidekiq
+    deploy:
+      replicas: 1
+  streaming:
+    image: ghcr.io/glitch-soc/mastodon-streaming:v4.7.5
+    environment:
+      RAILS_ENV: production
+      NODE_ENV: production
+      LOCAL_DOMAIN: ${PUBLIC_HOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-mastodon_production}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: ${KEY_SALT}
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: ${ENCRYPTION_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      SMTP_SERVER: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_LOGIN: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_ADDRESS: ${FROM_EMAIL}
+    command:
+    - node
+    - ./streaming/index.js
+    deploy:
+      replicas: 1

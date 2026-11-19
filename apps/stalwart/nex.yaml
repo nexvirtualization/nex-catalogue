@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stalwart Mail Server
+  summary: Host email, calendars and contacts with Stalwart
+  description: Use a dedicated registered network on a selected host. Email and HTTPS services use standard
+    protocol ports on the dedicated application address.
+  category: communication
+  website: https://stalw.art
+  source: https://github.com/stalwartlabs/stalwart
+  docs: https://stalw.art/docs/install/platform/docker/
+  primary_service: stalwart
+  post_install: Use a trusted setup network or HTTPS administrative proxy to reach TCP 8080 from your workstation.
+    Complete the Stalwart setup, configure DNS and certificates, and then make only the required client ports
+    reachable.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  options:
+    CONFIG:
+      label: Stalwart configuration
+      help: Managed directory mounted at /etc/stalwart. Choose storage writable by the application.
+    DATA:
+      label: Mail and account data
+      help: Managed directory mounted at /var/lib/stalwart. Choose storage writable by the application.
+services:
+  stalwart:
+    image: docker.io/stalwartlabs/stalwart:v1
+    volumes:
+    - ${CONFIG}:/etc/stalwart
+    - ${DATA}:/var/lib/stalwart
+    deploy:
+      replicas: 1

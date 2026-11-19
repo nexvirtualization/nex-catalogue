@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenSearch
+  summary: Index and search documents using the OpenSearch API
+  description: Connect with the initial admin account on the private application network. Replace the
+    bundled demo certificates or terminate TLS with a trusted deployment before exposing it.
+  category: development
+  website: https://github.com/opensearch-project/OpenSearch
+  source: https://github.com/opensearch-project/OpenSearch
+  docs: https://docs.opensearch.org/latest/install-and-configure/install-opensearch/docker/
+  primary_service: opensearch
+  scalable: false
+  license: Apache-2.0
+  options:
+    OPENSEARCH_INITIAL_ADMIN_PASSWORD:
+      label: Initial admin password
+      type: password
+      help: Use a strong password that meets OpenSearch complexity requirements.
+    DATA:
+      label: Search indexes and configuration
+      help: Keep search indexes and configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9200.
+services:
+  opensearch:
+    image: docker.io/opensearchproject/opensearch:latest
+    environment:
+      discovery.type: single-node
+      node.store.allow_mmap: 'false'
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    volumes:
+    - ${DATA}:/usr/share/opensearch/data
+    ports:
+    - ${PORT:-9200}:9200/tcp
+    deploy:
+      replicas: 1

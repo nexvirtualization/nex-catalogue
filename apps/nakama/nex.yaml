@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Nakama
+  summary: Run a game backend with matchmaking and leaderboards
+  description: Prepare PostgreSQL and connect over a trusted network. Use the console password for administration
+    and provide the game client key to your authorized clients. Deploy custom server runtime modules in
+    the package data folder.
+  category: development
+  website: https://heroiclabs.com/nakama/
+  source: https://github.com/heroiclabs/nakama
+  docs: https://github.com/heroiclabs/nakama/blob/master/docker-compose-postgres.yml
+  scalable: false
+  primary_service: nakama
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: nakama
+    scheme: http
+    port: 7351
+  works_with:
+  - postgresql
+  options:
+    DB_ADDRESS:
+      label: Database address
+      help: Use user:password@host:5432/nakama without the URI scheme. Percent-encode reserved characters
+        in the database login.
+      type: password
+    ADMIN_PASSWORD:
+      label: Initial console password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    SERVER_KEY:
+      label: Game client key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    SESSION_KEY:
+      label: Session signing key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    REFRESH_KEY:
+      label: Session refresh key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    CONSOLE_KEY:
+      label: Console session key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    RUNTIME_KEY:
+      label: Runtime HTTP key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7351.
+    CLIENT_PORT:
+      label: Client Port
+      help: Host-published client HTTP and WebSocket port.
+    GRPC_PORT:
+      label: Grpc Port
+      help: Host-published gRPC port for trusted clients.
+    DATA:
+      label: Runtime files
+      help: Select This host. Stores custom runtime modules and application files. Include this folder
+        in a stopped Nex backup.
+services:
+  nakama:
+    image: heroiclabs/nakama:latest
+    environment:
+      NAKAMA_DATABASE_ADDRESS: ${DB_ADDRESS}
+      NAKAMA_CONSOLE_PASSWORD: ${ADMIN_PASSWORD}
+      NAKAMA_SERVER_KEY: ${SERVER_KEY}
+      NAKAMA_SESSION_KEY: ${SESSION_KEY}
+      NAKAMA_REFRESH_KEY: ${REFRESH_KEY}
+      NAKAMA_CONSOLE_KEY: ${CONSOLE_KEY}
+      NAKAMA_RUNTIME_KEY: ${RUNTIME_KEY}
+    ports:
+    - ${PORT:-7351}:7351/tcp
+    - ${CLIENT_PORT:-7350}:7350/tcp
+    - ${GRPC_PORT:-7349}:7349/tcp
+    volumes:
+    - ${DATA}:/nakama/data
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - '/nakama/nakama migrate up --database.address "$$NAKAMA_DATABASE_ADDRESS"
+
+      exec /nakama/nakama --database.address "$$NAKAMA_DATABASE_ADDRESS"   --console.password "$$NAKAMA_CONSOLE_PASSWORD"   --console.signing_key
+      "$$NAKAMA_CONSOLE_KEY"   --socket.server_key "$$NAKAMA_SERVER_KEY"   --session.encryption_key "$$NAKAMA_SESSION_KEY"   --session.refresh_encryption_key
+      "$$NAKAMA_REFRESH_KEY"   --runtime.http_key "$$NAKAMA_RUNTIME_KEY"
+
+      '
+    deploy:
+      replicas: 1

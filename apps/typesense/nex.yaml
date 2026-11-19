@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Typesense
+  summary: Run a fast search API with typo tolerance
+  description: Keep the administrative API private and issue scoped API keys for search clients. Back
+    up the data before upgrading.
+  category: development
+  website: https://github.com/typesense/typesense
+  source: https://github.com/typesense/typesense
+  docs: https://typesense.org/docs/guide/install-typesense.html
+  primary_service: typesense
+  scalable: false
+  license: GPL-3.0
+  options:
+    API_KEY:
+      label: Admin API key
+      type: password
+      help: Use Nex Generate. Use separate scoped keys for clients.
+    DATA:
+      label: Search data
+      help: Typesense search collections and indexes.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8108.
+services:
+  typesense:
+    image: docker.io/typesense/typesense:30.2
+    environment:
+      TYPESENSE_DATA_DIR: /data
+      TYPESENSE_API_KEY: ${API_KEY}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8108}:8108/tcp
+    deploy:
+      replicas: 1

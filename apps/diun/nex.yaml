@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Diun
+  summary: Watch a configured list of container images for updates
+  description: Prepare diun.yml in the managed configuration folder and set providers.file.filename to
+    /config/images.yml. Add the images to watch to images.yml and configure a notifier in diun.yml if
+    desired. The application checks registries directly.
+  category: monitoring
+  website: https://crazymax.dev/diun
+  source: https://github.com/crazy-max/diun
+  docs: https://crazymax.dev/diun/providers/file/
+  scalable: false
+  primary_service: diun
+  architectures:
+  - amd64
+  - arm64
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for registry check schedules.
+    CONFIG:
+      label: Prepared image configuration
+      help: Select This host. Choose a folder containing diun.yml and images.yml. Include this folder
+        in a stopped Nex backup.
+    DATA:
+      label: Image history
+      help: Select This host. Stores the registry state and prior observations. Include this folder in
+        a stopped Nex backup.
+services:
+  diun:
+    image: crazymax/diun:latest
+    environment:
+      DIUN_DB_PATH: /data/diun.db
+      TZ: ${TZ:-Etc/UTC}
+    command:
+    - serve
+    - --config
+    - /config/diun.yml
+    volumes:
+    - ${CONFIG}:/config:ro
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

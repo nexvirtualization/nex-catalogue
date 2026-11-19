@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wallabag
+  summary: Save articles to read later in a clean interface
+  description: Set the public URL and complete first sign-in on a trusted network. Use the bundled SQLite
+    profile and back up its database and images together.
+  category: reading
+  website: https://github.com/wallabag/wallabag
+  source: https://github.com/wallabag/wallabag
+  docs: https://github.com/wallabag/docker
+  primary_service: wallabag
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full client-facing address including the scheme and port as needed.
+    DATA:
+      label: Article database
+      help: Wallabag SQLite database and persistent data.
+    IMAGES:
+      label: Article images
+      help: Images downloaded along with articles.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  wallabag:
+    image: docker.io/wallabag/wallabag:latest
+    environment:
+      SYMFONY__ENV__DOMAIN_NAME: ${BASE_URL}
+    volumes:
+    - ${DATA}:/var/www/wallabag/data
+    - ${IMAGES}:/var/www/wallabag/web/assets/images
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

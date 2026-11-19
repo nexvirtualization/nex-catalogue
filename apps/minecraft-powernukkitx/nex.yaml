@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft PowerNukkitX
+  summary: Host a Minecraft Bedrock server with PowerNukkitX plugins
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 19132 in Bedrock Edition. NetherNet media
+    uses UDP 19133. Configure the allowlist and gameplay in pnx.yml. Make a stopped backup before
+    applying updates.
+  category: games
+  website: https://powernukkitx.org/
+  source: https://github.com/PowerNukkitX/PowerNukkitX
+  docs: https://powernukkitx.org/docs/installation/docker
+  license: LGPL-3.0
+  architectures: [amd64]
+  tags: [minecraft, sandbox]
+  options:
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-powernukkitx:
+    image: ghcr.io/powernukkitx/server:latest
+    user: '0:0'
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        if [ ! -f /data/pnx.yml ]; then
+          printf 'network-settings:\n  nethernet:\n    udpPort: 19133\n' > /data/pnx.yml
+        fi
+        chown minecraft:minecraft /data /data/pnx.yml
+        exec setpriv --reuid=minecraft --regid=minecraft --init-groups java -Dfile.encoding=UTF-8 -Dterminal.ansi=true -XX:+UseZGC --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED -cp '/app/powernukkitx.jar:./libs/*' org.powernukkitx.PowerNukkitX --skip-setup --accept-license --language eng
+    expose:
+      - 19132/tcp
+      - 19132/udp
+      - 19133/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

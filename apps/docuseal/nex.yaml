@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: DocuSeal
+  summary: Prepare and sign documents online
+  description: Create the first administrator and set the public HTTPS address. This single-node profile
+    uses DocuSeal’s bundled SQLite configuration. Keep the documents folder and database together.
+  category: documents
+  website: https://www.docuseal.co
+  source: https://github.com/docusealco/docuseal
+  docs: https://www.docuseal.com/docs/deploy-with-docker
+  scalable: false
+  primary_service: docuseal
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: docuseal
+    scheme: http
+    port: 3000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Documents and database
+      help: Select This host. Stores the SQLite records, uploaded and signed PDF files, and configuration.
+        Include this folder in a stopped Nex backup.
+services:
+  docuseal:
+    image: docuseal/docuseal:latest
+    ports:
+    - ${PORT:-8398}:3000/tcp
+    volumes:
+    - ${DATA}:/data/docuseal
+    deploy:
+      replicas: 1

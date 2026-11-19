@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Alloy
+  summary: Collects and forwards metrics, logs, traces, and profiles through configurable OpenTelemetry and
+    Prometheus
+  description: Collects and forwards metrics, logs, traces, and profiles through configurable OpenTelemetry
+    and Prometheus pipelines.
+  category: monitoring
+  source: https://github.com/grafana/alloy
+  website: https://grafana.com/oss/alloy-opentelemetry-collector/
+  docs: https://grafana.com/docs/alloy/latest/set-up/install/docker/
+  primary_service: alloy
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /etc/alloy.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/lib/alloy/data.
+    PORT:
+      label: Published 12345/tcp port
+      help: Host port for application listener 12345/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Put a valid config.alloy in Configuration. Send telemetry to your chosen data sources using
+    the Nex service name and port. The diagnostic UI is intended for operators.
+  web:
+    port: 12345
+services:
+  alloy:
+    image: docker.io/grafana/alloy:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/etc/alloy
+    - ${DATA}:/var/lib/alloy/data
+    ports:
+    - ${PORT:-19756}:12345/tcp
+    command:
+    - run
+    - --server.http.listen-addr=0.0.0.0:12345
+    - --storage.path=/var/lib/alloy/data
+    - /etc/alloy/config.alloy

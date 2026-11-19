@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: wanderer
+  summary: Catalog and share outdoor routes and trails
+  description: Provision Meilisearch with a private master key and use the trusted HTTPS address. Keep PocketBase
+    and web services on one host or use shared storage.
+  category: photos
+  website: https://github.com/open-wanderer/wanderer
+  source: https://github.com/open-wanderer/wanderer
+  docs: https://github.com/open-wanderer/wanderer/blob/main/docker-compose.yml
+  primary_service: wanderer
+  post_install: Provision Meilisearch with a private master key and use the trusted HTTPS address. Keep PocketBase
+    and web services on one host or use shared storage.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    MEILI_URL:
+      label: Meili url
+      help: Enter the deployment value described in the upstream setup guide.
+    MEILI_KEY:
+      label: Meili key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PROXY_SECRET:
+      label: Proxy secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Enter a stable 32-character PocketBase encryption key.
+      type: password
+    DISABLE_SIGNUP:
+      label: Disable signup
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    UPLOADS:
+      label: Trail uploads
+      help: Managed directory mounted at /app/uploads. Choose storage writable by the application.
+    DB_STORAGE:
+      label: PocketBase database
+      help: Managed writable directory mounted at /pb_data in PocketBase.
+    PLUGINS:
+      label: PocketBase plugins
+      help: Managed writable directory mounted at /data/plugins in PocketBase.
+services:
+  wanderer:
+    image: docker.io/flomp/wanderer-web:latest
+    ports:
+    - ${PORT:-23534}:3000/tcp
+    volumes:
+    - ${UPLOADS}:/app/uploads
+    environment:
+      MEILI_URL: ${MEILI_URL}
+      MEILI_MASTER_KEY: ${MEILI_KEY}
+      ORIGIN: ${PUBLIC_URL}
+      PUBLIC_POCKETBASE_URL: http://pocketbase:8090
+      POCKETBASE_PROXY_SECRET: ${PROXY_SECRET}
+      BODY_SIZE_LIMIT: 2G
+      PUBLIC_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      UPLOAD_FOLDER: /app/uploads
+    deploy:
+      replicas: 1
+  pocketbase:
+    image: docker.io/flomp/wanderer-db:latest
+    environment:
+      MEILI_URL: ${MEILI_URL}
+      MEILI_MASTER_KEY: ${MEILI_KEY}
+      ORIGIN: ${PUBLIC_URL}
+      POCKETBASE_PROXY_SECRET: ${PROXY_SECRET}
+      POCKETBASE_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    volumes:
+    - ${DB_STORAGE}:/pb_data
+    - ${PLUGINS}:/data/plugins
+    deploy:
+      replicas: 1

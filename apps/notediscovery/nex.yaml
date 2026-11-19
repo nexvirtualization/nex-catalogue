@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NoteDiscovery
+  summary: Write and find notes in a Markdown workspace
+  description: The application keeps Markdown notes in the data folder. Keep it on a private network or
+    configure authentication through an HTTPS reverse proxy before granting access.
+  category: productivity
+  website: https://www.notediscovery.com/
+  source: https://github.com/gamosoft/NoteDiscovery
+  docs: https://github.com/gamosoft/NoteDiscovery#quick-start
+  scalable: false
+  primary_service: notediscovery
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: notediscovery
+    scheme: http
+    port: 8000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Notes
+      help: Select This host. Stores notes, attachments and related files. Include this folder in a stopped
+        Nex backup.
+services:
+  notediscovery:
+    image: ghcr.io/gamosoft/notediscovery:latest
+    ports:
+    - ${PORT:-8120}:8000/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

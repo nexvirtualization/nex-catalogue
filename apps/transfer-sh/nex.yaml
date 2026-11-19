@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: transfer.sh
+  summary: Share files using simple HTTP uploads and links
+  description: Keep uploads private or require authentication at the reverse proxy. Configure retention
+    and back up the returned file URLs with their contents.
+  category: downloads
+  website: https://github.com/dutchcoders/transfer.sh
+  source: https://github.com/dutchcoders/transfer.sh
+  docs: https://github.com/dutchcoders/transfer.sh
+  primary_service: transfer-sh
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Uploaded files
+      help: Keep uploaded files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  transfer-sh:
+    image: docker.io/dutchcoders/transfer.sh:latest
+    command:
+    - --provider
+    - local
+    - --basedir
+    - /data
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

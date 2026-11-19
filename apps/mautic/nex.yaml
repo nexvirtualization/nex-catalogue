@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mautic
+  summary: Manage campaigns, audience segments and marketing automation
+  description: Prepare the database and complete the initial web installer on a trusted network. Set
+    up a verified mail relay and your public HTTPS address before sending campaigns.
+  category: management
+  website: https://github.com/mautic/mautic
+  source: https://github.com/mautic/mautic
+  docs: https://github.com/mautic/docker-mautic
+  primary_service: mautic
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    MAUTIC_DB_HOST:
+      label: MySQL hostname
+      help: Reachable database server.
+    MAUTIC_DB_DATABASE:
+      label: Database name
+      help: Prepared Mautic database.
+    MAUTIC_DB_USER:
+      label: Database username
+      help: Dedicated application database user.
+    MAUTIC_DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the database user.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    CONFIG:
+      label: Mautic configuration
+      help: Keep mautic configuration in this managed folder between restarts.
+    LOGS:
+      label: Mautic logs
+      help: Keep mautic logs in this managed folder between restarts.
+    MEDIA:
+      label: Marketing media
+      help: Keep marketing media in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  mautic:
+    image: docker.io/mautic/mautic:7-apache
+    environment:
+      DOCKER_MAUTIC_ROLE: mautic_web
+      DOCKER_MAUTIC_RUN_MIGRATIONS: 'true'
+      MAUTIC_DB_HOST: ${MAUTIC_DB_HOST}
+      MAUTIC_DB_DATABASE: ${MAUTIC_DB_DATABASE}
+      MAUTIC_DB_USER: ${MAUTIC_DB_USER}
+      MAUTIC_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      MAUTIC_URL: ${PUBLIC_URL}
+    volumes:
+    - ${CONFIG}:/var/www/html/config
+    - ${LOGS}:/var/www/html/var/logs
+    - ${MEDIA}:/var/www/html/docroot/media
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1
+  cron:
+    image: docker.io/mautic/mautic:7-apache
+    environment:
+      MAUTIC_DB_HOST: ${MAUTIC_DB_HOST}
+      MAUTIC_DB_DATABASE: ${MAUTIC_DB_DATABASE}
+      MAUTIC_DB_USER: ${MAUTIC_DB_USER}
+      MAUTIC_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      DOCKER_MAUTIC_ROLE: mautic_cron
+      MAUTIC_URL: ${PUBLIC_URL}
+    volumes:
+    - ${CONFIG}:/var/www/html/config
+    - ${LOGS}:/var/www/html/var/logs
+    - ${MEDIA}:/var/www/html/docroot/media
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/mautic/mautic:7-apache
+    environment:
+      MAUTIC_DB_HOST: ${MAUTIC_DB_HOST}
+      MAUTIC_DB_DATABASE: ${MAUTIC_DB_DATABASE}
+      MAUTIC_DB_USER: ${MAUTIC_DB_USER}
+      MAUTIC_DB_PASSWORD: ${MAUTIC_DB_PASSWORD}
+      DOCKER_MAUTIC_ROLE: mautic_worker
+      MAUTIC_URL: ${PUBLIC_URL}
+    volumes:
+    - ${CONFIG}:/var/www/html/config
+    - ${LOGS}:/var/www/html/var/logs
+    - ${MEDIA}:/var/www/html/docroot/media
+    deploy:
+      replicas: 1

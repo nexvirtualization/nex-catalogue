@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenRouteService
+  summary: Generate routes and travel-time calculations for map data
+  description: Prepare the folder with your OpenRouteService configuration and OpenStreetMap extract.
+    The first graph build can take substantial time, memory and disk space.
+  category: development
+  website: https://github.com/GIScience/openrouteservice
+  source: https://github.com/GIScience/openrouteservice
+  docs: https://giscience.github.io/openrouteservice/run-instance/running-with-docker
+  primary_service: openrouteservice
+  scalable: false
+  license: GPL-3.0
+  options:
+    DATA:
+      label: OpenRouteService configuration and maps
+      help: Keep openrouteservice configuration and maps in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8082.
+services:
+  openrouteservice:
+    image: docker.io/openrouteservice/openrouteservice:latest
+    volumes:
+    - ${DATA}:/home/ors
+    ports:
+    - ${PORT:-8082}:8082/tcp
+    deploy:
+      replicas: 1

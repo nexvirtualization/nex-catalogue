@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: draw.io
+  summary: Create flowcharts and technical diagrams in your browser
+  description: The container serves the standalone diagrams.net editor. Save to a local file or to an integration
+    that you configure through the editor.
+  category: productivity
+  website: https://draw.io
+  source: https://github.com/jgraph/drawio
+  docs: https://github.com/jgraph/drawio/wiki/Self-Hosting
+  license: Apache-2.0
+  primary_service: drawio
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open draw.io and export or save your diagrams. For HTTPS, terminate TLS at your reverse proxy
+    and forward to internal port 8080.
+  web:
+    port: 8080
+  scale:
+  - drawio
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+services:
+  drawio:
+    image: docker.io/jgraph/drawio:latest
+    ports:
+    - ${PORT:-18111}:8080/tcp
+    deploy:
+      replicas: 1

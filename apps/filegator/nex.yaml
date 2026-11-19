@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FileGator
+  summary: Manage and share files in a browser
+  description: The upstream initial login uses username admin and password admin123. Change the initial
+    password on a trusted network before using an HTTPS proxy to expose the service.
+  category: tools
+  website: https://filegator.io/
+  source: https://github.com/filegator/filegator
+  docs: https://github.com/filegator/filegator#readme
+  scalable: false
+  primary_service: filegator
+  architectures:
+  - amd64
+  web:
+    service: filegator
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Hosted files
+      help: Select This host. Stores files users can browse and upload. Include this folder in a stopped
+        Nex backup.
+    CONFIG:
+      label: Private application state
+      help: Select This host. Stores application-private settings and users. Include this folder in a
+        stopped Nex backup.
+services:
+  filegator:
+    image: filegator/filegator:latest
+    ports:
+    - ${PORT:-8118}:8080/tcp
+    volumes:
+    - ${DATA}:/var/www/filegator/repository
+    - ${CONFIG}:/var/www/filegator/private
+    deploy:
+      replicas: 1

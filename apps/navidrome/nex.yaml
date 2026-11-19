@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Navidrome
+  summary: Stream your music collection to Subsonic clients
+  description: Lightweight music server with a browser player and Subsonic-compatible clients. Scans an existing
+    read-only music library and stores accounts, playlists and cache separately. The first visitor creates the administrator.
+    One copy only. Uses the upstream image default user so new Nex This host folders initialize without a host permission
+    step. In Nex, keep one chosen host when using This host folders; local data has no automatic host failover.
+  category: media
+  website: https://www.navidrome.org
+  source: https://github.com/navidrome/navidrome
+  license: GPL-3.0
+  scalable: false
+  tags:
+  - music
+  - streaming
+  - subsonic
+  options:
+    PORT:
+      label: Web port
+      help: Published HTTP port. Open it on a trusted network and create the administrator before exposing it to
+        other users. With Network → Docker and host publishing enabled, use the chosen host web port. On a registered
+        VLAN or private Primary network with its own address, use that address and internal port 4533; host publishing
+        is a separate switch.
+    DATA:
+      label: Settings and database
+      help: Persistent /data for the database, playlists and artwork cache. Must be writable by the image default
+        root user; prefer reliable storage on This host and back it up.
+    MUSIC:
+      label: Music library
+      help: Existing music at /music, mounted read-only. The image default root user needs read and directory traversal
+        permissions; NAS export permissions still apply.
+  primary_service: navidrome
+services:
+  navidrome:
+    image: navidrome/navidrome:latest
+    ports:
+    - ${PORT:-4533}:4533/tcp
+    volumes:
+    - ${DATA}:/data
+    - ${MUSIC}:/music:ro
+    deploy:
+      replicas: 1

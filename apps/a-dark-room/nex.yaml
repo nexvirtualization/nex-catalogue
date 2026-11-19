@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: A Dark Room
+  summary: Play the upstream browser-based text adventure
+  description: Serves the upstream static game from a verified source revision. Each browser retains its own save.
+  category: games
+  source: https://github.com/doublespeakgames/adarkroom
+  website: https://adarkroom.doublespeakgames.com/
+  docs: https://github.com/doublespeakgames/adarkroom/blob/1fada4620b6c66bd07bf15a3f1eb8223df8bc1d7/README.md
+  license: MPL-2.0
+  primary_service: a-dark-room
+  web:
+    port: 80
+  post_install: Choose a client-reachable primary network and open the app using its assigned address.
+services:
+  a-dark-room:
+    image: docker.io/library/nginx:latest
+    expose:
+      - 80/tcp
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        revision=1fada4620b6c66bd07bf15a3f1eb8223df8bc1d7
+        file=$$(mktemp)
+        trap 'rm -f "$$file"' EXIT
+        curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+          --retry 2 --max-time 60 --max-filesize 12582912 \
+          "https://codeload.github.com/doublespeakgames/adarkroom/tar.gz/$$revision" -o "$$file"
+        printf '%s  %s\n' '9138920520c5268a6575cb68fe1487927138b998ca75d6764f2f88acbe9b0012' "$$file" | sha256sum -c -
+        root="adarkroom-$$revision"
+        tar -xzf "$$file" -C /usr/share/nginx/html --strip-components=1 \
+          "$$root/LICENSE.md" "$$root/index.html" "$$root/browserWarning.html" "$$root/mobileWarning.html" \
+          "$$root/favicon.ico" "$$root/audio" "$$root/css" "$$root/img" "$$root/lang" "$$root/lib" "$$root/script"
+        test -s /usr/share/nginx/html/index.html
+        rm -f "$$file"
+        trap - EXIT
+        exec /docker-entrypoint.sh nginx -g 'daemon off;'
+    deploy:
+      replicas: 1

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: n8n
+  summary: Free node based Workflow Automation Tool
+  description: Free node based Workflow Automation Tool. Easily automate tasks across different services.
+  category: productivity
+  source: https://github.com/n8n-io/n8n
+  website: https://n8n.io/
+  docs: https://docs.n8n.io/hosting/installation/docker/
+  primary_service: n8n
+  options:
+    ENCRYPTION_KEY:
+      label: Encryption key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+      help: Full public HTTPS URL including a trailing slash.
+    PROXY_HOPS:
+      label: Proxy hops
+    TZ:
+      label: Tz
+    DATA:
+      label: Data folder
+      help: Stores the SQLite database, installed community nodes and instance settings.
+    PORT:
+      label: Published 5678/tcp port
+      help: Host port for application listener 5678/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Supply the client-facing HTTPS URL. Create the owner on first sign-in. Keep this folder and
+    the encryption key together in backups.
+  web:
+    port: 5678
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    deploy:
+      replicas: 1
+    environment:
+      N8N_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      N8N_EDITOR_BASE_URL: ${PUBLIC_URL}
+      WEBHOOK_URL: ${PUBLIC_URL}
+      N8N_PROXY_HOPS: ${PROXY_HOPS:-1}
+      GENERIC_TIMEZONE: ${TZ:-Etc/UTC}
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+    - ${DATA}:/home/node/.n8n
+    ports:
+    - ${PORT:-19523}:5678/tcp

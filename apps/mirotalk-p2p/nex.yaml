@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MiroTalk P2P
+  summary: Simple, secure, fast real-time video conferences up to 4k and 60fps, compatible with all browsers
+    and
+  description: Simple, secure, fast real-time video conferences up to 4k and 60fps, compatible with all browsers
+    and platforms.
+  category: communication
+  source: https://github.com/miroslavpejic85/mirotalk
+  website: https://p2p.mirotalk.com
+  docs: https://docs.mirotalk.com/mirotalk-p2p/self-hosting/
+  primary_service: mirotalk-p2p
+  options:
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Serve over browser-trusted HTTPS with WebSocket forwarding. Configure a TURN server for clients
+    that cannot connect directly.
+  web:
+    port: 3000
+services:
+  mirotalk-p2p:
+    image: docker.io/mirotalk/p2p:latest
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-19905}:3000/tcp

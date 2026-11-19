@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Apache APISIX
+  summary: Route authorized HTTP API traffic through a gateway
+  description: Select a prepared standalone APISIX configuration folder containing config.yaml and apisix.yaml.
+    Configure routing and authentication as required. The profiles with etcd do not use this configuration.
+  category: development
+  website: https://github.com/apache/apisix
+  source: https://github.com/apache/apisix
+  docs: https://apisix.apache.org/docs/apisix/deployment-modes/
+  primary_service: apache-apisix
+  scalable: false
+  license: Apache-2.0
+  options:
+    CONFIG:
+      label: Prepared gateway configuration
+      help: Keep prepared gateway configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9080.
+services:
+  apache-apisix:
+    image: docker.io/apache/apisix:latest
+    volumes:
+    - ${CONFIG}:/usr/local/apisix/conf
+    ports:
+    - ${PORT:-9080}:9080/tcp
+    deploy:
+      replicas: 1

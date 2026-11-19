@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stash
+  summary: Organize and browse a personal media collection
+  description: Complete the setup wizard on a trusted network and set authentication before sharing
+    access. Add the /data library path to Stash and scan it after importing media.
+  category: media
+  website: https://github.com/stashapp/stash
+  source: https://github.com/stashapp/stash
+  docs: https://docs.stashapp.cc/installation/docker/
+  primary_service: stash
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 9999
+  options:
+    CONFIG:
+      label: Application configuration
+      help: Stash configuration and database.
+    LIBRARY:
+      label: Media library
+      help: Your source media collection.
+    METADATA:
+      label: Library metadata
+      help: Downloaded metadata.
+    CACHE:
+      label: Media cache
+      help: Cached assets.
+    GENERATED:
+      label: Generated media
+      help: Previews and other generated content.
+    BLOBS:
+      label: Media database blobs
+      help: Stored media-related binary files.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9999.
+services:
+  stash:
+    image: docker.io/stashapp/stash:latest
+    environment:
+      STASH_STASH: /data
+      STASH_GENERATED: /generated
+      STASH_METADATA: /metadata
+      STASH_CACHE: /cache
+      STASH_PORT: '9999'
+    volumes:
+    - ${CONFIG}:/root/.stash
+    - ${LIBRARY}:/data
+    - ${METADATA}:/metadata
+    - ${CACHE}:/cache
+    - ${GENERATED}:/generated
+    - ${BLOBS}:/blobs
+    ports:
+    - ${PORT:-9999}:9999/tcp
+    deploy:
+      replicas: 1

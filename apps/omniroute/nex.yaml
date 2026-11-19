@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OmniRoute
+  summary: Connect client applications to multiple model providers
+  description: Use the dashboard to connect model providers and issue API keys for clients. Restrict the
+    management interface to a trusted network and enable authentication before opening the API through
+    an HTTPS proxy.
+  category: ai
+  website: https://github.com/cheaper-inference/OmniRoute
+  source: https://github.com/cheaper-inference/OmniRoute
+  docs: https://github.com/cheaper-inference/OmniRoute#readme
+  scalable: false
+  primary_service: omniroute
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: omniroute
+    scheme: http
+    port: 20128
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 20128.
+    API_PORT:
+      label: Api Port
+      help: Host-published OpenAI-compatible API port.
+    DATA:
+      label: Gateway configuration
+      help: Select This host. Stores configured providers, API keys and settings. Include this folder
+        in a stopped Nex backup.
+services:
+  omniroute:
+    image: diegosouzapw/omniroute:latest
+    environment:
+      NODE_ENV: production
+      PORT: '20128'
+      DASHBOARD_PORT: '20128'
+      API_PORT: '20129'
+      API_HOST: 0.0.0.0
+      HOSTNAME: 0.0.0.0
+      DATA_DIR: /app/data
+    ports:
+    - ${PORT:-20128}:20128/tcp
+    - ${API_PORT:-20129}:20129/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

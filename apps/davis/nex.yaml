@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Davis
+  summary: Provide a CalDAV and CardDAV server for calendar and contacts
+  description: Prepare a MariaDB database and apply the upstream Davis migrations using the application
+    container. Use an HTTPS proxy and sign in to /dashboard with the configured password.
+  category: productivity
+  website: https://github.com/tchapi/davis
+  source: https://github.com/tchapi/davis
+  docs: https://github.com/tchapi/davis
+  primary_service: davis
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    DATABASE_URL:
+      label: Database connection URL
+      type: password
+      help: Provide the supported MariaDB or PostgreSQL database URL.
+    ADMIN_PASSWORD:
+      label: Dashboard administrator password
+      type: password
+      help: Use Nex Generate.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  davis:
+    image: ghcr.io/tchapi/davis-standalone:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_DRIVER: mysql
+      APP_ENV: prod
+      ADMIN_LOGIN: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

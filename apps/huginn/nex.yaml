@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Huginn
+  summary: Build private automations that observe and connect services
+  description: Use the upstream initial administrator credentials printed in the startup logs, and change
+    them. Configure automations only for your own services and preserve the application secret.
+  category: productivity
+  website: https://github.com/huginn/huginn
+  source: https://github.com/huginn/huginn
+  docs: https://github.com/huginn/huginn
+  primary_service: huginn
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve the secret across restores.
+    DATA:
+      label: Huginn database
+      help: Keep huginn database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  huginn:
+    image: ghcr.io/huginn/huginn:latest
+    environment:
+      APP_SECRET_TOKEN: ${SECRET}
+    volumes:
+    - ${DATA}:/var/lib/mysql
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Fusio
+  summary: API management platform which helps to build and manage REST APIs
+  description: API management platform which helps to build and manage REST APIs.
+  category: development
+  source: https://github.com/apioo/fusio
+  website: https://www.fusio-project.org/
+  docs: https://github.com/apioo/fusio#installation
+  primary_service: fusio
+  options:
+    PROJECT_KEY:
+      label: Project key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    ADMIN_USER:
+      label: Admin user
+    ADMIN_EMAIL:
+      label: Admin email
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision a MySQL database and enter a PDO MySQL URI, such as pdo-mysql://user:pass@db/fusio.
+    Sign in at /apps/fusio on first use.
+  web:
+    port: 80
+services:
+  fusio:
+    image: docker.io/fusio/fusio:latest
+    deploy:
+      replicas: 1
+    environment:
+      FUSIO_PROJECT_KEY: ${PROJECT_KEY}
+      FUSIO_CONNECTION: ${DATABASE_URL}
+      FUSIO_BACKEND_USER: ${ADMIN_USER:-admin}
+      FUSIO_BACKEND_EMAIL: ${ADMIN_EMAIL}
+      FUSIO_BACKEND_PW: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-19970}:80/tcp

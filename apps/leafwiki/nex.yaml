@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LeafWiki
+  summary: Organize a Markdown wiki as a tree of pages
+  description: Use the administrator password entered in Nex to sign in. Use an authenticated HTTPS route
+    for remote clients and keep the direct listener on a trusted network.
+  category: productivity
+  website: https://github.com/perber/leafwiki
+  source: https://github.com/perber/leafwiki
+  docs: https://github.com/perber/leafwiki#readme
+  scalable: false
+  primary_service: leafwiki
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: leafwiki
+    scheme: http
+    port: 8080
+  options:
+    JWT_SECRET:
+      label: Wiki session secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Wiki files
+      help: Select This host. Stores Markdown pages, configuration and users. Include this folder in a
+        stopped Nex backup.
+services:
+  leafwiki:
+    image: ghcr.io/perber/leafwiki:latest
+    environment:
+      LEAFWIKI_JWT_SECRET: ${JWT_SECRET}
+      LEAFWIKI_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      LEAFWIKI_ALLOW_INSECURE: 'true'
+    ports:
+    - ${PORT:-8164}:8080/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

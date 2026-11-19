@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PgDog
+  summary: Pool and route PostgreSQL client connections
+  description: Prepare pgdog.toml with reachable PostgreSQL servers and users.toml with client credentials
+    before deploying. Keep both files private and store them in the selected read-only configuration folder.
+    Clients connect to PgDog using the PostgreSQL protocol on TCP 6432. Use the dedicated application
+    network for trusted clients.
+  category: development
+  website: https://pgdog.dev/
+  source: https://github.com/pgdogdev/pgdog
+  docs: https://docs.pgdog.dev/installation/
+  scalable: false
+  primary_service: pgdog
+  architectures:
+  - amd64
+  - arm64
+  works_with:
+  - postgresql
+  options:
+    CONFIG:
+      label: Prepared PostgreSQL routing configuration
+      help: Select This host. Choose a folder containing pgdog.toml and users.toml. Keep the listener
+        on TCP 6432 for this profile. Include this folder in a stopped Nex backup.
+services:
+  pgdog:
+    image: ghcr.io/pgdogdev/pgdog:v0.1.65
+    command:
+    - /usr/local/bin/pgdog
+    - --config
+    - /settings/pgdog.toml
+    - --users
+    - /settings/users.toml
+    expose:
+    - 6432/tcp
+    volumes:
+    - ${CONFIG}:/settings:ro
+    deploy:
+      replicas: 1

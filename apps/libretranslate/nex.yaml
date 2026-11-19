@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LibreTranslate
+  summary: Translate text with a locally hosted API and browser interface
+  description: This instance can use memory and CPU intensively. Restrict its unauthenticated API to
+    a trusted network. The initial startup can take time while models become available.
+  category: tools
+  website: https://github.com/LibreTranslate/LibreTranslate
+  source: https://github.com/LibreTranslate/LibreTranslate
+  docs: https://docs.libretranslate.com/guides/installation/
+  primary_service: libretranslate
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 5000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  libretranslate:
+    image: docker.io/libretranslate/libretranslate:latest
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

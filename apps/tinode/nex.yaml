@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tinode
+  summary: Host a private instant-messaging service
+  description: Prepare PostgreSQL and use a public HTTPS proxy with WebSocket support. Provide a random
+    signing key and configure user verification and optional calling infrastructure through the upstream
+    server configuration.
+  category: communication
+  website: https://github.com/tinode
+  source: https://github.com/tinode/chat
+  docs: https://github.com/tinode/chat/blob/master/docker/README.md
+  scalable: false
+  primary_service: tinode
+  architectures:
+  - amd64
+  web:
+    service: tinode
+    scheme: http
+    port: 6060
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    TOKEN_KEY:
+      label: Authentication token key
+      help: Provide 32 random bytes encoded in base64.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 6060.
+services:
+  tinode:
+    image: tinode/tinode:latest
+    environment:
+      POSTGRES_DSN: ${DATABASE_URL}
+      STORE_USE_ADAPTER: postgres
+      SAMPLE_DATA: ''
+      AUTH_TOKEN_KEY: ${TOKEN_KEY}
+    ports:
+    - ${PORT:-8873}:6060/tcp
+    deploy:
+      replicas: 1

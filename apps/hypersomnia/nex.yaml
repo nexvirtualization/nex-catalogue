@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hypersomnia
+  summary: Host a dedicated Hypersomnia game server
+  description: Select one x86-64 host and a dedicated Primary network reachable by players. Clients connect
+    to the app address on UDP 8412. Browser clients also use UDP 9000. Allow outbound UDP to the upstream
+    server list if you want it advertised. Preserve the server state and key through upgrades.
+  category: games
+  website: https://github.com/TeamHypersomnia/Hypersomnia
+  source: https://github.com/TeamHypersomnia/Hypersomnia
+  docs: https://github.com/TeamHypersomnia/Hypersomnia/blob/master/README_SERVER.md
+  scalable: false
+  primary_service: hypersomnia
+  architectures:
+  - amd64
+  options:
+    DATA:
+      label: Server configuration and data
+      help: Select This host. Stores server config, identity and custom maps. Existing folders must be
+        writable by UID 999. Include this folder in a stopped Nex backup.
+services:
+  hypersomnia:
+    image: ghcr.io/teamhypersomnia/hypersomnia-server:latest
+    expose:
+    - 8412/udp
+    - 9000/udp
+    volumes:
+    - ${DATA}:/home/hypersomniac/.config/Hypersomnia/user
+    deploy:
+      replicas: 1

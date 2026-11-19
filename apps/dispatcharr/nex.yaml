@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dispatcharr
+  summary: Manage streams and guides from authorized television sources
+  description: Complete first-time administrator setup on a trusted network. Configure sources you have
+    access to and keep the service behind your access controls.
+  category: media
+  website: https://github.com/Dispatcharr/Dispatcharr
+  source: https://github.com/Dispatcharr/Dispatcharr
+  docs: https://dispatcharr.github.io/dispatcharr-docs/
+  primary_service: dispatcharr
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 9191
+  options:
+    DATA:
+      label: Stream database and configuration
+      help: Keep stream database and configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9191.
+services:
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-9191}:9191/tcp
+    deploy:
+      replicas: 1

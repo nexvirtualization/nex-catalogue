@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wayback
+  summary: Archive pages and serve your saved web references
+  description: Select a folder prepared with the Wayback configuration for your authorized archive sources.
+    Configure the private web endpoint before using the service.
+  category: documents
+  website: https://github.com/wabarc/wayback
+  source: https://github.com/wabarc/wayback
+  docs: https://github.com/wabarc/wayback
+  primary_service: wayback
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8964
+  options:
+    DATA:
+      label: Archive state and configuration
+      help: Keep archive state and configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8964.
+services:
+  wayback:
+    image: docker.io/wabarc/wayback:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8964}:8964/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PsiTransfer
+  summary: Share files with resumable uploads and downloads
+  description: The administrator password protects administration. For a private instance, restrict the
+    upload interface with a trusted network or an authenticated proxy before publishing any share links.
+  category: tools
+  website: https://github.com/psi-4ward/psitransfer
+  source: https://github.com/psi-4ward/psitransfer
+  docs: https://github.com/psi-4ward/psitransfer#readme
+  scalable: false
+  primary_service: psitransfer
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: psitransfer
+    scheme: http
+    port: 3000
+  options:
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Shared files
+      help: Select This host. Stores uploads and share metadata. Include this folder in a stopped Nex
+        backup.
+services:
+  psitransfer:
+    image: psitrax/psitransfer:latest
+    environment:
+      PSITRANSFER_ADMIN_PASS: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-8146}:3000/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

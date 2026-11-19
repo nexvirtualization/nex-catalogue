@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Unmanic
+  summary: Optimize a media library with CPU transcoding
+  description: Choose a writable media library and select a software transcoding plugin. Open the dashboard
+    on a trusted network. This profile uses the host CPU.
+  category: media
+  website: https://github.com/Unmanic/unmanic
+  source: https://github.com/unmanic/unmanic
+  docs: https://docs.unmanic.app/docs/installation/docker
+  scalable: false
+  primary_service: unmanic
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: unmanic
+    scheme: http
+    port: 8888
+  options:
+    PUID:
+      label: Puid
+      help: UID with write access to the library.
+    PGID:
+      label: Pgid
+      help: GID with write access to the library.
+    TZ:
+      label: Tz
+      help: IANA time zone for processing jobs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8888.
+    DATA:
+      label: Transcoding configuration
+      help: Select This host. Stores plugins, preferences and queue state. Include this folder in a stopped
+        Nex backup.
+    LIBRARY:
+      label: Media library
+      help: Select This host. Choose media files to optimize in place. Include this folder in a stopped
+        Nex backup.
+    CACHE:
+      label: Processing cache
+      help: Select This host. Stores temporary transcodes. Include this folder in a stopped Nex backup.
+services:
+  unmanic:
+    image: josh5/unmanic:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8802}:8888/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${LIBRARY}:/library
+    - ${CACHE}:/tmp/unmanic
+    deploy:
+      replicas: 1

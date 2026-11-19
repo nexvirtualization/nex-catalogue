@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: WatchYourLAN
+  summary: Track devices on a dedicated local network
+  description: Select a registered Primary network on the physical LAN you administer. Specify the interface
+    visible to the application on that network. Keep the discovery dashboard private.
+  category: networking
+  website: https://github.com/aceberg/WatchYourLAN
+  source: https://github.com/aceberg/WatchYourLAN
+  docs: https://github.com/aceberg/WatchYourLAN#docker
+  scalable: false
+  primary_service: watchyourlan
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: watchyourlan
+    scheme: http
+    port: 8840
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for discovery timestamps.
+    LAN_INTERFACES:
+      label: Lan Interfaces
+      help: Space-separated container interface names connected to managed LAN networks.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8840.
+    DATA:
+      label: Discovery history
+      help: Select This host. Stores application configuration and detected MAC addresses. Include this
+        folder in a stopped Nex backup.
+services:
+  watchyourlan:
+    image: aceberg/watchyourlan:latest
+    environment:
+      HOST: 0.0.0.0
+      PORT: '8840'
+      TZ: ${TZ:-Etc/UTC}
+      IFACES: ${LAN_INTERFACES:-eth0}
+    ports:
+    - ${PORT:-8840}:8840/tcp
+    volumes:
+    - ${DATA}:/data/WatchYourLAN
+    cap_add:
+    - NET_RAW
+    deploy:
+      replicas: 1

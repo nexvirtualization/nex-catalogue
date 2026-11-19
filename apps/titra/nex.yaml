@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Titra
+  summary: Track time against freelance projects
+  description: Provision an authenticated MongoDB deployment first. Use a browser-addressable ROOT_URL
+    and complete initial setup from a trusted network.
+  category: productivity
+  website: https://titra.io/
+  source: https://github.com/titraio/titra
+  docs: https://github.com/titraio/titra#readme
+  scalable: false
+  primary_service: titra
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: titra
+    scheme: http
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    MONGO_URL:
+      label: Database connection string
+      help: Provide a complete authenticated MongoDB URI with database name and a percent-encoded password.
+        The MongoDB instance must already be running.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  titra:
+    image: titraio/titra:latest
+    environment:
+      ROOT_URL: ${PUBLIC_URL}
+      PORT: '3000'
+      MONGO_URL: ${MONGO_URL}
+    ports:
+    - ${PORT:-8384}:3000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Workout.cool
+  summary: Plan workout routines and track your training
+  description: Provision a PostgreSQL database and use a trusted HTTPS endpoint. Complete the initial
+    account setup after the app has connected to the database.
+  category: productivity
+  website: https://github.com/Snouzy/workout-cool
+  source: https://github.com/Snouzy/workout-cool
+  docs: https://github.com/Snouzy/workout-cool
+  primary_service: workout-cool
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    DB_URL:
+      label: PostgreSQL database URL
+      type: password
+      help: Provide a reachable connection URL with database credentials.
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL with the scheme.
+    AUTH_SECRET:
+      label: Authentication signing secret
+      type: password
+      help: Use Nex Generate and preserve across restores.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  workout-cool:
+    image: ghcr.io/snouzy/workout-cool:latest
+    environment:
+      DATABASE_URL: ${DB_URL}
+      BETTER_AUTH_URL: ${BASE_URL}
+      BETTER_AUTH_SECRET: ${AUTH_SECRET}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

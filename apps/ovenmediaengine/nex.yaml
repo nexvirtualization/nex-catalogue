@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OvenMediaEngine
+  summary: Publish and deliver low-latency video streams
+  description: Select a dedicated primary application address. Configure the public WebRTC endpoint
+    and ingest access in the origin configuration before sharing any streams.
+  category: media
+  website: https://github.com/OvenMediaLabs/OvenMediaEngine
+  source: https://github.com/OvenMediaLabs/OvenMediaEngine
+  docs: https://docs.ovenmediaengine.com/quick-start
+  primary_service: ovenmediaengine
+  scalable: false
+  license: AGPL-3.0
+  options:
+    OME_HOST_IP:
+      label: Client-reachable application address
+      help: Advertised public IP or application address for your WebRTC clients.
+    ORIGIN:
+      label: Origin configuration
+      help: Keep origin configuration in this managed folder between restarts.
+    EDGE:
+      label: Edge configuration
+      help: Keep edge configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3333.
+    RTMP_PORT:
+      label: RTMP ingest
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1935.
+    SRT_PORT:
+      label: SRT ingest
+      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9999.
+services:
+  ovenmediaengine:
+    image: docker.io/ovenmedialabs/ovenmediaengine:latest
+    environment:
+      OME_HOST_IP: ${OME_HOST_IP}
+    volumes:
+    - ${ORIGIN}:/opt/ovenmediaengine/bin/origin_conf
+    - ${EDGE}:/opt/ovenmediaengine/bin/edge_conf
+    ports:
+    - ${PORT:-3333}:3333/tcp
+    - ${RTMP_PORT:-1935}:1935/tcp
+    - ${SRT_PORT:-9999}:9999/udp
+    deploy:
+      replicas: 1

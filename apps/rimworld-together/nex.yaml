@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RimWorld Together
+  summary: Host an online world for the RimWorld Together mod
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Install the RimWorld Together mod on every client. Match the mod version to the server image and
+    connect to the app’s Primary address on TCP 25555. Update the server by redeploying the image.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://rimworldtogether.wiki.gg/
+  source: https://github.com/RimWorld-Together/Rimworld-Together
+  docs: https://github.com/RimWorld-Together/Rimworld-Together#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  rimworld-together:
+    image: ghcr.io/rimworld-together/rimworld-together:latest
+    expose:
+      - 25555/tcp
+    volumes:
+      - ${DATA}:/Data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

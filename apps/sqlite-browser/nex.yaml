@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SQLite Browser
+  summary: Browse and edit SQLite databases through a private desktop
+  description: Open the web desktop over HTTPS. Place a copy of a database in the managed folder and open
+    it through SQLite Browser. Avoid writing databases that another application is using.
+  category: tools
+  website: https://sqlitebrowser.org/
+  source: https://github.com/sqlitebrowser/sqlitebrowser
+  docs: https://docs.linuxserver.io/images/docker-sqlitebrowser/
+  scalable: false
+  primary_service: sqlite-browser
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: sqlite-browser
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    DATABASES:
+      label: SQLite files
+      help: Select This host. Upload or mount a managed folder of SQLite databases to inspect. Include
+        this folder in a stopped Nex backup.
+services:
+  sqlite-browser:
+    image: lscr.io/linuxserver/sqlitebrowser:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8124}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${DATABASES}:/databases
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

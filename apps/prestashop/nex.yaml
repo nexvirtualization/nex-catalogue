@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PrestaShop
+  summary: Build and manage an online shop
+  description: Prepare a MariaDB or MySQL database and finish the web installer on a trusted endpoint.
+    Set the shop address and configure HTTPS before taking orders.
+  category: management
+  website: https://github.com/PrestaShop/PrestaShop
+  source: https://github.com/PrestaShop/PrestaShop
+  docs: https://devdocs.prestashop-project.org/9/basics/installation/environments/docker/
+  primary_service: prestashop
+  scalable: false
+  license: OSL-3.0
+  web:
+    port: 80
+  options:
+    DB_SERVER:
+      label: Database hostname
+      help: Reachable MariaDB or MySQL address.
+    DATA:
+      label: Store files and extensions
+      help: Keep store files and extensions in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  prestashop:
+    image: docker.io/prestashop/prestashop:latest
+    environment:
+      DB_SERVER: ${DB_SERVER}
+    volumes:
+    - ${DATA}:/var/www/html
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Firefly III
+  summary: Track budgets and personal transactions
+  description: Provision MySQL or MariaDB, then create your first user. Include uploaded files and the application
+    key in backups.
+  category: finance
+  website: https://firefly-iii.org/
+  source: https://github.com/firefly-iii/firefly-iii
+  docs: https://docs.firefly-iii.org/how-to/firefly-iii/installation/docker/
+  primary_service: firefly-iii
+  post_install: Provision MySQL or MariaDB, then create your first user. Include uploaded files and the application
+    key in backups.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    APP_KEY:
+      label: App key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    UPLOADS:
+      label: Uploaded records
+      help: Managed directory mounted at /var/www/html/storage/upload. Choose storage writable by the application.
+services:
+  firefly-iii:
+    image: docker.io/fireflyiii/core:latest
+    ports:
+    - ${PORT:-23573}:8080/tcp
+    volumes:
+    - ${UPLOADS}:/var/www/html/storage/upload
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${PUBLIC_URL}
+      DB_CONNECTION: mysql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_NAME:-firefly}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 1

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LinkStack
+  summary: Publish a personal link page with LinkStack
+  description: The container serves LinkStack and keeps configuration, uploads and database files in its
+    managed web directory.
+  category: productivity
+  website: https://linkstack.org/
+  source: https://github.com/LinkStackOrg/LinkStack
+  docs: https://docs.linkstack.org/docker/setup/
+  primary_service: linkstack
+  post_install: Complete the installer on a trusted network, then edit your profile. Use HTTPS at a reverse
+    proxy and back up the App files folder.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: App files
+      help: Managed directory mounted at /htdocs. Choose storage writable by the application.
+services:
+  linkstack:
+    image: docker.io/linkstackorg/linkstack:latest
+    ports:
+    - ${PORT:-20206}:80/tcp
+    volumes:
+    - ${DATA}:/htdocs
+    deploy:
+      replicas: 1

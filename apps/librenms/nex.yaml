@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LibreNMS
+  summary: Monitor your network equipment over SNMP
+  description: Prepare MariaDB. Configure the equipment you administer from the web interface and keep
+    the discovery service on your trusted management network. Additional dispatcher features use an
+    upstream sidecar.
+  category: monitoring
+  website: https://github.com/LibreNMS/LibreNMS
+  source: https://github.com/LibreNMS/LibreNMS
+  docs: https://github.com/librenms/docker
+  primary_service: librenms
+  scalable: false
+  license: GPL-3.0-or-later
+  web:
+    port: 8000
+  options:
+    DB_HOST:
+      label: Database hostname
+      help: Reachable MariaDB server.
+    DB_NAME:
+      label: Database name
+      help: Prepared LibreNMS database.
+    DB_USER:
+      label: Database user
+      help: Dedicated application database account.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of that database account.
+    DATA:
+      label: Monitoring settings and histories
+      help: Keep monitoring settings and histories in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  librenms:
+    image: docker.io/librenms/librenms:latest
+    environment:
+      DB_TIMEOUT: '60'
+      PUID: '1000'
+      PGID: '1000'
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

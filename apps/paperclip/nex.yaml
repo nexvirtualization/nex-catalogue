@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Paperclip
+  summary: Organize tasks and operating context for your team
+  description: Set up an external PostgreSQL database and a browser-facing HTTPS endpoint. Use the initial
+    setup flow on a trusted network and retain the authentication secret.
+  category: productivity
+  website: https://github.com/paperclipai/paperclip
+  source: https://github.com/paperclipai/paperclip
+  docs: https://github.com/paperclipai/paperclip
+  primary_service: paperclip
+  scalable: false
+  license: MIT
+  web:
+    port: 3100
+  options:
+    DB_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply a reachable database URL with credentials.
+    BASE_URL:
+      label: Public HTTPS address
+      help: Browser-facing URL including the scheme.
+    AUTH_SECRET:
+      label: Authentication secret
+      type: password
+      help: Use Nex Generate and retain the value across restores.
+    DATA:
+      label: Paperclip storage and configuration
+      help: Keep paperclip storage and configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3100.
+services:
+  paperclip:
+    image: ghcr.io/paperclipai/paperclip:latest
+    environment:
+      HOST: 0.0.0.0
+      PORT: '3100'
+      SERVE_UI: 'true'
+      PAPERCLIP_HOME: /paperclip
+      DATABASE_URL: ${DB_URL}
+      PAPERCLIP_PUBLIC_URL: ${BASE_URL}
+      PAPERCLIP_DEPLOYMENT_MODE: authenticated
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: private
+      BETTER_AUTH_SECRET: ${AUTH_SECRET}
+    volumes:
+    - ${DATA}:/paperclip
+    ports:
+    - ${PORT:-3100}:3100/tcp
+    deploy:
+      replicas: 1

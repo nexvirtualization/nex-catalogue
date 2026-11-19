@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Damselfly
+  summary: Fast server-based photo management system for large collections of images
+  description: Fast server-based photo management system for large collections of images. Includes face detection,
+    face & object recognition, powerful search, and EXIF Keyword tagging. Runs on Linux, MacOS and Windows.
+  category: photos
+  source: https://github.com/webreaper/damselfly
+  website: https://damselfly.info
+  docs: https://github.com/Webreaper/Damselfly/blob/master/docs/Installation.md
+  primary_service: damselfly
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    PICTURES:
+      label: Pictures folder
+      help: Choose the Nex-managed folder mounted at /pictures.
+    THUMBNAILS:
+      label: Thumbnails folder
+      help: Choose the Nex-managed folder mounted at /thumbs.
+    PORT:
+      label: Published 6363/tcp port
+      help: Host port for application listener 6363/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Mount the Pictures library, then configure access to the web UI. Back up Config. Thumbnail generation
+    uses Thumbnails as a working folder.
+  web:
+    port: 6363
+services:
+  damselfly:
+    image: docker.io/webreaper/damselfly:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/config
+    - ${PICTURES}:/pictures
+    - ${THUMBNAILS}:/thumbs
+    ports:
+    - ${PORT:-19981}:6363/tcp

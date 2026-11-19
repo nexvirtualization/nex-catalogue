@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenPanel
+  summary: Collect product analytics and explore event data
+  description: Provision PostgreSQL, Redis, and ClickHouse with the prepared environment. Configure
+    distinct, reachable dashboard and API HTTPS URLs and keep the initial administrator private.
+  category: monitoring
+  website: https://github.com/Openpanel-dev/openpanel
+  source: https://github.com/Openpanel-dev/openpanel
+  docs: https://openpanel.dev/docs/self-hosting
+  primary_service: openpanel
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    CLICKHOUSE_URL:
+      label: ClickHouse analytics URL
+      type: password
+      help: Use the prepared ClickHouse endpoint and database.
+    API_URL:
+      label: Public analytics API URL
+      help: Full API URL reachable by analytics clients.
+    DASHBOARD_URL:
+      label: Public dashboard URL
+      help: Full browser-facing dashboard HTTPS URL.
+    API_PORT:
+      label: Published analytics API port
+      help: Host port to serve the browser-facing API through your reverse proxy.
+    COOKIE_SECRET:
+      label: Cookie signing secret
+      type: password
+      help: Use a long random signing secret and retain it for restore.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  openpanel:
+    image: docker.io/lindesvard/openpanel-dashboard:2
+    environment:
+      NODE_ENV: production
+      SELF_HOSTED: 'true'
+      API_URL: ${API_URL}
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_DIRECT: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1
+  api:
+    image: docker.io/lindesvard/openpanel-api:2
+    ports:
+    - ${API_PORT:-3333}:3333/tcp
+    environment:
+      NODE_ENV: production
+      SELF_HOSTED: 'true'
+      API_URL: ${API_URL}
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_DIRECT: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      ALLOW_REGISTRATION: 'true'
+    command:
+    - sh
+    - -ec
+    - CI=true pnpm -r run migrate:deploy; exec pnpm start
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/lindesvard/openpanel-worker:2
+    environment:
+      NODE_ENV: production
+      SELF_HOSTED: 'true'
+      API_URL: ${API_URL}
+      DASHBOARD_URL: ${DASHBOARD_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_DIRECT: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+    deploy:
+      replicas: 1

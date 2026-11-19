@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chatto
+  summary: Host a messaging service with an embedded message broker
+  description: Use a client-facing HTTPS URL. Supply a mail relay for account sign-in and invitations,
+    then use the configured owner email. Voice and video integrations require additional setup.
+  category: communication
+  website: https://github.com/chattocorp/chatto
+  source: https://github.com/chattocorp/chatto
+  docs: https://github.com/chattocorp/chatto
+  primary_service: chatto
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 4000
+  options:
+    BASE_URL:
+      label: Public HTTPS URL
+      help: Browser-facing Chatto address.
+    OWNER_EMAIL:
+      label: Initial owner email
+      help: Address to use for owner sign-in.
+    SMTP_HOST:
+      label: SMTP host
+      help: Reachable mail relay hostname.
+    SMTP_PORT:
+      label: SMTP port
+      help: Port for the SMTP relay with TLS.
+    SMTP_USER:
+      label: SMTP username
+      help: Authenticated mail relay account.
+    SMTP_PASSWORD:
+      label: SMTP password
+      type: password
+      help: Password for the mail relay account.
+    SMTP_FROM:
+      label: From address
+      help: Email address your SMTP relay accepts.
+    COOKIE_SECRET:
+      label: Cookie signing key
+      type: password
+      help: Use Nex Generate.
+    CORE_SECRET:
+      label: Core signing key
+      type: password
+      help: Use Nex Generate.
+    ASSETS_SECRET:
+      label: Assets signing key
+      type: password
+      help: Use Nex Generate.
+    DATA:
+      label: Messages and users
+      help: Keep messages and users in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4000.
+services:
+  chatto:
+    image: ghcr.io/chattocorp/chatto:latest
+    environment:
+      CHATTO_WEBSERVER_URL: ${BASE_URL}
+      CHATTO_WEBSERVER_PORT: '4000'
+      CHATTO_WEBSERVER_COOKIE_SIGNING_SECRET: ${COOKIE_SECRET}
+      CHATTO_CORE_SECRET_KEY: ${CORE_SECRET}
+      CHATTO_CORE_ASSETS_SIGNING_SECRET: ${ASSETS_SECRET}
+      CHATTO_NATS_EMBEDDED_ENABLED: 'true'
+      CHATTO_NATS_EMBEDDED_DATA_DIR: /data
+      CHATTO_OWNERS_EMAILS: ${OWNER_EMAIL}
+      CHATTO_SMTP_ENABLED: 'true'
+      CHATTO_SMTP_HOST: ${SMTP_HOST}
+      CHATTO_SMTP_PORT: ${SMTP_PORT:-587}
+      CHATTO_SMTP_TLS: mandatory
+      CHATTO_SMTP_USERNAME: ${SMTP_USER}
+      CHATTO_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      CHATTO_SMTP_FROM: ${SMTP_FROM}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-4000}:4000/tcp
+    deploy:
+      replicas: 1

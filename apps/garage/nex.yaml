@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Garage
+  summary: Serve a single-node S3-compatible object store
+  description: Prepare garage.toml in the managed configuration folder before startup. Follow the upstream
+    single-node guide and set metadata_dir to /metadata and data_dir to /objects. Configure the S3 API
+    to bind on port 3900, then initialize the node layout and create bucket credentials with the Garage
+    CLI. Keep the management API private.
+  category: tools
+  website: https://garagehq.deuxfleurs.fr/
+  source: https://github.com/deuxfleurs-org/garage
+  docs: https://garagehq.deuxfleurs.fr/documentation/quick-start/
+  scalable: false
+  primary_service: garage
+  architectures:
+  - amd64
+  - arm64
+  options:
+    S3_PORT:
+      label: S3 Port
+      help: Host-published S3 API port. Use the app name and port 3900 for internal clients.
+    CONFIG:
+      label: Prepared Garage configuration
+      help: Select This host. Select a managed folder containing garage.toml. Include this folder in a
+        stopped Nex backup.
+    METADATA:
+      label: Garage metadata
+      help: Select This host. Stores node identity, journals and bucket metadata. Include this folder
+        in a stopped Nex backup.
+    OBJECTS:
+      label: Object storage
+      help: Select This host. Stores the object payloads. Include this folder in a stopped Nex backup.
+services:
+  garage:
+    image: dxflrs/garage:v2.0.0
+    command:
+    - -c
+    - /settings/garage.toml
+    - server
+    ports:
+    - ${S3_PORT:-3900}:3900/tcp
+    volumes:
+    - ${CONFIG}:/settings:ro
+    - ${METADATA}:/metadata
+    - ${OBJECTS}:/objects
+    deploy:
+      replicas: 1

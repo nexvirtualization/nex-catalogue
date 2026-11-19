@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenHabitTracker
+  summary: Track habits, tasks and notes
+  description: Create the application login from Nex Settings and sign in through the web UI. The app
+    stores habit records, tasks and notes in a local database.
+  category: productivity
+  website: https://openhabittracker.net
+  source: https://github.com/Jinjinov/OpenHabitTracker
+  docs: https://github.com/Jinjinov/OpenHabitTracker#readme
+  scalable: false
+  primary_service: openhabittracker
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openhabittracker
+    scheme: http
+    port: 8080
+  options:
+    APP_USERNAME:
+      label: Initial user name
+      help: Display name for the user.
+    APP_EMAIL:
+      label: Initial user email
+      help: Email address to sign in with.
+    APP_PASSWORD:
+      label: Initial user password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    JWT_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Habit and task data
+      help: Select This host. Stores the application database and user data. Include this folder in a
+        stopped Nex backup.
+services:
+  openhabittracker:
+    image: jinjinov/openhabittracker:latest
+    environment:
+      AppSettings__UserName: ${APP_USERNAME:-admin}
+      AppSettings__Email: ${APP_EMAIL}
+      AppSettings__Password: ${APP_PASSWORD}
+      AppSettings__JwtSecret: ${JWT_SECRET}
+    ports:
+    - ${PORT:-8147}:8080/tcp
+    volumes:
+    - ${DATA}:/app/.OpenHabitTracker
+    deploy:
+      replicas: 1

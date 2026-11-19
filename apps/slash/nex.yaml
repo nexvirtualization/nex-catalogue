@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Slash
+  summary: Create short reusable links for your workspace
+  description: Use the onboarding screen on a trusted network before sharing the endpoint. Back up the
+    app folder with Slash stopped.
+  category: productivity
+  website: https://github.com/yourselfhosted/slash
+  source: https://github.com/yourselfhosted/slash
+  docs: https://github.com/yourselfhosted/slash
+  primary_service: slash
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 5231
+  options:
+    DATA:
+      label: Shortcuts and configuration
+      help: Slash settings and SQLite database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5231.
+services:
+  slash:
+    image: docker.io/yourselfhosted/slash:latest
+    volumes:
+    - ${DATA}:/var/opt/slash
+    ports:
+    - ${PORT:-5231}:5231/tcp
+    deploy:
+      replicas: 1

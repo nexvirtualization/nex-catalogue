@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: '015'
+  summary: Share temporary files and text with expiring links
+  description: Provision Redis and create config.yaml in Configuration from the upstream example with private
+    signing secrets, Redis URL, and public HTTPS address. Keep the app and worker on one host or shared storage.
+  category: documents
+  website: https://send.fudaoyuan.icu
+  source: https://github.com/keven1024/015
+  docs: https://github.com/keven1024/015#docker
+  primary_service: '015'
+  post_install: Provision Redis and create config.yaml in Configuration from the upstream example with private
+    signing secrets, Redis URL, and public HTTPS address. Keep the app and worker on one host or shared storage.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    CONFIG:
+      label: Prepared 015 configuration
+      help: Managed directory mounted at /nex-config. Choose storage readable by the application.
+    UPLOADS:
+      label: Shared uploaded files
+      help: Managed directory mounted at /uploads. Choose storage writable by the application.
+services:
+  '015':
+    image: docker.io/fudaoyuanicu/015-app:latest
+    ports:
+    - ${PORT:-23514}:80/tcp
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    - ${UPLOADS}:/uploads
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      test -r /nex-config/config.yaml
+      ln -sf /nex-config/config.yaml /app/config.yaml
+      exec /bin/sh /app/015.sh
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/fudaoyuanicu/015-worker:latest
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    - ${UPLOADS}:/uploads
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      test -r /nex-config/config.yaml
+      ln -sf /nex-config/config.yaml /config.yaml
+      exec /bin/worker
+    deploy:
+      replicas: 1

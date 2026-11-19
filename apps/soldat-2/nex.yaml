@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Soldat 2
+  summary: Host a physics-based 2D multiplayer shooter
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads the official Linux dedicated-server archive. Join in Soldat 2 using the app’s
+    Primary address and UDP 23000. Stop the app before editing the generated configuration. Make a
+    stopped backup before applying game updates.
+  category: games
+  website: https://soldat2.com/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/soldat-2
+  docs: https://wiki.soldat2.com/index.php?title=Server_Hosting
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - arena
+    - multiplayer
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  soldat-2:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 23000/udp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        cd "$$HOME"
+        if [ ! -x soldat2/soldat2 ]; then
+          stage=$$(mktemp -d .soldat2.XXXXXX)
+          trap 'rm -rf "$$stage"' EXIT
+          curl --fail --silent --show-error --location --retry 3 \
+            https://dl.thd.vg/soldat2-linuxserver-release.tar.gz -o "$$stage/release.tar.gz"
+          mkdir "$$stage/server"
+          tar -xzf "$$stage/release.tar.gz" -C "$$stage/server" --strip-components=1
+          chmod +x "$$stage/server/soldat2"
+          mv -T "$$stage/server" soldat2
+          rm -rf "$$stage"
+          trap - EXIT
+        fi
+        cd soldat2
+        exec ./soldat2 "Name=Nex Soldat 2" Port=23000 WebSocketsPort=0 \
+          WebSocketsRconPort=0 MaxPlayers=12 "ServerPassword=$$JOIN_PASSWORD" RconPassword=
+    stop_signal: SIGINT

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Label Studio
+  summary: Label data for machine learning projects
+  description: Single-node install using Label Studio’s local database. Create the first account on a
+    trusted network before sharing the service. Large or heavily used teams may need upstream’s external
+    database and object storage setup.
+  category: development
+  website: https://labelstud.io/
+  source: https://github.com/HumanSignal/label-studio
+  docs: https://labelstud.io/guide/install.html
+  scalable: false
+  primary_service: label-studio
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: label-studio
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Label Studio data
+      help: Select This host. Stores the database, uploads and user data. The image user must be able
+        to write to this folder. Include this folder in a stopped Nex backup.
+services:
+  label-studio:
+    image: heartexlabs/label-studio:latest
+    ports:
+    - ${PORT:-8375}:8080/tcp
+    volumes:
+    - ${DATA}:/label-studio/data
+    deploy:
+      replicas: 1

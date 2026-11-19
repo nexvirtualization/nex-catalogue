@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Nango
+  summary: Connect external APIs and manage integration credentials
+  description: Provision PostgreSQL. Use an authenticating HTTPS endpoint and configure integrations from
+    their respective provider credentials.
+  category: development
+  website: https://nango.dev/
+  source: https://github.com/NangoHQ/nango
+  docs: https://docs.nango.dev/guides/self-hosting
+  primary_service: nango
+  post_install: Provision PostgreSQL. Use an authenticating HTTPS endpoint and configure integrations from
+    their respective provider credentials.
+  license: Elastic-2.0
+  architectures:
+  - amd64
+  web:
+    port: 3003
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3003 inside Nex.
+services:
+  nango:
+    image: docker.io/nangohq/nango-server:latest
+    ports:
+    - ${PORT:-23597}:3003/tcp
+    environment:
+      NANGO_SERVER_URL: ${PUBLIC_URL}
+      NANGO_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NANGO_DB_HOST: ${DB_HOST}
+      NANGO_DB_PORT: ${DB_PORT:-5432}
+      NANGO_DB_NAME: ${DB_NAME:-nango}
+      NANGO_DB_USER: ${DB_USER}
+      NANGO_DB_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 1

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Openobserve
+  summary: Collect, query and view logs, metrics and traces
+  description: Sign in with the root account and connect ingestion clients with the app endpoints. Use
+    HTTPS outside the application network. This profile stores data on one host.
+  category: monitoring
+  website: https://github.com/openobserve/openobserve
+  source: https://github.com/openobserve/openobserve
+  docs: https://openobserve.ai/docs/quickstart/
+  primary_service: openobserve
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 5080
+  options:
+    ROOT_EMAIL:
+      label: Root account email
+      help: Email address for the initial root account.
+    ROOT_PASSWORD:
+      label: Root account password
+      type: password
+      help: Use Nex Generate. Store the initial credentials for sign-in.
+    DATA:
+      label: Observation data
+      help: Standalone logs, metrics, traces, configuration and database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5080.
+services:
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    environment:
+      ZO_ROOT_USER_EMAIL: ${ROOT_EMAIL}
+      ZO_ROOT_USER_PASSWORD: ${ROOT_PASSWORD}
+      ZO_DATA_DIR: /data
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-5080}:5080/tcp
+    deploy:
+      replicas: 1

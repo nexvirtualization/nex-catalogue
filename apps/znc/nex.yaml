@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ZNC
+  summary: Keep persistent IRC connections with a bouncer
+  description: Complete the first-run configuration in the app folder following the image documentation.
+    Configure TLS and user access before letting clients connect to the bouncer.
+  category: communication
+  website: https://github.com/znc/znc
+  source: https://github.com/znc/znc
+  docs: https://docs.linuxserver.io/images/docker-znc/
+  primary_service: znc
+  scalable: false
+  license: Apache-2.0
+  options:
+    CONFIG:
+      label: Bouncer configuration
+      help: ZNC configuration, accounts and runtime state.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6501.
+services:
+  znc:
+    image: lscr.io/linuxserver/znc:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-6501}:6501/tcp
+    deploy:
+      replicas: 1

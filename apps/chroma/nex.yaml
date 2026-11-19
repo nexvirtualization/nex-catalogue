@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chroma
+  summary: Serve and persist vector embeddings and collections
+  description: Use the application network for Chroma API clients. Keep this unauthenticated server
+    behind a trusted network or an authenticating proxy.
+  category: development
+  website: https://github.com/chroma-core/chroma
+  source: https://github.com/chroma-core/chroma
+  docs: https://docs.trychroma.com/production/containers/docker
+  primary_service: chroma
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: Vector indexes
+      help: Chroma collections, embeddings and index data.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  chroma:
+    image: docker.io/chromadb/chroma:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

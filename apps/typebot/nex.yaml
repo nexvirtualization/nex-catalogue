@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Typebot
+  summary: Build and publish conversational forms
+  description: Provision PostgreSQL, Redis, and SMTP. Route the builder and public viewer through their own
+    HTTPS addresses, then log in with the configured administrator email.
+  category: development
+  website: https://typebot.io
+  source: https://github.com/baptisteArno/typebot.io
+  docs: https://docs.typebot.io/self-hosting/deploy/docker
+  primary_service: typebot
+  post_install: Provision PostgreSQL, Redis, and SMTP. Route the builder and public viewer through their
+    own HTTPS addresses, then log in with the configured administrator email.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    ENCRYPTION_SECRET:
+      label: Encryption secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    VIEWER_URL:
+      label: Viewer url
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SMTP_SECURE:
+      label: Smtp secure
+      help: Enter the deployment value described in the upstream setup guide.
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    VIEWER_PORT:
+      label: Published viewer port
+      help: Host-published port for the internal 3001/tcp endpoint.
+services:
+  typebot:
+    image: docker.io/library/caddy:latest
+    ports:
+    - ${PORT:-23533}:3000/tcp
+    - ${VIEWER_PORT:-24533}:3001/tcp
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      printf '%s\n' '{
+        auto_https off
+      }
+      :3000 {
+        reverse_proxy builder:3000
+      }
+      :3001 {
+        reverse_proxy viewer:3000
+      }' | exec caddy run --config - --adapter caddyfile
+    deploy:
+      replicas: 1
+  builder:
+    image: docker.io/baptistearno/typebot-builder:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      NEXT_PUBLIC_VIEWER_URL: ${VIEWER_URL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      NEXT_PUBLIC_SMTP_FROM: ${FROM_EMAIL}
+      NODE_OPTIONS: --no-node-snapshot
+    deploy:
+      replicas: 1
+  viewer:
+    image: docker.io/baptistearno/typebot-viewer:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      NEXT_PUBLIC_VIEWER_URL: ${VIEWER_URL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      NEXT_PUBLIC_SMTP_FROM: ${FROM_EMAIL}
+      NODE_OPTIONS: --no-node-snapshot
+    deploy:
+      replicas: 1

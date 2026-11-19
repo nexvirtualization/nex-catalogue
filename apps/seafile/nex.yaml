@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Seafile
+  summary: Sync personal files and collaborate on a shared library
+  description: Prepare an accessible MariaDB server and a Redis-compatible cache. Use a client-facing
+    HTTPS hostname and keep the initial administrator credentials private.
+  category: documents
+  website: https://github.com/haiwen/seafile
+  source: https://github.com/haiwen/seafile
+  docs: https://manual.seafile.com/latest/setup/setup_ce_by_docker/
+  primary_service: seafile
+  scalable: false
+  license: GPL-2.0-only
+  web:
+    port: 80
+  options:
+    SEAFILE_SERVER_HOSTNAME:
+      label: Public hostname
+      help: Client hostname without scheme.
+    INIT_SEAFILE_ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address of the initial account.
+    INIT_SEAFILE_ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate.
+    SEAFILE_MYSQL_DB_HOST:
+      label: MariaDB hostname
+      help: Reachable MariaDB server.
+    SEAFILE_MYSQL_DB_USER:
+      label: MariaDB user
+      help: Dedicated Seafile database user.
+    SEAFILE_MYSQL_DB_PASSWORD:
+      label: MariaDB password
+      type: password
+      help: Supply the password for this account.
+    JWT_PRIVATE_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    REDIS_HOST:
+      label: Redis hostname
+      help: Reachable cache service.
+    DATA:
+      label: Libraries and Seafile state
+      help: Keep libraries and seafile state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  seafile:
+    image: docker.io/seafileltd/seafile-mc:14.0.9
+    environment:
+      SEAFILE_SERVER_PROTOCOL: https
+      CACHE_PROVIDER: redis
+      REDIS_PORT: '6379'
+      SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
+      INIT_SEAFILE_ADMIN_EMAIL: ${INIT_SEAFILE_ADMIN_EMAIL}
+      INIT_SEAFILE_ADMIN_PASSWORD: ${INIT_SEAFILE_ADMIN_PASSWORD}
+      SEAFILE_MYSQL_DB_HOST: ${SEAFILE_MYSQL_DB_HOST}
+      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      SEAFILE_MYSQL_DB_PASSWORD: ${SEAFILE_MYSQL_DB_PASSWORD}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      REDIS_HOST: ${REDIS_HOST}
+    volumes:
+    - ${DATA}:/shared
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

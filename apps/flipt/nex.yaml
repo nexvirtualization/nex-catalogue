@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Flipt
+  summary: Manage and evaluate feature flags
+  description: Open the interface on a trusted network. Set up authentication before exposing it and
+    configure a Git repository in Flipt only if your team uses one for flag storage.
+  category: development
+  website: https://github.com/flipt-io/flipt
+  source: https://github.com/flipt-io/flipt
+  docs: https://docs.flipt.io/v2/quickstart
+  primary_service: flipt
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Feature flag storage
+      help: The local flag store and persisted runtime data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    GRPC_PORT:
+      label: gRPC API port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9000.
+services:
+  flipt:
+    image: ghcr.io/flipt-io/flipt:v2
+    volumes:
+    - ${DATA}:/var/opt/flipt
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${GRPC_PORT:-9000}:9000/tcp
+    deploy:
+      replicas: 1

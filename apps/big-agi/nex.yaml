@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: big-AGI
+  summary: Chat with multiple AI model providers
+  description: The web client connects to model providers that you configure. Access to a model requires a provider
+    API key or a compatible local model endpoint.
+  category: ai
+  website: https://big-agi.com/
+  source: https://github.com/enricoros/big-AGI
+  docs: https://github.com/enricoros/big-AGI
+  license: MIT
+  primary_service: big-agi
+  architectures:
+  - amd64
+  - arm64
+  post_install: Configure providers and models in the app. Keep access private or use an authenticating reverse
+    proxy. Back up browser data and audit the services to which you submit prompts.
+  web:
+    port: 3000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+services:
+  big-agi:
+    image: ghcr.io/enricoros/big-agi:latest
+    ports:
+    - ${PORT:-18118}:3000/tcp
+    deploy:
+      replicas: 1

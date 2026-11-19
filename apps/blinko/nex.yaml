@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Blinko
+  summary: Capture and organize personal notes
+  description: Provision a PostgreSQL database and use the same external HTTPS address for sessions and
+    the web interface. Create the first account on a trusted network.
+  category: productivity
+  website: https://blinko.space/
+  source: https://github.com/blinkospace/blinko
+  docs: https://github.com/blinkospace/blinko#readme
+  scalable: false
+  primary_service: blinko
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: blinko
+    scheme: http
+    port: 1111
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1111.
+    DATA:
+      label: Blinko files
+      help: Select This host. Stores local uploaded resources. Include this folder in a stopped Nex backup.
+services:
+  blinko:
+    image: blinkospace/blinko:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: production
+      NEXTAUTH_SECRET: ${SESSION_SECRET}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      NEXT_PUBLIC_BASE_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8409}:1111/tcp
+    volumes:
+    - ${DATA}:/app/.blinko
+    deploy:
+      replicas: 1

@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gitea Mirror
+  summary: Keep mirrors of Git repositories in Gitea
+  description: Set the full public URL so sessions and callbacks match the client-facing address. Create
+    the initial login, then add the source and destination credentials through the UI.
+  category: development
+  website: https://github.com/raylabshq/gitea-mirror
+  source: https://github.com/raylabshq/gitea-mirror
+  docs: https://gitea-mirror.raylabs.io/docs/deployment/
+  scalable: false
+  primary_service: gitea-mirror
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: gitea-mirror
+    scheme: http
+    port: 4321
+  works_with:
+  - gitea
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4321.
+    DATA:
+      label: Mirror state
+      help: Select This host. Stores the SQLite database and synchronization settings. Include this folder
+        in a stopped Nex backup.
+services:
+  gitea-mirror:
+    image: ghcr.io/raylabshq/gitea-mirror:latest
+    environment:
+      BETTER_AUTH_URL: ${PUBLIC_URL}
+      BETTER_AUTH_SECRET: ${SESSION_SECRET}
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '4321'
+      DATABASE_URL: file:data/gitea-mirror.db
+    ports:
+    - ${PORT:-8391}:4321/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

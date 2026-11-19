@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Webtop
+  summary: Run a Linux desktop inside a private browser session
+  description: Use a trusted HTTPS endpoint and the configured password. Applications started from the
+    desktop can access the files in its persistent folder.
+  category: tools
+  website: https://github.com/linuxserver/docker-webtop
+  source: https://github.com/linuxserver/docker-webtop
+  docs: https://docs.linuxserver.io/images/docker-webtop/
+  primary_service: linuxserver-webtop
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 3000
+  options:
+    PASSWORD:
+      label: Desktop login password
+      type: password
+      help: Use Nex Generate. The configured user is nex.
+    CONFIG:
+      label: Desktop home and settings
+      help: Keep desktop home and settings in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  linuxserver-webtop:
+    image: lscr.io/linuxserver/webtop:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      CUSTOM_USER: nex
+      PASSWORD: ${PASSWORD}
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

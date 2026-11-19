@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenList
+  summary: Organize local and remote storage in a web file manager
+  description: Sign in as admin with the initial password entered in Nex. Use HTTPS before configuring
+    providers and credentials. Storage-provider credentials and the file index stay in the data folder.
+  category: tools
+  website: https://doc.oplist.org/
+  source: https://github.com/OpenListTeam/OpenList
+  docs: https://doc.oplist.org/guide/installation/docker.html
+  scalable: false
+  primary_service: openlist
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openlist
+    scheme: http
+    port: 5244
+  options:
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5244.
+    DATA:
+      label: OpenList data
+      help: Select This host. Holds the SQLite index, settings and provider credentials. Include this
+        folder in a stopped Nex backup.
+services:
+  openlist:
+    image: openlistteam/openlist:latest
+    environment:
+      OPENLIST_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      UMASK: '022'
+    ports:
+    - ${PORT:-8144}:5244/tcp
+    volumes:
+    - ${DATA}:/opt/openlist/data
+    deploy:
+      replicas: 1

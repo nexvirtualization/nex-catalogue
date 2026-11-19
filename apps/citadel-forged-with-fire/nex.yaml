@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'Citadel: Forged with Fire'
+  summary: Host a persistent multiplayer wizarding world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join from the server browser or use the app’s Primary address on UDP 7777. The Steam query listener
+    uses UDP 27015. First boot downloads the server through SteamCMD. Restarts check for updates. Make
+    a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/487120/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/citadelfwf
+  docs: https://github.com/ich777/docker-templates/blob/master/ich777/Citadel-ForgedWithFire.xml
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - survival
+  options:
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host for the Steam installer and its downloaded tools.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  citadel-forged-with-fire:
+    image: ghcr.io/ich777/steamcmd:citadelfwf
+    environment:
+      GAME_ID: '489650'
+      UID: '1000'
+      GID: '1000'
+      UMASK: '027'
+      DATA_PERM: '750'
+    expose:
+    - 7777/udp
+    - 27015/udp
+    volumes:
+    - ${STEAMCMD}:/serverdata/steamcmd
+    - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

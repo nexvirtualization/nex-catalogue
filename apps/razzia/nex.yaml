@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Razzia
+  summary: Run live quiz sessions for small events
+  description: Choose a registered client-reachable Primary network. Players and hosts open the application
+    address on port 3000. The starter quiz appears on first launch. Review permissions before using it
+    at an event.
+  category: games
+  website: https://github.com/Ralex91/Razzia
+  source: https://github.com/Ralex91/Razzia
+  docs: https://github.com/Ralex91/Razzia/blob/HEAD/docs/configuration.md
+  scalable: false
+  primary_service: razzia
+  web:
+    service: razzia
+    scheme: http
+    port: 3000
+  architectures:
+  - amd64
+  - arm64
+  options:
+    DATA:
+      label: Quiz data
+      help: Select This host. Holds quizzes, application configuration and results. Include this folder
+        in a stopped Nex backup.
+services:
+  razzia:
+    image: ghcr.io/ralex91/razzia:latest
+    expose:
+    - 3000/tcp
+    volumes:
+    - ${DATA}:/app/config
+    deploy:
+      replicas: 1

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Artalk
+  summary: Host comments and moderation for your own sites
+  description: Keep the instance private while creating the initial administrator. Configure trusted
+    site URLs and moderation settings before enabling commenting.
+  category: communication
+  website: https://github.com/ArtalkJS/Artalk
+  source: https://github.com/ArtalkJS/Artalk
+  docs: https://artalk.js.org/guide/deploy.html
+  primary_service: artalk
+  scalable: false
+  license: MIT
+  web:
+    port: 23366
+  options:
+    DATA:
+      label: Comments and site configuration
+      help: Keep comments and site configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 23366.
+services:
+  artalk:
+    image: docker.io/artalk/artalk-go:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-23366}:23366/tcp
+    deploy:
+      replicas: 1

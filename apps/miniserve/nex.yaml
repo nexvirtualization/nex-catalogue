@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: miniserve
+  summary: Serve selected files from a browser
+  description: Sign in with the configured credentials. Keep the folder on a trusted network or place
+    the endpoint behind HTTPS.
+  category: documents
+  website: https://github.com/svenstaro/miniserve
+  source: https://github.com/svenstaro/miniserve
+  docs: https://github.com/svenstaro/miniserve
+  primary_service: miniserve
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    USERNAME:
+      label: File browser username
+      help: Username for HTTP Basic authentication.
+    PASSWORD:
+      label: File browser password
+      type: password
+      help: Use Nex Generate and configure HTTPS for remote access.
+    FILES:
+      label: Files to serve
+      help: Keep files to serve in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  miniserve:
+    image: docker.io/svenstaro/miniserve:latest
+    command:
+    - --auth
+    - ${USERNAME:-nex}:${PASSWORD}
+    - /files
+    volumes:
+    - ${FILES}:/files
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

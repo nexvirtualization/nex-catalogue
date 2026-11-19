@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://usememos.com/docs/deploy/docker
+x-nex:
+  name: Memos
+  summary: Knowledge base that works with a SQLite db file
+  category: productivity
+  description: Knowledge base that works with a SQLite db file. Back up the application folders together and
+    keep them writable by the container.
+  source: https://github.com/usememos/memos
+  website: https://usememos.com/
+  docs: https://usememos.com/
+  primary_service: app
+  options:
+    FOLDER_1:
+      label: Memos folder
+      help: Nex-managed folder mounted at /var/opt/memos. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 5230/tcp.
+  web:
+    port: 5230
+  post_install: Create the first user on a trusted network. The SQLite database and uploads are in the Memos
+    data folder.
+services:
+  app:
+    image: docker.io/neosmemo/memos:stable
+    volumes:
+    - ${FOLDER_1}:/var/opt/memos
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-5230}:5230/tcp

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CowAgent
+  summary: Configure a private assistant and connect supported messaging channels
+  description: Prepare your CowAgent configuration with a web password and bind its console to 0.0.0.0.
+    Select the prepared folders before startup and keep the console private.
+  category: ai
+  website: https://github.com/zhayujie/CowAgent
+  source: https://github.com/zhayujie/CowAgent
+  docs: https://github.com/zhayujie/CowAgent
+  primary_service: cow-agent
+  scalable: false
+  license: MIT
+  architectures:
+  - amd64
+  web:
+    port: 9899
+  options:
+    CONFIG:
+      label: Prepared CowAgent configuration
+      help: Keep prepared cowagent configuration in this managed folder between restarts.
+    DATA:
+      label: CowAgent state
+      help: Keep cowagent state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9899.
+services:
+  cow-agent:
+    image: docker.io/zhayujie/chatgpt-on-wechat:latest
+    volumes:
+    - ${CONFIG}:/home/agent/cow
+    - ${DATA}:/home/agent/.cow
+    ports:
+    - ${PORT:-9899}:9899/tcp
+    deploy:
+      replicas: 1

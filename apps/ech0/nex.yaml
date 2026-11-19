@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ech0
+  summary: Host a small social feed for short posts and media
+  description: Initialize the first Ech0 administrator on a trusted network. Configure the public site
+    URL behind HTTPS when sharing the feed.
+  category: communication
+  website: https://github.com/lin-snow/Ech0
+  source: https://github.com/lin-snow/Ech0
+  docs: https://github.com/lin-snow/Ech0
+  primary_service: ech0
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 6277
+  options:
+    DATA:
+      label: Ech0 feed and account data
+      help: Posts, uploads and application database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6277.
+services:
+  ech0:
+    image: docker.io/sn0wl1n/ech0:latest
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-6277}:6277/tcp
+    deploy:
+      replicas: 1

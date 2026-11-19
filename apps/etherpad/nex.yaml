@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Etherpad
+  summary: Highly customizable online editor providing collaborative editing in real-time
+  description: Highly customizable online editor providing collaborative editing in real-time.
+  category: productivity
+  source: https://github.com/ether/etherpad
+  website: https://etherpad.org/
+  docs: https://docs.etherpad.org/
+  primary_service: etherpad
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /opt/etherpad-lite/var.
+    PORT:
+      label: Published 9001/tcp port
+      help: Host port for application listener 9001/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Open the editor on a trusted network. The embedded database suits a small single-copy instance.
+    Back up the var folder while stopped for consistent documents.
+  web:
+    port: 9001
+services:
+  etherpad:
+    image: docker.io/etherpad/etherpad:latest
+    deploy:
+      replicas: 1
+    environment:
+      DB_TYPE: dirty
+    volumes:
+    - ${DATA}:/opt/etherpad-lite/var
+    ports:
+    - ${PORT:-19477}:9001/tcp

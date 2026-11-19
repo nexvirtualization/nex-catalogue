@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gitingest
+  summary: Turn Git repositories into readable text digests
+  description: Generate a file tree and text digest from a Git repository. This install runs the standalone
+    service without S3 caching or a published metrics port.
+  category: development
+  website: https://gitingest.com/
+  source: https://github.com/coderamp-labs/gitingest
+  docs: https://github.com/coderamp-labs/gitingest#-self-host
+  license: MIT
+  primary_service: gitingest
+  architectures:
+  - amd64
+  - arm64
+  post_install: Add the browser-facing hostname to Allowed hosts, then open the interface. Keep it on a trusted
+    network or behind an authenticating reverse proxy.
+  web:
+    port: 8000
+  options:
+    ALLOWED_HOSTS:
+      label: Allowed hosts
+      help: Comma-separated browser-facing hostnames without ports or schemes. Include your reverse proxy hostname
+        if used.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8000. This setting is used when host port publishing is enabled.
+services:
+  gitingest:
+    image: ghcr.io/coderamp-labs/gitingest:v0.3.1
+    ports:
+    - ${PORT:-18115}:8000/tcp
+    environment:
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      GITINGEST_METRICS_ENABLED: 'false'
+      GITINGEST_SENTRY_ENABLED: 'false'
+    deploy:
+      replicas: 1

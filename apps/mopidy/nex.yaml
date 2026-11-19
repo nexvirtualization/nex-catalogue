@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mopidy
+  summary: Play music from a prepared library through network clients
+  description: Configure the managed mopidy.conf with a network audio output, then add your local music
+    directory. Use an authorized MPD or web client on a trusted network.
+  category: media
+  website: https://docs.mopidy.com/
+  source: https://github.com/mopidy/mopidy
+  docs: https://github.com/sweisgerber/docker-mopidy#configuration
+  scalable: false
+  primary_service: mopidy
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: mopidy
+    scheme: http
+    port: 6680
+  options:
+    PUID:
+      label: Puid
+      help: Numeric user ID for media and configuration.
+    PGID:
+      label: Pgid
+      help: Numeric group ID for media and configuration.
+    TZ:
+      label: Tz
+      help: IANA time zone for logging.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 6680.
+    MPD_PORT:
+      label: Mpd Port
+      help: Host-published MPD control port for trusted clients.
+    DATA:
+      label: Mopidy configuration
+      help: Select This host. Stores player and audio-output configuration. Include this folder in a stopped
+        Nex backup.
+    LIBRARY_DATA:
+      label: Library state
+      help: Select This host. Stores playlist state and generated local indexes. Include this folder in
+        a stopped Nex backup.
+    MUSIC:
+      label: Music files
+      help: Select This host. Select the managed music directory for playback. Include this folder in
+        a stopped Nex backup.
+services:
+  mopidy:
+    image: ghcr.io/sweisgerber/mopidy:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-6680}:6680/tcp
+    - ${MPD_PORT:-6600}:6600/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${LIBRARY_DATA}:/data
+    - ${MUSIC}:/music:ro
+    deploy:
+      replicas: 1

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'The Lord of the Rings: Return to Moria'
+  summary: Host co-op adventures under the Misty Mountains
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the dedicated-server option and enter the app’s Primary address on UDP 7777. First boot downloads
+    the server and creates MoriaServerConfig.ini. Edit the managed config to set a server password
+    and restart before inviting players. The image checks Steam for updates at startup. Make a stopped
+    backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2933130/
+  source: https://github.com/AndrewSav/moria-docker
+  docs: https://github.com/AndrewSav/moria-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    WINE:
+      label: Wine runtime cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  return-to-moria:
+    image: docker.io/andrewsav/moria:latest
+    expose:
+      - 7777/udp
+    volumes:
+      - ${DATA}:/server
+      - ${WINE}:/wineprefix-volume
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    stop_signal: SIGINT

@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Matomo
+  summary: Analyze your website traffic privately
+  description: Create a database in MariaDB or MySQL and complete the web installer on a trusted network.
+    Use HTTPS for the analytics endpoints. Configure periodic archiving in Matomo for larger sites.
+  category: monitoring
+  website: https://matomo.org/
+  source: https://github.com/matomo-org/matomo
+  docs: https://hub.docker.com/_/matomo
+  scalable: false
+  primary_service: matomo
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: matomo
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is matomo.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Matomo installation
+      help: Select This host. Stores configuration, plugins and other application files. Include this
+        folder in a stopped Nex backup.
+services:
+  matomo:
+    image: matomo:latest
+    environment:
+      MATOMO_DATABASE_HOST: ${DB_HOST}
+      MATOMO_DATABASE_USER: ${DB_USER}
+      MATOMO_DATABASE_PASSWORD: ${DB_PASSWORD}
+      MATOMO_DATABASE_DBNAME: ${DB_NAME:-matomo}
+    ports:
+    - ${PORT:-8420}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    deploy:
+      replicas: 1

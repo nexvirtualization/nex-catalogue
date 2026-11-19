@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Black Mesa Deathmatch
+  summary: Host Black Mesa multiplayer deathmatch
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In the in-game developer console, enter connect APP-IP:27015 with the app’s Primary address in
+    place of APP-IP. First boot downloads the server through SteamCMD. Restarts check for updates.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/362890/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/bmdmserver/
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - fps
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  black-mesa:
+    image: ghcr.io/gameservermanagers/gameserver:bmdm
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+    - 27015/udp
+    - 27015/tcp
+    volumes:
+    - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

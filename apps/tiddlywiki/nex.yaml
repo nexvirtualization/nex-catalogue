@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TiddlyWiki
+  summary: Maintain a personal wiki of linked notes
+  description: Keep the editor on a trusted network or behind an authenticating HTTPS proxy. Select
+    the wiki folder and back it up regularly.
+  category: productivity
+  website: https://github.com/TiddlyWiki/TiddlyWiki5
+  source: https://github.com/TiddlyWiki/TiddlyWiki5
+  docs: https://github.com/nicolaw/docker-tiddlywiki
+  primary_service: tiddlywiki
+  scalable: false
+  license: BSD-3-Clause
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Wiki notes and configuration
+      help: Keep wiki notes and configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  tiddlywiki:
+    image: docker.io/nicolaw/tiddlywiki:latest
+    volumes:
+    - ${DATA}:/var/lib/tiddlywiki
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

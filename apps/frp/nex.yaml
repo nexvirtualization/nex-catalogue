@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Frp
+  summary: FRP forwards traffic to services behind NAT or a firewall
+  description: FRP forwards traffic to services behind NAT or a firewall.
+  category: networking
+  source: https://github.com/fatedier/frp
+  website: https://gofrp.org/en/
+  docs: https://gofrp.org/en/docs/setup/
+  primary_service: frp
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /nex-config.
+    PORT:
+      label: Published 7000/tcp port
+      help: Host port for application listener 7000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Prepare frps.toml in Configuration. Configure authentication and TLS for trusted clients. Use
+    a dedicated app address or separate proxy configuration for the extra listener ports you define.
+services:
+  frp:
+    image: ghcr.io/fatedier/frps:v0.71.0
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    ports:
+    - ${PORT:-19921}:7000/tcp
+    command:
+    - -c
+    - /nex-config/frps.toml

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Jotty
+  summary: Manage notes and checklists in one web interface
+  description: Jotty stores notes and account configuration in two managed folders. A separate folder holds
+    the rendering cache.
+  category: productivity
+  website: https://jotty.page
+  source: https://github.com/fccview/jotty
+  docs: https://github.com/fccview/jotty/blob/main/howto/DOCKER.md
+  primary_service: jotty
+  post_install: Open Jotty on a trusted network and complete first-user setup. Back up the data and configuration
+    folders.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    DATA:
+      label: Notes and checklists
+      help: Managed directory mounted at /app/data. Choose storage writable by the application.
+    CONFIG:
+      label: Account configuration
+      help: Managed directory mounted at /app/config. Choose storage writable by the application.
+    CACHE:
+      label: Rendering cache
+      help: Managed directory mounted at /app/.next/cache. Choose storage writable by the application.
+services:
+  jotty:
+    image: ghcr.io/fccview/jotty:latest
+    ports:
+    - ${PORT:-20224}:3000/tcp
+    volumes:
+    - ${DATA}:/app/data
+    - ${CONFIG}:/app/config
+    - ${CACHE}:/app/.next/cache
+    environment:
+      NODE_ENV: production
+    user: 1000:1000
+    deploy:
+      replicas: 1

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: XWiki
+  summary: Collaborate on an extensible wiki and knowledge base
+  description: Provision a PostgreSQL database before starting XWiki. Complete the distribution wizard
+    at /xwiki/ and restrict setup access to a trusted network.
+  category: documents
+  website: https://github.com/xwiki/xwiki-platform
+  source: https://github.com/xwiki/xwiki-platform
+  docs: https://hub.docker.com/_/xwiki
+  primary_service: xwiki
+  scalable: false
+  license: LGPL-2.1
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: Database hostname
+      help: Reachable PostgreSQL server.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the prepared XWiki database user.
+    DB_USER:
+      label: Database user
+      help: Dedicated user of the prepared xwiki database.
+    DATA:
+      label: Wiki extensions and attachments
+      help: Keep wiki extensions and attachments in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  xwiki:
+    image: docker.io/library/xwiki:stable-postgres-tomcat
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+    volumes:
+    - ${DATA}:/usr/local/xwiki
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

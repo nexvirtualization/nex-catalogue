@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: EMQX
+  summary: Broker MQTT messages with a web management dashboard
+  description: Complete the dashboard first sign-in on a trusted network and change the default credentials.
+    Configure client authentication before publishing MQTT to any shared network. One broker copy only.
+  category: communication
+  website: https://github.com/emqx/emqx
+  source: https://github.com/emqx/emqx
+  docs: https://docs.emqx.com/en/emqx/latest/deploy/install-docker.html
+  primary_service: emqx
+  scalable: false
+  license: BUSL-1.1
+  web:
+    port: 18083
+  options:
+    DATA:
+      label: Broker configuration and data
+      help: Broker data, retained messages and runtime settings.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 18083.
+    MQTT_PORT:
+      label: MQTT client port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1883.
+services:
+  emqx:
+    image: docker.io/emqx/emqx:latest
+    environment:
+      EMQX_NODE__NAME: emqx@127.0.0.1
+    volumes:
+    - ${DATA}:/opt/emqx/data
+    ports:
+    - ${PORT:-18083}:18083/tcp
+    - ${MQTT_PORT:-1883}:1883/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: IPFS Kubo
+  summary: Run a persistent IPFS peer and HTTP retrieval gateway
+  description: Use the published HTTP port to retrieve IPFS content. For inbound peers, use a dedicated
+    Primary network and allow TCP and UDP port 4001 to the app address. The administrative RPC listener
+    stays on container loopback.
+  category: networking
+  website: https://ipfs.tech/
+  source: https://github.com/ipfs/kubo
+  docs: https://docs.ipfs.tech/install/run-ipfs-inside-docker/
+  scalable: false
+  primary_service: ipfs-kubo
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: ipfs-kubo
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: IPFS repository
+      help: Select This host. Holds the content-addressed data, peer identity and daemon configuration.
+        Include this folder in a stopped Nex backup.
+services:
+  ipfs-kubo:
+    image: ipfs/kubo:latest
+    environment:
+      IPFS_PROFILE: server
+    ports:
+    - ${PORT:-8170}:8080/tcp
+    expose:
+    - 4001/tcp
+    - 4001/udp
+    volumes:
+    - ${DATA}:/data/ipfs
+    entrypoint:
+    - /sbin/tini
+    - --
+    - /bin/sh
+    - -ec
+    - |-
+      run_ipfs() {
+        if [ "$$(id -u)" -eq 0 ]; then
+          gosu ipfs ipfs "$$@"
+        else
+          ipfs "$$@"
+        fi
+      }
+      if [ "$$(id -u)" -eq 0 ]; then
+        gosu ipfs test -w "$$IPFS_PATH" || chown -R ipfs:users "$$IPFS_PATH"
+      fi
+      if [ ! -f "$$IPFS_PATH/config" ]; then
+        run_ipfs init --profile=server
+      fi
+      run_ipfs config Addresses.API /ip4/127.0.0.1/tcp/5001
+      run_ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+      exec /usr/local/bin/start_ipfs daemon --migrate=true --agent-version-suffix=docker
+    deploy:
+      replicas: 1

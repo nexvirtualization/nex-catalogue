@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AnyCable
+  summary: Realtime server for reliable two-way communication over WebSockets, Server-sent events, etc
+  description: Realtime server for reliable two-way communication over WebSockets, Server-sent events, etc.
+  category: communication
+  source: https://github.com/anycable/anycable
+  website: https://anycable.io/
+  docs: https://docs.anycable.io/anycable-go/configuration
+  primary_service: anycable
+  options:
+    RPC_ENDPOINT:
+      label: Rpc endpoint
+    SERVER_SECRET:
+      label: Server secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_URL:
+      label: Redis url
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision the application RPC endpoint and a Redis instance. Configure WebSocket forwarding
+    to /cable and use the correct secret for your application.
+services:
+  anycable:
+    image: docker.io/anycable/anycable-go:latest
+    deploy:
+      replicas: 1
+    environment:
+      ANYCABLE_HOST: 0.0.0.0
+      ANYCABLE_PORT: '8080'
+      ANYCABLE_RPC_HOST: ${RPC_ENDPOINT}
+      ANYCABLE_SECRET: ${SERVER_SECRET}
+      ANYCABLE_REDIS_URL: ${REDIS_URL}
+    ports:
+    - ${PORT:-19959}:8080/tcp

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Matchering
+  summary: Master audio using an uploaded reference track
+  description: Access the audio processing interface on a trusted network. Keep uploaded material private
+    through network restrictions or an authenticated HTTPS proxy.
+  category: tools
+  website: https://github.com/sergree/matchering
+  source: https://github.com/sergree/matchering
+  docs: https://github.com/sergree/matchering/blob/master/DOCKER_LINUX.md
+  scalable: false
+  primary_service: matchering
+  architectures:
+  - amd64
+  web:
+    service: matchering
+    scheme: http
+    port: 8360
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8360.
+    DATA:
+      label: Audio files and results
+      help: Select This host. Stores uploaded reference files and generated output. Include this folder
+        in a stopped Nex backup.
+services:
+  matchering:
+    image: sergree/matchering-web:latest
+    ports:
+    - ${PORT:-8360}:8360/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

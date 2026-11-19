@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'SCP: Secret Laboratory'
+  summary: Host a multiplayer containment breach server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Read the server EULA in the LinuxGSM documentation before installing. Direct connect to the app’s
+    Primary address on UDP 7777. Public listing requires Northwood verification. First boot downloads
+    the server through SteamCMD. Restarts check for updates. Make a stopped backup before applying
+    game updates.
+  category: games
+  website: https://store.steampowered.com/app/700330/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/scpslserver/
+  license: Free-to-play game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - fps
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    EULA:
+      label: Accept the server EULA
+      type: bool
+      help: Accept the Northwood dedicated server terms at https://store.steampowered.com/eula/700330_eula_0
+        to start the server.
+services:
+  scp-secret-laboratory:
+    image: ghcr.io/gameservermanagers/gameserver:scpsl
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+      EULA: ${EULA}
+    expose:
+      - 7777/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        [[ "$${EULA,,}" == true ]] || { echo "Accept the server EULA in Nex before starting." >&2; exit 1; }
+        exec /bin/bash /app/entrypoint.sh

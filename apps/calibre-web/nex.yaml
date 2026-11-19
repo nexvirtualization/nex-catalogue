@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://docs.linuxserver.io/images/docker-calibre-web/
+x-nex:
+  name: Calibre Web
+  summary: Browse, read and download eBooks using an existing Calibre database
+  category: documents
+  description: Browse, read and download eBooks using an existing Calibre database. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/janeczku/calibre-web
+  website: https://github.com/janeczku/calibre-web
+  docs: https://github.com/janeczku/calibre-web
+  primary_service: calibre-web
+  options:
+    TZ:
+      label: Tz
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Books folder
+      help: Nex-managed folder mounted at /books. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8100/tcp.
+  web:
+    port: 8083
+  post_install: Initialize or point the app at the Calibre library database in /books. Update the initial administrator
+    credentials before remote access.
+services:
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: ${TZ}
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_3}:/books
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8100}:8083/tcp

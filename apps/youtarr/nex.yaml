@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Youtarr
+  summary: Organize video downloads and subscriptions
+  description: Prepare a dedicated MariaDB database and supply your first user credentials. Restrict access
+    and back up Config and the database.
+  category: media
+  website: https://github.com/DialmasterOrg/Youtarr
+  source: https://github.com/DialmasterOrg/Youtarr
+  docs: https://github.com/DialmasterOrg/Youtarr/blob/main/docker-compose.yml
+  primary_service: youtarr
+  post_install: Prepare a dedicated MariaDB database and supply your first user credentials. Restrict access
+    and back up Config and the database.
+  license: ISC
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3011
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_USER:
+      label: Admin user
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3011 inside Nex.
+    DATA:
+      label: Downloaded videos
+      help: Managed directory mounted at /usr/src/app/data. Choose storage writable by the application.
+    CONFIG:
+      label: Settings and logs
+      help: Managed directory mounted at /app/config. Choose storage writable by the application.
+    JOBS:
+      label: Job files
+      help: Managed directory mounted at /app/jobs. Choose storage writable by the application.
+    IMAGES:
+      label: Channel images
+      help: Managed directory mounted at /app/server/images. Choose storage writable by the application.
+services:
+  youtarr:
+    image: docker.io/dialmaster/youtarr:latest
+    ports:
+    - ${PORT:-23557}:3011/tcp
+    volumes:
+    - ${DATA}:/usr/src/app/data
+    - ${CONFIG}:/app/config
+    - ${JOBS}:/app/jobs
+    - ${IMAGES}:/app/server/images
+    environment:
+      IN_DOCKER_CONTAINER: '1'
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-youtarr}
+      AUTH_ENABLED: 'true'
+      AUTH_PRESET_USERNAME: ${ADMIN_USER:-admin}
+      AUTH_PRESET_PASSWORD: ${ADMIN_PASSWORD}
+    deploy:
+      replicas: 1

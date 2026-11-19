@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Invoice Builder
+  summary: Generate invoices through a browser workspace
+  description: Set up your company profile and billing details on a trusted network. Export generated
+    invoices for your records.
+  category: finance
+  website: https://github.com/piratuks/invoice-builder
+  source: https://github.com/piratuks/invoice-builder
+  docs: https://github.com/piratuks/invoice-builder
+  primary_service: invoice-builder
+  scalable: false
+  license: MIT
+  architectures:
+  - amd64
+  web:
+    port: 3001
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Enter the full client-facing URL including scheme and any port.
+    DATA:
+      label: Invoice database and files
+      help: Keep invoice database and files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3001.
+services:
+  invoice-builder:
+    image: ghcr.io/piratuks/invoice-builder:latest
+    environment:
+      SERVICE: frontend
+      BACKEND_HOST: backend
+      BACKEND_PORT: '3000'
+    volumes:
+    - ${DATA}:/app-data
+    ports:
+    - ${PORT:-3001}:3001/tcp
+    deploy:
+      replicas: 1
+  backend:
+    image: ghcr.io/piratuks/invoice-builder:latest
+    volumes:
+    - ${DATA}:/app-data
+    environment:
+      SERVICE: backend
+      NODE_ENV: docker
+      DB_DIRECTORY: /app-data
+      PORT: '3000'
+      DEV_SERVER_URL: 0.0.0.0
+      FE_SERVER_URL: ${BASE_URL}
+      MIGRATIONS_PATH: /app/dist-migrations
+    deploy:
+      replicas: 1

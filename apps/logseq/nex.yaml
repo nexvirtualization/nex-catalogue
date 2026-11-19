@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Logseq Web
+  summary: Run the browser edition of a local-first knowledge base
+  description: Use an HTTPS reverse proxy for remote access and open the app in a browser that supports
+    the File System Access API. Choose a Logseq graph from storage accessible to that browser.
+  category: productivity
+  website: https://logseq.com/
+  source: https://github.com/logseq/logseq
+  docs: https://github.com/logseq/logseq/blob/master/docs/docker-web-app-guide.md
+  scalable: false
+  primary_service: logseq
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: logseq
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+services:
+  logseq:
+    image: ghcr.io/logseq/logseq-webapp:latest
+    ports:
+    - ${PORT:-8791}:80/tcp
+    deploy:
+      replicas: 1

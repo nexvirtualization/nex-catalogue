@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LanguageTool
+  summary: Check grammar and spelling through a private HTTP API
+  description: Configure compatible clients to use the local API. Restrict access to intended clients
+    and size memory for your traffic.
+  category: tools
+  website: https://github.com/languagetool-org/languagetool
+  source: https://github.com/languagetool-org/languagetool
+  docs: https://github.com/Erikvl87/docker-languagetool
+  primary_service: languagetool
+  scalable: true
+  license: LGPL-2.1
+  scale:
+  - languagetool
+  options:
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8010.
+services:
+  languagetool:
+    image: docker.io/erikvl87/languagetool:latest
+    ports:
+    - ${PORT:-8010}:8010/tcp
+    deploy:
+      replicas: 1

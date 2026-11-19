@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Unleash
+  summary: Control feature rollouts with feature flags
+  description: Configure an existing PostgreSQL database. Sign in and change the upstream initial administrator
+    password before giving SDKs and team members access. Use HTTPS for the management interface and client
+    API.
+  category: development
+  website: https://www.getunleash.io/
+  source: https://github.com/Unleash/unleash
+  docs: https://docs.getunleash.io/deploy/getting-started
+  scalable: false
+  primary_service: unleash
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: unleash
+    scheme: http
+    port: 4242
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4242.
+services:
+  unleash:
+    image: unleashorg/unleash-server:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_SSL: 'false'
+    ports:
+    - ${PORT:-8453}:4242/tcp
+    deploy:
+      replicas: 1

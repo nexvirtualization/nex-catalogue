@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenResty Manager
+  summary: Manage manually configured HTTPS proxy routes
+  description: Open the HTTPS administration port on a trusted network, sign in with the upstream initial
+    credentials, and change the password. Configure backends using their Nex application names and
+    internal ports.
+  category: networking
+  website: https://om.uusec.com/
+  source: https://github.com/safe3/openresty-manager
+  docs: https://github.com/safe3/openresty-manager#readme
+  scalable: false
+  primary_service: openresty-manager
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openresty-manager
+    scheme: https
+    port: 34567
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTPS management port. With a dedicated Primary network, use the
+        application address on port 34567.
+    HTTP_PORT:
+      label: Http Port
+      help: Host-published HTTP listener.
+    HTTPS_PORT:
+      label: Https Port
+      help: Host-published HTTPS listener.
+    DATA:
+      label: Proxy state
+      help: Select This host. Stores proxy configuration and metadata. Include this folder in a stopped
+        Nex backup.
+    ACME:
+      label: TLS state
+      help: Select This host. Stores certificates and ACME state. Include this folder in a stopped Nex
+        backup.
+    CONFIG:
+      label: OpenResty configuration
+      help: Select This host. Stores web server configuration. Include this folder in a stopped Nex backup.
+services:
+  openresty-manager:
+    image: uusec/openresty-manager:latest
+    ports:
+    - ${PORT:-8804}:34567/tcp
+    - ${HTTP_PORT:-8084}:80/tcp
+    - ${HTTPS_PORT:-8444}:443/tcp
+    volumes:
+    - ${DATA}:/opt/om/data
+    - ${ACME}:/opt/om/acme
+    - ${CONFIG}:/opt/om/nginx/conf
+    deploy:
+      replicas: 1

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hister
+  summary: Personal web search engine with automatic indexing of visited websites
+  description: Personal web search engine with automatic indexing of visited websites. Supports offline local
+    result previews, local files, multi-user handling and optional semantic search.
+  category: reading
+  source: https://github.com/asciimoo/nogon
+  website: https://nogon.eu/
+  docs: https://github.com/asciimoo/hister#docker
+  primary_service: hister
+  options:
+    PUBLIC_URL:
+      label: Public url
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /hister/data.
+    PORT:
+      label: Published 4433/tcp port
+      help: Host port for application listener 4433/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Point the browser companion at the client-facing Hister server URL. Keep the data folder private
+    because indexed pages may contain personal content.
+  web:
+    port: 4433
+services:
+  hister:
+    image: ghcr.io/asciimoo/hister:latest
+    deploy:
+      replicas: 1
+    environment:
+      HISTER__SERVER__ADDRESS: 0.0.0.0:4433
+      HISTER__SERVER__BASE_URL: ${PUBLIC_URL}
+    volumes:
+    - ${DATA}:/hister/data
+    ports:
+    - ${PORT:-19960}:4433/tcp

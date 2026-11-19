@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'Holdfast: Nations At War'
+  summary: Host custom battles and map rotations
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In the server browser use Join Custom Server and enter the app’s Primary address on UDP 20100.
+    Steam uses UDP 27000 for queries and UDP 8700 for communications. Edit serverfiles/serverconfig_nex.txt
+    in the managed folder to customize the map rotation. First boot downloads the server through SteamCMD.
+    Restarts check for updates. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/589290/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/holdfast
+  docs: https://wiki.holdfastgame.com/index.php?title=Server_Hosting
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use at least 12 letters, numbers, underscores or hyphens.
+      type: password
+services:
+  holdfast:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+    - 20100/udp
+    - 27000/udp
+    - 8700/udp
+    volumes:
+    - ${DATA}:/home/container
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      # SPDX-License-Identifier: AGPL-3.0-only
+      # Embedded in catalogue manifests that install a server through SteamCMD.
+      # A package passes a dedicated-server app ID and either linux or windows.
+      nex_steamcmd_update() {
+        local app_id="$$1" platform="$$2"
+        local archive attempt architecture steamclient
+        local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+        cd "$$HOME"
+        mkdir -p steamcmd serverfiles
+        if [[ ! -x steamcmd/steamcmd.sh ]]; then
+          archive=$$(mktemp)
+          if ! curl --fail --silent --show-error --location --retry 3 \
+            https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+            || ! tar -xzf "$$archive" -C steamcmd; then
+            rm -f "$$archive"
+            return 1
+          fi
+          rm -f "$$archive"
+        fi
+
+        if [[ "$$platform" == windows ]]; then
+          update+=(+@sSteamCmdForcePlatformType windows)
+        fi
+        update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+        for attempt in 1 2 3; do
+          if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+            break
+          fi
+          if [[ "$$attempt" == 3 ]]; then
+            return 1
+          fi
+          sleep "$$((attempt * 5))"
+        done
+
+        for architecture in 32 64; do
+          steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+          if [[ -f "$$steamclient" ]]; then
+            mkdir -p ".steam/sdk$$architecture"
+            ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+          fi
+        done
+        cd serverfiles
+      }
+
+      nex_steamcmd_update 1424230 linux
+      [[ -f serverconfig_nex.txt ]] || cp serverconfig_default.txt serverconfig_nex.txt
+      [[ "$$ADMIN_PASSWORD" =~ ^[A-Za-z0-9_-]{12,}$$ ]] || {
+        echo "Use at least 12 characters from A-Z, a-z, 0-9, underscore or hyphen for the Holdfast administrator password." >&2
+        exit 1
+      }
+      tmp_config=$$(mktemp ./serverconfig_nex.XXXXXX)
+      awk '$$1 !~ /^(server_admin_password|server_port|steam_query_port|steam_communications_port)$$/' serverconfig_nex.txt > "$$tmp_config"
+      {
+        printf 'server_admin_password %s\n' "$$ADMIN_PASSWORD"
+        printf 'server_port 20100\nsteam_query_port 27000\nsteam_communications_port 8700\n'
+        cat "$$tmp_config"
+      } > "$$tmp_config.updated"
+      mv "$$tmp_config.updated" serverconfig_nex.txt
+      rm -f "$$tmp_config"
+      mkdir -p logs_output logs_archive
+      exec "./Holdfast NaW" -startserver -batchmode -nographics --serverheadless \
+        -serverConfigFilePath serverconfig_nex.txt -logFile logs_output/server.log \
+        -logArchivesDirectory logs_archive/ -p 20100
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

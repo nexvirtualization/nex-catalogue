@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TRIP
+  summary: Keep a private map of places and plan trips
+  description: Use the web installer to set up your own trip planner and map of points of interest. Place
+    it behind an authenticated HTTPS reverse proxy if your network is shared.
+  category: productivity
+  website: https://itskovacs-trip.netlify.app/
+  source: https://github.com/itskovacs/trip
+  docs: https://github.com/itskovacs/trip#readme
+  scalable: false
+  primary_service: trip
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: trip
+    scheme: http
+    port: 8000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Trips and settings
+      help: Select This host. Stores trips, local configuration and map data. Include this folder in a
+        stopped Nex backup.
+services:
+  trip:
+    image: ghcr.io/itskovacs/trip:latest
+    ports:
+    - ${PORT:-8106}:8000/tcp
+    volumes:
+    - ${DATA}:/app/storage
+    deploy:
+      replicas: 1

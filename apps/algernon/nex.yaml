@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Algernon
+  summary: Serve Lua applications and static web files
+  description: Put your application files in the managed site folder. Follow the upstream configuration
+    documentation if you need a proxy, custom Lua modules or a backing database.
+  category: development
+  website: https://github.com/xyproto/algernon
+  source: https://github.com/xyproto/algernon
+  docs: https://github.com/xyproto/algernon
+  primary_service: algernon
+  scalable: false
+  license: BSD-3-Clause
+  architectures:
+  - amd64
+  web:
+    port: 4000
+  options:
+    SITE:
+      label: Website files
+      help: Keep website files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4000.
+services:
+  algernon:
+    image: docker.io/xyproto/algernon:latest
+    volumes:
+    - ${SITE}:/srv/algernon
+    ports:
+    - ${PORT:-4000}:4000/tcp
+    deploy:
+      replicas: 1

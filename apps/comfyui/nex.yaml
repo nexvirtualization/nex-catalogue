@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ComfyUI
+  summary: Build and run model-based image generation workflows
+  description: This CPU profile needs no accelerator. Put compatible model files in the managed data
+    folder and keep the ComfyUI interface private or behind an authenticating proxy.
+  category: ai
+  website: https://github.com/comfy-org/comfyui
+  source: https://github.com/comfy-org/comfyui
+  docs: https://github.com/romkey/comfyui-docker/blob/main/docker-compose.cpu.yml
+  primary_service: comfyui
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8188
+  options:
+    DATA:
+      label: Models, workspace and output files
+      help: Keep models, workspace and output files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8188.
+services:
+  comfyui:
+    image: ghcr.io/romkey/comfyui-docker:0.38.0-cpu
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      COMFYUI_CPU: 'true'
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8188}:8188/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Scrutiny Web
+  summary: View drive health reports from outside collectors
+  description: Provision a compatible InfluxDB backend and prepare the Scrutiny web configuration. Install
+    SMART collectors on the hosts whose drives you monitor and point them at the web API. Restrict the
+    API and dashboard to authorized devices.
+  category: monitoring
+  website: https://github.com/AnalogJ/scrutiny
+  source: https://github.com/AnalogJ/scrutiny
+  docs: https://github.com/AnalogJ/scrutiny#installation
+  scalable: false
+  primary_service: scrutiny
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: scrutiny
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Prepared web configuration
+      help: Select This host. Choose a managed folder containing the Scrutiny configuration and InfluxDB
+        settings. Include this folder in a stopped Nex backup.
+services:
+  scrutiny:
+    image: ghcr.io/analogj/scrutiny:latest-web
+    ports:
+    - ${PORT:-8797}:8080/tcp
+    volumes:
+    - ${DATA}:/opt/scrutiny/config
+    deploy:
+      replicas: 1

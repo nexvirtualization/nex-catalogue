@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dagu
+  summary: Schedule and monitor workflows described in YAML
+  description: Run Dagu with managed state and workflow files. This profile does not attach a Docker management
+    socket.
+  category: development
+  website: https://docs.dagu.cloud/
+  source: https://github.com/dagucloud/dagu
+  docs: https://github.com/dagucloud/dagu
+  primary_service: dagu
+  post_install: Open Dagu on a trusted network. Workflows execute inside the worker process, so protect the
+    editor with a trusted reverse proxy or Dagu authentication.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Workflows and history
+      help: Managed directory mounted at /var/lib/dagu. Choose storage writable by the application.
+services:
+  dagu:
+    image: ghcr.io/dagucloud/dagu:latest
+    ports:
+    - ${PORT:-20218}:8080/tcp
+    volumes:
+    - ${DATA}:/var/lib/dagu
+    command:
+    - dagu
+    - start-all
+    deploy:
+      replicas: 1

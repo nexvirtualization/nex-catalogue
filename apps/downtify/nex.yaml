@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Downtify
+  summary: Manage audio downloads and files with a web queue
+  description: Keep the endpoint private or protect it with an authenticating HTTPS proxy. The default
+    profile stores its state in SQLite.
+  category: downloads
+  website: https://github.com/henriquesebastiao/downtify
+  source: https://github.com/henriquesebastiao/downtify
+  docs: https://henriquesebastiao.github.io/downtify/getting-started/
+  primary_service: downtify
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    DATA:
+      label: Settings and database
+      help: Downtify settings and database.
+    DOWNLOADS:
+      label: Downloaded audio
+      help: The audio library written by Downtify.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  downtify:
+    image: ghcr.io/henriquesebastiao/downtify:latest
+    volumes:
+    - ${DATA}:/data
+    - ${DOWNLOADS}:/downloads
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

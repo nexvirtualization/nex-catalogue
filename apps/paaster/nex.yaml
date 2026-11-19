@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: paaster
+  summary: Share end-to-end encrypted pastes
+  description: Provision MongoDB and a private S3-compatible bucket with a dedicated writer. Configure the
+    bucket to allow requests from your Paaster HTTPS origin.
+  category: development
+  website: https://paaster.io
+  source: https://github.com/WardPearce/paaster
+  docs: https://github.com/WardPearce/paaster/blob/main/docker-compose.yml
+  primary_service: paaster
+  post_install: Provision MongoDB and a private S3-compatible bucket with a dedicated writer. Configure the
+    bucket to allow requests from your Paaster HTTPS origin.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 3000
+  options:
+    S3_ENDPOINT:
+      label: S3 endpoint
+      help: Enter the deployment value described in the upstream setup guide.
+    S3_REGION:
+      label: S3 region
+      help: Enter the deployment value described in the upstream setup guide.
+    S3_ACCESS_KEY_ID:
+      label: S3 access key id
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    S3_SECRET_ACCESS_KEY:
+      label: S3 secret access key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    S3_BUCKET:
+      label: S3 bucket
+      help: Enter the deployment value described in the upstream setup guide.
+    MONGO_DB:
+      label: Mongo db
+      help: Enter the deployment value described in the upstream setup guide.
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  paaster:
+    image: docker.io/wardpearce/paaster:latest
+    ports:
+    - ${PORT:-23512}:3000/tcp
+    environment:
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET: ${S3_BUCKET}
+      MONGO_DB: ${MONGO_DB:-paasterv3}
+      MONGO_URL: ${MONGO_URI}
+    deploy:
+      replicas: 1

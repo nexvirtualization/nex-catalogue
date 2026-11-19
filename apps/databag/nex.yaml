@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Databag
+  summary: Host an independent messaging node for your community
+  description: For browser and app clients, configure a public DNS name and HTTPS reverse proxy. Follow
+    the upstream onboarding directions and create the node administrator from a trusted endpoint.
+  category: communication
+  website: https://github.com/balzack/databag
+  source: https://github.com/balzack/databag
+  docs: https://github.com/balzack/databag
+  primary_service: databag
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 7000
+  options:
+    DATA:
+      label: Messaging data
+      help: Databag accounts, stored data and configuration.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7000.
+services:
+  databag:
+    image: docker.io/balzack/databag:latest
+    volumes:
+    - ${DATA}:/var/lib/databag
+    ports:
+    - ${PORT:-7000}:7000/tcp
+    deploy:
+      replicas: 1

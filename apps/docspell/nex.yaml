@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Docspell
+  summary: Organize, search and process scanned documents
+  description: Runs the Docspell web server and a private document processing worker. Provision PostgreSQL before
+    installing and back up that database for recovery. This profile uses PostgreSQL full-text search.
+  category: documents
+  source: https://github.com/eikek/docspell
+  website: https://docspell.org/
+  docs: https://docspell.org/docs/install/docker/
+  primary_service: restserver
+  web:
+    port: 7880
+  options:
+    PORT:
+      label: Web port
+      help: Host port for the Docspell HTTP listener on 7880, when host publishing is available.
+    PUBLIC_URL:
+      label: Public browser URL
+      help: The full URL operators see in the browser. Include HTTPS when using a proxy.
+    DB_URL:
+      label: PostgreSQL JDBC URL
+      help: Use jdbc:postgresql://db:5432/docspell with the Nex connection name of your database.
+    DB_USER:
+      label: Database user
+    DB_PASSWORD:
+      label: Database password
+      type: password
+    SESSION_SECRET:
+      label: Session signing secret
+      type: password
+      help: Use a unique value and keep it unchanged with backups.
+    ADMIN_SECRET:
+      label: Administrative API secret
+      type: password
+    SIGNUP_PASSWORD:
+      label: Workspace invite password
+      type: password
+      help: Required to register a new workspace from the browser.
+  post_install: Sign up for a collective with the configured invite password. Keep the database and operator secrets
+    in your backup. The private worker handles OCR and related processing.
+services:
+  restserver:
+    image: ghcr.io/docspell/restserver:latest
+    environment:
+      DOCSPELL_SERVER_BIND_ADDRESS: 0.0.0.0
+      DOCSPELL_SERVER_BASE__URL: ${PUBLIC_URL}
+      DOCSPELL_SERVER_INTERNAL__URL: http://restserver:7880
+      DOCSPELL_SERVER_BACKEND_JDBC_URL: ${DB_URL}
+      DOCSPELL_SERVER_BACKEND_JDBC_USER: ${DB_USER}
+      DOCSPELL_SERVER_BACKEND_JDBC_PASSWORD: ${DB_PASSWORD}
+      DOCSPELL_SERVER_AUTH_SERVER__SECRET: ${SESSION_SECRET}
+      DOCSPELL_SERVER_ADMIN__ENDPOINT_SECRET: ${ADMIN_SECRET}
+      DOCSPELL_SERVER_BACKEND_SIGNUP_MODE: invite
+      DOCSPELL_SERVER_BACKEND_SIGNUP_NEW__INVITE__PASSWORD: ${SIGNUP_PASSWORD}
+      DOCSPELL_SERVER_FULL__TEXT__SEARCH_ENABLED: "true"
+      DOCSPELL_SERVER_FULL__TEXT__SEARCH_BACKEND: postgresql
+      DOCSPELL_SERVER_FULL__TEXT__SEARCH_POSTGRESQL_USE__DEFAULT__CONNECTION: "true"
+    ports:
+      - ${PORT:-19961}:7880/tcp
+    deploy:
+      replicas: 1
+  joex:
+    image: ghcr.io/docspell/joex:latest
+    environment:
+      DOCSPELL_JOEX_BIND_ADDRESS: 0.0.0.0
+      DOCSPELL_JOEX_BASE__URL: http://joex:7878
+      DOCSPELL_JOEX_JDBC_URL: ${DB_URL}
+      DOCSPELL_JOEX_JDBC_USER: ${DB_USER}
+      DOCSPELL_JOEX_JDBC_PASSWORD: ${DB_PASSWORD}
+      DOCSPELL_JOEX_FULL__TEXT__SEARCH_ENABLED: "true"
+      DOCSPELL_JOEX_FULL__TEXT__SEARCH_BACKEND: postgresql
+      DOCSPELL_JOEX_FULL__TEXT__SEARCH_POSTGRESQL_USE__DEFAULT__CONNECTION: "true"
+    deploy:
+      replicas: 1

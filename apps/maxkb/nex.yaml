@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MaxKB
+  summary: Build knowledge-base assistants from documents and models
+  description: Sign in with the upstream default admin credentials from a trusted network and immediately
+    change the password. Configure a reachable model endpoint as needed.
+  category: ai
+  website: https://github.com/1panel-dev/maxkb
+  source: https://github.com/1panel-dev/maxkb
+  docs: https://github.com/1panel-dev/maxkb
+  primary_service: maxkb
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: MaxKB database and knowledge base
+      help: Keep maxkb database and knowledge base in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  maxkb:
+    image: docker.io/1panel/maxkb:latest
+    volumes:
+    - ${DATA}:/opt/maxkb
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

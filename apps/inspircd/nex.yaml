@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: InspIRCd
+  summary: Host a modular Internet Relay Chat server
+  description: The image generates an IRC configuration from the install settings. Connect to the client
+    endpoint over TLS on port 6697. It uses a self-signed certificate unless a trusted certificate has
+    been supplied. Configure IRC clients on a trusted network before exchanging passwords.
+  category: communication
+  website: https://www.inspircd.org/
+  source: https://github.com/inspircd/inspircd
+  docs: https://github.com/inspircd/docker#how-to-use-this-image
+  scalable: false
+  primary_service: inspircd
+  architectures:
+  - amd64
+  - arm64
+  options:
+    SERVER_NAME:
+      label: IRC hostname
+      help: Use the full DNS name clients use to reach this server.
+    NETWORK_NAME:
+      label: IRC network name
+      help: Name advertised to its IRC clients.
+    JOIN_PASSWORD:
+      label: Client join password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    IRC_TLS_PORT:
+      label: Irc Tls Port
+      help: IRC client TLS port. Clients on a dedicated network use the app address and port 6697.
+    DATA:
+      label: IRC server configuration
+      help: Select This host. Holds the IRC configuration and certificate materials. Include this folder
+        in a stopped Nex backup.
+services:
+  inspircd:
+    image: inspircd/inspircd-docker:latest
+    environment:
+      INSP_SERVER_NAME: ${SERVER_NAME}
+      INSP_NET_NAME: ${NETWORK_NAME:-NexIRC}
+      INSP_CONNECT_PASSWORD: ${JOIN_PASSWORD}
+      INSP_TLS_CN: ${SERVER_NAME}
+    ports:
+    - ${IRC_TLS_PORT:-6697}:6697/tcp
+    volumes:
+    - ${DATA}:/inspircd/conf
+    deploy:
+      replicas: 1

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Mohist
+  summary: Use Bukkit plugins and Forge mods together
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Runs the Mohist 1.20.1
+    server on Java 17. Check each Forge mod and Bukkit plugin for Mohist compatibility. Make a
+    stopped backup before applying updates.
+  category: games
+  website: https://mohistmc.com/
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://mohistmc.com/mohistmc-api
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-mohist:
+    image: ghcr.io/itzg/minecraft-server:java17
+    environment:
+      EULA: ${EULA}
+      TYPE: MOHIST
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: 1.20.1
+      MOHIST_BUILD: '995'
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

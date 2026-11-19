@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Colanode
+  summary: Provide a collaboration server for Colanode clients
+  description: Prepare PostgreSQL with pgvector, Redis and two S3-compatible buckets before deployment.
+    Enter this server address in the Colanode client. Keep the service within your organization’s access
+    controls.
+  category: communication
+  website: https://github.com/colanode/colanode
+  source: https://github.com/colanode/colanode
+  docs: https://colanode.com/docs/self-hosting/
+  primary_service: colanode
+  scalable: false
+  license: Apache-2.0
+  options:
+    POSTGRES_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    SERVER_NAME:
+      label: Team server name
+      help: Name shown in Colanode clients.
+    S3_ENDPOINT:
+      label: Object store URL
+      help: Reachable S3-compatible service URL.
+    S3_ACCESS_KEY:
+      label: Object store access key
+      help: Dedicated access key for both buckets.
+    S3_SECRET_KEY:
+      label: Object store secret key
+      type: password
+      help: Secret for the object store access key.
+    S3_AVATARS_BUCKET_NAME:
+      label: Avatar bucket
+      help: Existing S3-compatible bucket for avatars.
+    STORAGE_S3_BUCKET:
+      label: File bucket
+      help: Existing S3-compatible bucket for attachments.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  colanode:
+    image: ghcr.io/colanode/server:latest
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      SERVER_MODE: standalone
+      ACCOUNT_VERIFICATION_TYPE: automatic
+      S3_AVATARS_ENDPOINT: ${S3_ENDPOINT}
+      STORAGE_S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_AVATARS_ACCESS_KEY: ${S3_ACCESS_KEY}
+      STORAGE_S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_AVATARS_SECRET_KEY: ${S3_SECRET_KEY}
+      STORAGE_S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_AVATARS_REGION: us-east-1
+      STORAGE_S3_REGION: us-east-1
+      S3_AVATARS_FORCE_PATH_STYLE: 'true'
+      STORAGE_S3_FORCE_PATH_STYLE: 'true'
+      POSTGRES_URL: ${POSTGRES_URL}
+      REDIS_URL: ${REDIS_URL}
+      SERVER_NAME: ${SERVER_NAME}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_AVATARS_BUCKET_NAME: ${S3_AVATARS_BUCKET_NAME}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

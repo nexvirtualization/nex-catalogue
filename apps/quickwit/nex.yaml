@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Quickwit
+  summary: Search and retain logs with Quickwit indexes
+  description: Use the managed data folder for a single-node deployment. Restrict operator and ingestion
+    endpoints to intended clients.
+  category: monitoring
+  website: https://github.com/quickwit-oss/quickwit
+  source: https://github.com/quickwit-oss/quickwit
+  docs: https://quickwit.io/docs/get-started/quickstart
+  primary_service: quickwit
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: Quickwit indexes and metadata
+      help: Keep quickwit indexes and metadata in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7280.
+    GRPC_PORT:
+      label: Quickwit gRPC endpoint
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7281.
+services:
+  quickwit:
+    image: docker.io/quickwit/quickwit:latest
+    command:
+    - run
+    volumes:
+    - ${DATA}:/quickwit/qwdata
+    ports:
+    - ${PORT:-7280}:7280/tcp
+    - ${GRPC_PORT:-7281}:7281/tcp
+    deploy:
+      replicas: 1

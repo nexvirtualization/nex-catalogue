@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenProject
+  summary: Plan cross-team projects, milestones and work packages
+  description: Set the browser-facing hostname and place the endpoint behind HTTPS. Complete sign-in
+    through the upstream setup and back up both the database and asset folders.
+  category: productivity
+  website: https://github.com/opf/openproject
+  source: https://github.com/opf/openproject
+  docs: https://www.openproject.org/docs/installation-and-operations/installation/docker/
+  primary_service: openproject
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    OPENPROJECT_HOST__NAME:
+      label: Public hostname
+      help: Hostname and optional port without scheme.
+    SECRET_KEY_BASE:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DATABASE:
+      label: Embedded database
+      help: Keep embedded database in this managed folder between restarts.
+    ASSETS:
+      label: Project uploads
+      help: Keep project uploads in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  openproject:
+    image: docker.io/openproject/openproject:17
+    environment:
+      OPENPROJECT_HTTPS: 'true'
+      OPENPROJECT_HOST__NAME: ${OPENPROJECT_HOST__NAME}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    volumes:
+    - ${DATABASE}:/var/openproject/pgdata
+    - ${ASSETS}:/var/openproject/assets
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

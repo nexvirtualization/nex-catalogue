@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hugging Face Chat UI
+  summary: Chat with a configured model endpoint in a browser
+  description: The upstream image includes MongoDB. Set the OpenAI-compatible provider URL and its API
+    key. Restrict access to trusted clients or an authenticated HTTPS proxy because requests use this
+    installed provider credential.
+  category: ai
+  website: https://huggingface.co/chat/
+  source: https://github.com/huggingface/chat-ui
+  docs: https://github.com/huggingface/chat-ui#readme
+  scalable: false
+  primary_service: hugging-face-chat-ui
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: hugging-face-chat-ui
+    scheme: http
+    port: 3000
+  options:
+    MODEL_URL:
+      label: Model endpoint
+      help: Base URL of the OpenAI-compatible model API.
+    MODEL_API_KEY:
+      label: Model API key
+      help: Enter an API key issued by the model provider.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Conversations and database
+      help: Select This host. Stores conversation history and MongoDB state. Include this folder in a
+        stopped Nex backup.
+services:
+  hugging-face-chat-ui:
+    image: ghcr.io/huggingface/chat-ui-db:latest
+    environment:
+      OPENAI_BASE_URL: ${MODEL_URL:-https://router.huggingface.co/v1}
+      OPENAI_API_KEY: ${MODEL_API_KEY}
+    ports:
+    - ${PORT:-8167}:3000/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

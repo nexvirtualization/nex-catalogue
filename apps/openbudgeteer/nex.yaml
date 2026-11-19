@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenBudgeteer
+  summary: Track your budget using the bucket budgeting model
+  description: Keep budget records on a trusted endpoint or behind an authenticating proxy. Use one
+    copy and stop it before backing up its SQLite files.
+  category: finance
+  website: https://github.com/TheAxelander/OpenBudgeteer
+  source: https://github.com/TheAxelander/OpenBudgeteer
+  docs: https://github.com/TheAxelander/OpenBudgeteer
+  primary_service: openbudgeteer
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Budget database
+      help: Keep budget database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  openbudgeteer:
+    image: docker.io/axelander/openbudgeteer:latest
+    environment:
+      CONNECTION_PROVIDER: sqlite
+    volumes:
+    - ${DATA}:/app/database
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

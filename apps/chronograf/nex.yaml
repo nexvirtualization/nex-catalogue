@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chronograf
+  summary: Explore time-series metrics stored in InfluxDB
+  description: Add a reachable InfluxDB connection from the web interface. Keep access private or authenticate
+    users through a supported proxy arrangement.
+  category: monitoring
+  website: https://github.com/influxdata/chronograf
+  source: https://github.com/influxdata/chronograf
+  docs: https://docs.influxdata.com/chronograf/v1/introduction/installation/
+  primary_service: chronograf
+  scalable: false
+  license: AGPL-3.0-or-later
+  web:
+    port: 8888
+  options:
+    DATA:
+      label: Dashboard and connection settings
+      help: Keep dashboard and connection settings in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8888.
+services:
+  chronograf:
+    image: docker.io/library/chronograf:latest
+    volumes:
+    - ${DATA}:/var/lib/chronograf
+    ports:
+    - ${PORT:-8888}:8888/tcp
+    deploy:
+      replicas: 1

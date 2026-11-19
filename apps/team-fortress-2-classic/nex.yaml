@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Team Fortress 2 Classic
+  summary: Host the community TF2 Classic game
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Team Fortress 2 Classified is the Steam release of Team Fortress 2 Classic. First boot downloads
+    the dedicated server with SteamCMD. Use the multiplayer browser or enter connect followed by the
+    app’s Primary address and port 27015 in the client console. Make a stopped backup before applying
+    game updates.
+  category: games
+  website: https://store.steampowered.com/app/3545060/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/tf2cserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - fps
+    - steam
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  team-fortress-2-classic:
+    image: ghcr.io/gameservermanagers/gameserver:tf2c
+    expose:
+      - 27015/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

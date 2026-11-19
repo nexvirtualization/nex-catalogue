@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: VerneMQ
+  summary: Broker MQTT messages for connected devices
+  description: Review and accept the VerneMQ Docker image terms before installation. Keep the broker
+    private and connect clients with the configured MQTT username and password.
+  category: communication
+  website: https://github.com/vernemq/vernemq
+  source: https://github.com/vernemq/vernemq
+  docs: https://docs.vernemq.com/installing-vernemq/docker
+  primary_service: vernemq
+  scalable: false
+  license: Apache-2.0
+  options:
+    ACCEPT_TERMS:
+      label: Accept the image EULA
+      help: Review the upstream image terms, then enter yes to accept.
+    MQTT_PASSWORD:
+      label: MQTT password
+      type: password
+      help: Use Nex Generate. Connect with username nex.
+    DATA:
+      label: Broker state
+      help: Keep broker state in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1883.
+services:
+  vernemq:
+    image: docker.io/vernemq/vernemq:latest
+    environment:
+      DOCKER_VERNEMQ_ACCEPT_EULA: ${ACCEPT_TERMS}
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: 'off'
+      DOCKER_VERNEMQ_USER_nex: ${MQTT_PASSWORD}
+    volumes:
+    - ${DATA}:/vernemq/data
+    ports:
+    - ${PORT:-1883}:1883/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Apache Solr
+  summary: Index and query data using Apache Solr
+  description: Use the private application network and configure Solr access controls before sharing
+    it. This profile creates a starter core named nex.
+  category: development
+  website: https://github.com/apache/solr
+  source: https://github.com/apache/solr
+  docs: https://solr.apache.org/guide/solr/latest/deployment-guide/solr-in-docker.html
+  primary_service: solr
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8983
+  options:
+    DATA:
+      label: Search indexes and core configuration
+      help: Keep search indexes and core configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8983.
+services:
+  solr:
+    image: docker.io/library/solr:latest
+    command:
+    - solr-precreate
+    - nex
+    volumes:
+    - ${DATA}:/var/solr
+    ports:
+    - ${PORT:-8983}:8983/tcp
+    deploy:
+      replicas: 1

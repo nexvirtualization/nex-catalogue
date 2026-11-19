@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tracks
+  summary: Manage tasks and projects in a personal workflow
+  description: Use a trusted network during first user setup. Keep the application folder in stopped
+    backups.
+  category: productivity
+  website: https://github.com/TracksApp/tracks
+  source: https://github.com/TracksApp/tracks
+  docs: https://github.com/TracksApp/tracks
+  primary_service: tracks
+  scalable: false
+  license: GPL-2.0
+  architectures:
+  - amd64
+  web:
+    port: 3000
+  options:
+    DATA:
+      label: Task database and settings
+      help: Keep task database and settings in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  tracks:
+    image: ghcr.io/tracksapp/tracks:latest
+    volumes:
+    - ${DATA}:/var/lib/tracks
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

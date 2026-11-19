@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wurm Unlimited
+  summary: Host a persistent sandbox world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First start creates a Creative world. Join it in the server browser or use the Primary address
+    on TCP 3724. Keep port 8766 and UDP 27020 reachable for Steam. Use your administrator password
+    only for in-game administration. First start downloads the dedicated server from Steam. Make a
+    stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/366220/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/wurmunlimited
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/wurmunlimited#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players in the multiplayer browser.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Choose a strong password for the server administrator.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  wurm-unlimited:
+    image: ghcr.io/ich777/steamcmd:wurmunlimited
+    environment:
+      GAME_ID: '402370'
+      WU_SERVERNAME: ${SERVER_NAME:-Nex Wurm}
+      WU_ADMINPWD: ${ADMIN_PASSWORD}
+      WU_PWD: ${JOIN_PASSWORD}
+      GAME_MODE: Creative
+      GAME_PORT: '3724'
+      WU_QUERYPORT: '27020'
+      GAME_PARAMS: ''
+    expose:
+      - 3724/tcp
+      - 8766/tcp
+      - 8766/udp
+      - 27020/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

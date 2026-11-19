@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tekkit Classic
+  summary: Run the classic industrial Minecraft modpack
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Install Tekkit Classic
+    3.1.2 with the Technic Launcher on each client. This package runs the original Minecraft 1.2.5
+    server files with Java 8. Keep access limited to trusted players. Make a stopped backup before
+    applying updates.
+  category: games
+  website: https://www.technicpack.net/modpack/tekkit.552560
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/mods-and-plugins/#generic-pack-files
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-tekkit-classic:
+    image: ghcr.io/itzg/minecraft-server:java8
+    environment:
+      EULA: ${EULA}
+      TYPE: CUSTOM
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: 1.2.5
+      GENERIC_PACK: https://servers.technicpack.net/Technic/servers/tekkit/Tekkit_Server_3.1.2.zip
+      SKIP_GENERIC_PACK_UPDATE_CHECK: 'true'
+      CUSTOM_SERVER: Tekkit.jar
+      DISABLE_HEALTHCHECK: 'true'
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SIPCAPTURE Homer
+  summary: Collect and search HEP signaling data from your own voice infrastructure
+  description: Check the logs for the initial Homer administrator credentials and change the password
+    in the web interface. Send HEP traffic from your authorized voice infrastructure using the UDP ingest
+    endpoint.
+  category: monitoring
+  website: https://github.com/sipcapture/homer
+  source: https://github.com/sipcapture/homer
+  docs: https://sipcapture.github.io/homer/
+  primary_service: sipcapture-homer
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Homer data lake
+      help: Capture data, local catalogue, accounts and configuration.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    HEP_PORT:
+      label: HEP UDP ingest port
+      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9060.
+services:
+  sipcapture-homer:
+    image: ghcr.io/sipcapture/homer:latest
+    command:
+    - "if [ ! -s /data/homer/homer.json ]; then\n  /homer wizard --profile all-in-one --output /data/homer/homer.json\n\
+      fi\nexec /homer --config-path /data/homer/homer.json"
+    entrypoint:
+    - /bin/sh
+    - -ec
+    volumes:
+    - ${DATA}:/data/homer
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${HEP_PORT:-9060}:9060/udp
+    deploy:
+      replicas: 1

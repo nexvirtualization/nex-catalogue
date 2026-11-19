@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: copyparty
+  summary: Browse and transfer files through a shared web endpoint
+  description: Add file-sharing rules and accounts before exposing the service. This profile uses a
+    password-protected file volume and keeps the administration endpoint on the trusted application
+    network.
+  category: documents
+  website: https://github.com/9001/copyparty
+  source: https://github.com/9001/copyparty
+  docs: https://github.com/9001/copyparty
+  primary_service: copyparty
+  scalable: false
+  license: MIT
+  web:
+    port: 3923
+  options:
+    ACCESS_PASSWORD:
+      label: File access password
+      type: password
+      help: Sign in as nex with this password. Use Nex Generate.
+    FILES:
+      label: Shared files
+      help: Files and upload history served by Copyparty.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3923.
+services:
+  copyparty:
+    image: ghcr.io/9001/copyparty-ac:latest
+    command:
+    - -a
+    - nex:${ACCESS_PASSWORD}
+    - -v
+    - /w::A,nex
+    volumes:
+    - ${FILES}:/w
+    ports:
+    - ${PORT:-3923}:3923/tcp
+    deploy:
+      replicas: 1

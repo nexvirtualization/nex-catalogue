@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/runtipi/runtipi-appstore/blob/HEAD/apps/komga/docker-compose.yml
+x-nex:
+  name: Komga
+  summary: Media server for comics/mangas/BDs with API and OPDS support, a modern web interface for exploring
+    your libraries, as
+  category: documents
+  description: Media server for comics/mangas/BDs with API and OPDS support, a modern web interface for exploring
+    your libraries, as well as a web reader. Back up the application folders together and keep them writable
+    by the container.
+  source: https://github.com/gotson/komga
+  website: https://komga.org
+  docs: https://komga.org
+  primary_service: komga
+  options:
+    TZ:
+      label: Tz
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Data folder
+      help: Nex-managed folder mounted at /data. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Media folder
+      help: Nex-managed folder mounted at /media. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 25600/tcp.
+  web:
+    port: 25600
+  post_install: Create the administrator and add a library using /data or /media. Mount your existing media
+    as a Nex share.
+services:
+  komga:
+    image: ghcr.io/gotson/komga:latest
+    environment:
+      TZ: ${TZ}
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/data
+    - ${FOLDER_3}:/media
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-25600}:25600/tcp

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Budibase
+  summary: Build internal web tools using your data sources
+  description: Complete workspace onboarding on a trusted network. Use the bundled single-container
+    backing services with application data in the managed folder.
+  category: development
+  website: https://github.com/Budibase/budibase
+  source: https://github.com/Budibase/budibase
+  docs: https://docs.budibase.com/docs/docker
+  primary_service: budibase
+  scalable: false
+  license: GPL-3.0-or-later core; BUSL-1.1 paid packages
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Budibase applications and state
+      help: Keep budibase applications and state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  budibase:
+    image: docker.io/budibase/budibase:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

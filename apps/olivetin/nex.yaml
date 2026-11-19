@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OliveTin
+  summary: Present approved container-local tasks as web actions
+  description: Create config.yaml in the configuration folder with the upstream action format. Commands
+    run within this application container. Expose the configured interface only behind authentication.
+  category: management
+  website: https://github.com/OliveTin/OliveTin
+  source: https://github.com/OliveTin/OliveTin
+  docs: https://docs.olivetin.app/install/docker.html
+  primary_service: olivetin
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 1337
+  options:
+    CONFIG:
+      label: Action configuration
+      help: OliveTin configuration and allowed action definitions.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1337.
+services:
+  olivetin:
+    image: docker.io/jamesread/olivetin:latest
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-1337}:1337/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ICARUS
+  summary: Host persistent co-op prospects and open worlds
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the in-game dedicated-server browser to select your server and create or load a prospect.
+    The game uses UDP 17777 and Steam queries use UDP 27015. SteamCMD installs the server on first
+    boot and checks for updates on restart. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1149460/
+  source: https://github.com/indifferentbroccoli/icarus-server-docker
+  docs: https://github.com/indifferentbroccoli/icarus-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  icarus:
+    image: docker.io/indifferentbroccoli/icarus-server-docker:latest
+    environment:
+      SERVER_NAME: Nex Icarus
+      PUID: '1000'
+      PGID: '1000'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 17777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/steam/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

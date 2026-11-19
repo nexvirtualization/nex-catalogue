@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wastebin
+  summary: Share text pastes with expiration and optional encryption
+  description: Keep access restricted when used for internal material. Preserve the configured password
+    salt to keep encrypted pastes readable after redeployment.
+  category: tools
+  website: https://github.com/matze/wastebin
+  source: https://github.com/matze/wastebin
+  docs: https://github.com/matze/wastebin
+  primary_service: wastebin
+  scalable: false
+  license: MIT
+  architectures:
+  - amd64
+  web:
+    port: 8088
+  options:
+    PASSWORD_SALT:
+      label: Paste password salt
+      type: password
+      help: Use Nex Generate. Retain this value across restores.
+    DATA:
+      label: Paste database
+      help: Keep paste database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8088.
+services:
+  wastebin:
+    image: docker.io/quxfoo/wastebin:latest
+    environment:
+      WASTEBIN_DATABASE_PATH: /data/state.db
+      WASTEBIN_PASSWORD_SALT: ${PASSWORD_SALT}
+      TMPDIR: /data
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8088}:8088/tcp
+    deploy:
+      replicas: 1

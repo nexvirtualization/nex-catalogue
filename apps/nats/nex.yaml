@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NATS JetStream
+  summary: Run an authenticated messaging server with durable streams
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 4222 and supply
+    the token in each client. JetStream stores streams on disk. Use This host for persistent data and choose
+    one eligible host. Swarm can restart the process on that host. Multi-node JetStream needs a NATS cluster
+    and per-node storage.
+  category: development
+  website: https://docs.nats.io/running-a-nats-service/configuration
+  source: https://github.com/nats-io/nats-server
+  docs: https://docs.nats.io/running-a-nats-service/configuration
+  license: Apache-2.0
+  primary_service: nats
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    ACCESS_TOKEN:
+      label: Client token
+      help: Generate a token. All clients need this value to connect. URL-encode it if you put it in a client
+        URL.
+      type: password
+    DATA:
+      label: Persistent data
+      help: Choose This host and one eligible host. Back up the data before updating.
+services:
+  nats:
+    image: docker.io/library/nats:latest
+    ports:
+      - ${PORT:-4222}:4222/tcp
+    volumes:
+      - ${DATA}:/data
+    command:
+      - --jetstream
+      - --store_dir
+      - /data
+      - --auth=${ACCESS_TOKEN}
+    deploy:
+      replicas: 1

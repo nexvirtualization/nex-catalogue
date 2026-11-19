@@ -1,0 +1,116 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dawarich
+  summary: Review location history on an interactive map
+  description: Provision PostgreSQL with PostGIS and Redis. Keep app and worker on the same eligible host
+    or use shared storage. Create the first account on a trusted network.
+  category: productivity
+  website: https://dawarich.app/
+  source: https://github.com/Freika/dawarich
+  docs: https://dawarich.app/docs/tutorials/complete-setup/
+  primary_service: dawarich
+  post_install: Provision PostgreSQL with PostGIS and Redis. Keep app and worker on the same eligible host
+    or use shared storage. Create the first account on a trusted network.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    PUBLIC:
+      label: Static files and exports
+      help: Managed directory mounted at /var/app/public. Choose storage writable by the application.
+    WATCHED:
+      label: Location import folder
+      help: Managed directory mounted at /var/app/tmp/imports/watched. Choose storage writable by the application.
+    DATA:
+      label: Application file storage
+      help: Managed directory mounted at /var/app/storage. Choose storage writable by the application.
+services:
+  dawarich:
+    image: docker.io/freikin/dawarich:latest
+    ports:
+    - ${PORT:-23579}:3000/tcp
+    volumes:
+    - ${PUBLIC}:/var/app/public
+    - ${WATCHED}:/var/app/tmp/imports/watched
+    - ${DATA}:/var/app/storage
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: ${REDIS_URL}
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT:-5432}
+      DATABASE_USERNAME: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_NAME: ${DB_NAME:-dawarich}
+      APPLICATION_HOSTS: ${PUBLIC_HOST}
+      APPLICATION_PROTOCOL: https
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      SELF_HOSTED: 'true'
+      STORE_GEODATA: 'true'
+    entrypoint:
+    - web-entrypoint.sh
+    command:
+    - bin/rails
+    - server
+    - -p
+    - '3000'
+    - -b
+    - 0.0.0.0
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/freikin/dawarich:latest
+    environment:
+      RAILS_ENV: production
+      REDIS_URL: ${REDIS_URL}
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT:-5432}
+      DATABASE_USERNAME: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_NAME: ${DB_NAME:-dawarich}
+      APPLICATION_HOSTS: ${PUBLIC_HOST}
+      APPLICATION_PROTOCOL: https
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      SELF_HOSTED: 'true'
+      STORE_GEODATA: 'true'
+    deploy:
+      replicas: 1
+    command:
+    - sidekiq
+    volumes:
+    - ${PUBLIC}:/var/app/public
+    - ${WATCHED}:/var/app/tmp/imports/watched
+    - ${DATA}:/var/app/storage
+    entrypoint:
+    - sidekiq-entrypoint.sh

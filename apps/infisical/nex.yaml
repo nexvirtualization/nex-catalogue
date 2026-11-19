@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Infisical Community Edition
+  summary: Manage application secrets with Infisical
+  description: Provision PostgreSQL and Redis. Open the configured HTTPS site to create the first organization
+    and protect your database and key backups.
+  category: security
+  website: https://infisical.com/
+  source: https://github.com/Infisical/infisical
+  docs: https://infisical.com/docs/self-hosting/deployment-options/docker-compose
+  primary_service: infisical
+  post_install: Provision PostgreSQL and Redis. Open the configured HTTPS site to create the first organization
+    and protect your database and key backups.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  infisical:
+    image: docker.io/infisical/infisical:latest
+    ports:
+    - ${PORT:-23526}:8080/tcp
+    environment:
+      SITE_URL: ${PUBLIC_URL}
+      DB_CONNECTION_URI: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    deploy:
+      replicas: 1

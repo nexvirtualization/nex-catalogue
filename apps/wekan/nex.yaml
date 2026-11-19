@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wekan
+  summary: Trello-like kanban
+  description: Trello-like kanban.
+  category: productivity
+  source: https://github.com/wekan/wekan
+  website: https://wekan.github.io/
+  docs: https://github.com/wekan/wekan/wiki/Docker
+  primary_service: wekan
+  options:
+    MONGO_URL:
+      label: Mongo url
+    PUBLIC_URL:
+      label: Public url
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision an upstream-supported MongoDB or FerretDB instance. Back up the board database and
+    Data together.
+  web:
+    port: 8080
+services:
+  wekan:
+    image: ghcr.io/wekan/wekan:latest
+    deploy:
+      replicas: 1
+    environment:
+      WRITABLE_PATH: /data
+      MONGO_URL: ${MONGO_URL}
+      ROOT_URL: ${PUBLIC_URL}
+      DEFAULT_METEOR_REACTIVITY_ORDER: polling
+      METEOR_REACTIVITY_ORDER: polling
+      DDP_TRANSPORT: sockjs
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-19667}:8080/tcp

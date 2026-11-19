@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CommaFeed
+  summary: Read feeds and keep subscriptions in one place
+  description: The upstream embedded H2 edition. Complete the initial admin sign-in on a trusted network
+    and change the default password. Keep its database on a single host.
+  category: reading
+  website: https://www.commafeed.com/
+  source: https://github.com/Athou/commafeed
+  docs: https://github.com/Athou/commafeed#docker
+  scalable: false
+  primary_service: commafeed
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: commafeed
+    scheme: http
+    port: 8082
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8082.
+    DATA:
+      label: Subscriptions and data
+      help: Select This host. Stores the H2 database, feed subscriptions and user accounts. Include this
+        folder in a stopped Nex backup.
+services:
+  commafeed:
+    image: athou/commafeed:latest-h2
+    ports:
+    - ${PORT:-8113}:8082/tcp
+    volumes:
+    - ${DATA}:/commafeed/data
+    deploy:
+      replicas: 1

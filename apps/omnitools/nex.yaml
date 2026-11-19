@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OmniTools
+  summary: Use file, text and number tools in your browser
+  description: Convert formats, format data, and edit images from a collection of browser utilities. Tools run
+    client-side.
+  category: tools
+  website: https://omnitools.app/
+  source: https://github.com/iib0011/omni-tools
+  docs: https://github.com/iib0011/omni-tools#self-hostrun
+  license: MIT
+  primary_service: omnitools
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the app and download the outputs you want to keep.
+  web:
+    port: 80
+  scale:
+  - omnitools
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  omnitools:
+    image: docker.io/iib0011/omni-tools:latest
+    ports:
+    - ${PORT:-18106}:80/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenRemote
+  summary: Manage IoT devices, data, and automation rules
+  description: Use the configured browser hostname and route HTTPS and MQTTS as needed. Set the external
+    HTTPS port to match Keycloak’s public URL. Sign in as admin with the supplied password and back up the
+    database and manager data.
+  category: home-automation
+  website: https://openremote.io
+  source: https://github.com/openremote/core
+  docs: https://github.com/openremote/core/blob/main/docker-compose.yml
+  primary_service: openremote
+  post_install: Use the configured browser hostname and route HTTPS and MQTTS as needed. Set the external
+    HTTPS port to match Keycloak’s public URL. Sign in as admin with the supplied password and back up the
+    database and manager data.
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 443
+    scheme: https
+  options:
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    ACME_EMAIL:
+      label: Acme email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    EXTERNAL_HTTPS_PORT:
+      label: External https port
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published HTTPS port. For a reverse proxy, forward to internal TCP port 443.
+    HTTP_PORT:
+      label: Published HTTP or ACME port
+      help: Host-published port for the internal 80/tcp endpoint.
+    MQTTS_PORT:
+      label: Published MQTTS port
+      help: Host-published port for the internal 8883/tcp endpoint.
+    PROXY_DATA:
+      label: TLS and proxy state
+      help: Managed directory mounted at /deployment. Choose storage writable by the application.
+    MANAGER_DATA:
+      label: Manager data
+      help: Managed writable directory mounted at /storage.
+    DB_DATA:
+      label: OpenRemote database
+      help: Managed writable directory mounted at /var/lib/postgresql/data.
+services:
+  openremote:
+    image: docker.io/openremote/proxy:latest
+    ports:
+    - ${PORT:-23548}:443/tcp
+    - ${HTTP_PORT:-24548}:80/tcp
+    - ${MQTTS_PORT:-25548}:8883/tcp
+    volumes:
+    - ${PROXY_DATA}:/deployment
+    environment:
+      DOMAINNAME: ${PUBLIC_HOST}
+      LE_EMAIL: ${ACME_EMAIL:-}
+    deploy:
+      replicas: 1
+  postgresql:
+    image: docker.io/openremote/postgresql:latest-slim
+    environment:
+      POSTGRES_DB: openremote
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+  keycloak:
+    image: docker.io/openremote/keycloak:latest
+    environment:
+      KC_DB_URL_HOST: postgresql
+      KC_DB_URL_DATABASE: openremote
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+      KC_HOSTNAME: https://${PUBLIC_HOST}:${EXTERNAL_HTTPS_PORT:-443}/auth
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    deploy:
+      replicas: 1
+  manager:
+    image: docker.io/openremote/manager:latest
+    environment:
+      OR_DB_HOST: postgresql
+      OR_DB_NAME: openremote
+      OR_DB_PASSWORD: ${DB_PASSWORD}
+      OR_HOSTNAME: ${PUBLIC_HOST}
+      OR_SSL_PORT: ${EXTERNAL_HTTPS_PORT:-443}
+      OR_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      OR_METRICS_ENABLED: 'false'
+    volumes:
+    - ${MANAGER_DATA}:/storage
+    deploy:
+      replicas: 1

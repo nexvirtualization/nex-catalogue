@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Unturned
+  summary: Host a persistent zombie survival server
+  description: >-
+    Choose one x86-64 host and a registered primary network reachable by your players. The first
+    start downloads the server and creates its configuration. Choose Connect in the Steam PC
+    client and enter APP-IP with query port 27015. Game traffic also uses UDP 27016. To set a join
+    password, stop the app and edit Commands.dat, then start the app again.
+    Keep the app on a trusted network while you configure access. Take a stopped Nex backup before updating.
+  category: games
+  website: https://smartlydressedgames.com/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://docs.smartlydressedgames.com/en/stable/servers/server-hosting.html
+  license: Proprietary
+  architectures: [amd64]
+  tags: [survival, co-op, steam, dedicated-server]
+  options:
+    SERVER_DATA:
+      label: World and settings
+      help: >-
+        Select This host. For the default server instance edit serverfiles/Servers/untserver/Server/Commands.dat.
+        Set the LinuxGSM server name in config-lgsm/untserver/common.cfg. Public listing requires a Steam
+        game server login token. SteamCMD checks for updates on app startup.
+services:
+  unturned:
+    image: ghcr.io/gameservermanagers/gameserver:unt
+    environment:
+      UPDATE_ON_START: 'true'
+      UPDATE_CHECK: '0'
+    expose: ['27015/udp', '27016/udp']
+    volumes:
+      - ${SERVER_DATA}:/data
+    stop_grace_period: 2m
+    deploy:
+      replicas: 1

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenBao
+  summary: Manage secrets with an initialized OpenBao server
+  description: Select a prepared OpenBao config with a listener and file storage at /openbao/file. Use
+    TLS before allowing clients. Initialize and unseal the server under your own documented key custody
+    process.
+  category: security
+  website: https://github.com/openbao/openbao
+  source: https://github.com/openbao/openbao
+  docs: https://openbao.org/docs/configuration/
+  primary_service: openbao
+  scalable: false
+  license: MPL-2.0
+  options:
+    CONFIG:
+      label: Prepared OpenBao configuration
+      help: Keep prepared openbao configuration in this managed folder between restarts.
+    DATA:
+      label: OpenBao storage
+      help: Keep openbao storage in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8200.
+services:
+  openbao:
+    image: docker.io/openbao/openbao:latest
+    command:
+    - server
+    - -config=/openbao/config
+    volumes:
+    - ${CONFIG}:/openbao/config
+    - ${DATA}:/openbao/file
+    ports:
+    - ${PORT:-8200}:8200/tcp
+    deploy:
+      replicas: 1

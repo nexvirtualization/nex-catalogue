@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zigbee2MQTT
+  summary: Connect a network Zigbee coordinator to MQTT
+  description: Prepare a supported TCP Ethernet Zigbee coordinator and an MQTT broker reachable from Nex.
+    Set the coordinator address and protocol in Settings, then finish onboarding in the web interface.
+    Keep the front end private.
+  category: home-automation
+  website: https://www.zigbee2mqtt.io/
+  source: https://github.com/Koenkk/zigbee2mqtt
+  docs: https://www.zigbee2mqtt.io/guide/configuration/adapter-settings.html
+  scalable: false
+  primary_service: zigbee2mqtt
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: zigbee2mqtt
+    scheme: http
+    port: 8080
+  works_with:
+  - home-assistant
+  options:
+    ADAPTER_ADDRESS:
+      label: Adapter Address
+      help: TCP coordinator address such as tcp://192.0.2.10:6638.
+    ADAPTER_TYPE:
+      label: Adapter Type
+      help: Coordinator protocol such as zstack or ember.
+    MQTT_URL:
+      label: Mqtt Url
+      help: MQTT broker URL including protocol and internal port.
+    MQTT_USER:
+      label: Mqtt User
+      help: Dedicated MQTT account name.
+    MQTT_PASSWORD:
+      label: MQTT password
+      help: Password for the broker user.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Zigbee coordinator state
+      help: Select This host. Stores configuration, device state and network keys. Include this folder
+        in a stopped Nex backup.
+services:
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    environment:
+      ZIGBEE2MQTT_CONFIG_SERIAL_PORT: ${ADAPTER_ADDRESS}
+      ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: ${ADAPTER_TYPE:-zstack}
+      ZIGBEE2MQTT_CONFIG_MQTT_SERVER: ${MQTT_URL}
+      ZIGBEE2MQTT_CONFIG_MQTT_USER: ${MQTT_USER}
+      ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ${MQTT_PASSWORD}
+      ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: 'true'
+    ports:
+    - ${PORT:-8782}:8080/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

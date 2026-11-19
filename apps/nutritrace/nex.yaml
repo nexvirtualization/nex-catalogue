@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NutriTrace
+  summary: Track meals and nutrition in a self-hosted journal
+  description: Set up the first account on a trusted network. Configure optional food data providers
+    after sign-in.
+  category: productivity
+  website: https://github.com/TraceApps/nutritrace
+  source: https://github.com/TraceApps/nutritrace
+  docs: https://github.com/TraceApps/nutritrace
+  primary_service: nutritrace
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3001
+  options:
+    JWT_SECRET:
+      label: Authentication signing key
+      type: password
+      help: Use Nex Generate and retain the key across restores.
+    DATABASE:
+      label: Nutrition database
+      help: Keep nutrition database in this managed folder between restarts.
+    UPLOADS:
+      label: Uploaded images
+      help: Keep uploaded images in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3001.
+services:
+  nutritrace:
+    image: ghcr.io/traceapps/nutritrace:latest
+    environment:
+      DB_PATH: /data/db/nutritrace.db
+      UPLOADS_PATH: /data/uploads
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+    - ${DATABASE}:/data/db
+    - ${UPLOADS}:/data/uploads
+    ports:
+    - ${PORT:-3001}:3001/tcp
+    deploy:
+      replicas: 1

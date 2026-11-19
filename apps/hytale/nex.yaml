@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hytale
+  summary: Host an authenticated multiplayer world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    At first startup, open the Hytale device authorization links from this app’s logs and sign in to
+    authorize downloading and hosting. Connect to the app’s Primary address on UDP 5520 after the server
+    authorizes. Keep the persistent folder for authentication and worlds. If Hytale asks you to authorize
+    again, open the new device links. Choose a stopped backup before updating.
+  category: games
+  website: https://hytale.com/
+  source: https://github.com/indifferentbroccoli/hytale-server-docker
+  docs: https://support.hytale.com/hc/en-us/articles/45326769420827-Hytale-Server-Manual
+  license: Proprietary game server
+  architectures:
+  - amd64
+  - arm64
+  tags:
+  - sandbox
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    SERVER_NAME:
+      label: Server name
+      help: Name shown to players in the server browser.
+services:
+  hytale:
+    image: docker.io/indifferentbroccoli/hytale-server-docker:latest
+    environment:
+      AUTH_MODE: authenticated
+      SERVER_NAME: ${SERVER_NAME:-Nex Hytale}
+      ENABLE_BACKUPS: 'false'
+      PUID: '1000'
+      PGID: '1000'
+    expose:
+    - 5520/udp
+    volumes:
+    - ${DATA}:/home/hytale/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

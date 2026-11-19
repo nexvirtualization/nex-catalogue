@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Jellyfin
+  summary: Stream your movies, television and music
+  description: Media server with local accounts and streaming clients. Uses software transcoding; this package does
+    not attach GPU devices or offer DLNA discovery. Complete the administrator setup immediately on a trusted network.
+    One copy only. In Nex, keep one chosen host when using This host folders; local data has no automatic host failover.
+  category: media
+  website: https://jellyfin.org
+  source: https://github.com/jellyfin/jellyfin
+  license: GPL-2.0-or-later
+  scalable: false
+  tags:
+  - media
+  - streaming
+  - video
+  options:
+    USER_UID:
+      label: User ID
+      help: Numeric UID used to run the application. Its settings folder must be writable and its media folders
+        readable by this UID or the selected group.
+    USER_GID:
+      label: Group ID
+      help: Numeric GID used to run the application. Match the group allowed to access the selected storage; Nex
+        does not grant permissions automatically.
+    PORT:
+      label: Web port
+      help: Published HTTP port. Finish the first-run wizard and create an administrator before allowing other users
+        to connect. With Network → Docker and host publishing enabled, use the chosen host web port. On a registered
+        VLAN or private Primary network with its own address, use that address and internal port 8096; host publishing
+        is a separate switch.
+    CONFIG:
+      label: Settings and database
+      help: Persistent /config with accounts, settings and library database. Must be writable by the selected UID/GID;
+        prefer reliable storage on This host and back up this folder.
+    CACHE:
+      label: Cache and transcodes
+      help: Writable /cache for artwork and temporary software transcodes. Allow enough free space for active streams.
+    MEDIA:
+      label: Media library
+      help: Existing films, television and music at /media, mounted read-only. Must be readable by the selected
+        UID/GID. Choose folders under /media in the library wizard.
+  primary_service: jellyfin
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    user: ${USER_UID:-1000}:${USER_GID:-1000}
+    ports:
+    - ${PORT:-8096}:8096/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${CACHE}:/cache
+    - ${MEDIA}:/media:ro
+    deploy:
+      replicas: 1

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hoodik
+  summary: Sync encrypted files through a browser
+  description: Set an HTTPS hostname and finish first-user setup. Back up the application data and the client
+    recovery information.
+  category: management
+  website: https://hoodik.io
+  source: https://github.com/hudikhq/hoodik
+  docs: https://github.com/hudikhq/hoodik#docker
+  primary_service: hoodik
+  post_install: Set an HTTPS hostname and finish first-user setup. Back up the application data and the client
+    recovery information.
+  license: CC-BY-NC-4.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 5443
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 5443 inside Nex.
+    DATA:
+      label: Encrypted file data
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  hoodik:
+    image: docker.io/hudik/hoodik:latest
+    ports:
+    - ${PORT:-23594}:5443/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      DATA_DIR: /data
+      APP_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

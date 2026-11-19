@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HomeTube
+  summary: Web UI to download videos and playlists from 1700+ sites into a Plex or Jellyfin library, with quality
+  description: Web UI to download videos and playlists from 1700+ sites into a Plex or Jellyfin library, with
+    quality selection, SponsorBlock sponsor removal, subtitles, clip cutting and resilient playlist sync.
+  category: media
+  source: https://github.com/EgalitarianMonkey/hometube
+  website: https://hometube.latentnoise.dev
+  docs: https://github.com/egalitarianmonkey/hometube#installation
+  primary_service: hometube
+  options:
+    PORT:
+      label: Published 8501/tcp port
+      help: Host port for application listener 8501/tcp. Leave host publishing off to use only the assigned
+        app address.
+    VIDEOS:
+      label: Videos folder
+      help: Stores completed downloads.
+    TEMP:
+      label: Working folder
+      help: Used for in-progress downloads.
+    TZ:
+      label: Time zone
+  post_install: Open the UI on a trusted network and choose a download target. Only download content you are
+    allowed to download.
+  web:
+    port: 8501
+services:
+  hometube:
+    image: ghcr.io/egalitarianmonkey/hometube:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${VIDEOS}:/data/videos
+    - ${TEMP}:/data/tmp
+    ports:
+    - ${PORT:-19991}:8501/tcp
+    environment:
+      VIDEOS_FOLDER: /data/videos
+      TMP_DOWNLOAD_FOLDER: /data/tmp
+      TZ: ${TZ:-Etc/UTC}

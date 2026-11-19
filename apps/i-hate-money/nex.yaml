@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: IHateMoney
+  summary: Track shared purchases and settle expenses
+  description: Restrict the service to your intended participants. Keep stopped backups of the SQLite
+    database and preserve the secret key.
+  category: finance
+  website: https://github.com/spiral-project/ihatemoney
+  source: https://github.com/spiral-project/ihatemoney
+  docs: https://github.com/spiral-project/ihatemoney
+  primary_service: i-hate-money
+  scalable: false
+  license: BSD beerware derivative
+  web:
+    port: 8000
+  options:
+    SECRET_KEY:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and preserve the value for restores.
+    DATA:
+      label: Expense database
+      help: Keep expense database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  i-hate-money:
+    image: docker.io/ihatemoney/ihatemoney:latest
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      SQLALCHEMY_DATABASE_URI: sqlite:////database/ihatemoney.db
+    volumes:
+    - ${DATA}:/database
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

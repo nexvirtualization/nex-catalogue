@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Crawl4AI
+  summary: Convert webpages into structured content through an authenticated API
+  description: The server runs an isolated browser workload for sites you specify. Access requires an API
+    bearer token.
+  category: development
+  website: https://crawl4ai.com/
+  source: https://github.com/unclecode/crawl4ai
+  docs: https://docs.crawl4ai.com/core/self-hosting/
+  primary_service: crawl4ai
+  post_install: Set Shared memory to 1024 MiB in Nex for Chromium. Use the configured token on requests and
+    keep the endpoint on a trusted network or authenticated HTTPS ingress.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 11235
+  options:
+    API_TOKEN:
+      label: API bearer token
+      help: Generate a strong token before starting the service.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 11235 inside Nex.
+services:
+  crawl4ai:
+    image: docker.io/unclecode/crawl4ai:latest
+    ports:
+    - ${PORT:-20229}:11235/tcp
+    environment:
+      CRAWL4AI_API_TOKEN: ${API_TOKEN}
+    deploy:
+      replicas: 1

@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Project Zomboid
+  summary: Survive the zombie apocalypse together in a private world
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep both folders on This host
+    with one eligible x86-64 host. Allow at least 8 GB of host RAM and space for the initial Steam download.
+    Add the application's IPv4 address to Favorites in Join with port 16261. Allow UDP 16261 and 16262
+    for players at your network firewall. Keep TCP 27015 restricted to administrators. The server uses
+    the stable game branch and checks for updates on restart. Back up the world folder with the app stopped.
+  category: games
+  website: https://projectzomboid.com/
+  source: https://github.com/SWATPeaceKeeper/zomboid-server-docker
+  docs: https://github.com/SWATPeaceKeeper/zomboid-server-docker#readme
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    SERVER_NAME:
+      label: Display name
+    PLAYER_PASSWORD:
+      label: Player password
+      type: password
+      help: Players enter this shared password in addition to their individual in-game account credentials.
+    ADMIN_PASSWORD:
+      label: Temporary administrator password
+      type: password
+      help: Generate a unique first-boot password. The game can log it during setup, so change the admin password in-game before inviting players.
+    RCON_PASSWORD:
+      label: Remote console password
+      type: password
+      help: Generate a separate password for the server's health check and remote console.
+    DATA:
+      label: World and configuration
+      help: Include this folder in stopped backups.
+    SERVER_FILES:
+      label: Downloaded server files
+      help: Steam can rebuild this folder from the stable branch.
+services:
+  project-zomboid:
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker:latest
+    expose:
+      - "16261/udp"
+      - "16262/udp"
+    environment:
+      PUBLIC_NAME: ${SERVER_NAME:-Project Zomboid}
+      PUBLIC: "false"
+      SERVER_PASSWORD: ${PLAYER_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      MAX_PLAYERS: "8"
+      PZ_MAX_RAM: 4g
+      PZ_BRANCH: public
+      UPDATE_ON_START: "true"
+    volumes:
+      - ${DATA}:/data/zomboid
+      - ${SERVER_FILES}:/data/server
+    stop_grace_period: 180s
+    deploy:
+      replicas: 1

@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Cap
+  summary: Share and manage screen recordings
+  description: Provision MySQL and S3-compatible storage with a browser-reachable endpoint. Configure the
+    Cap client with your deployed HTTPS URL.
+  category: media
+  website: https://cap.so/
+  source: https://github.com/CapSoftware/Cap
+  docs: https://cap.so/docs/self-hosting
+  primary_service: cap-web
+  post_install: Provision MySQL and S3-compatible storage with a browser-reachable endpoint. Configure the
+    Cap client with your deployed HTTPS URL.
+  license: AGPL-3.0 core; MIT capture libraries
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    S3_ACCESS_KEY:
+      label: S3 access key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    S3_SECRET_KEY:
+      label: S3 secret key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    S3_BUCKET:
+      label: S3 bucket
+      help: Enter the deployment value described in the upstream setup guide.
+    S3_REGION:
+      label: S3 region
+      help: Enter the deployment value described in the upstream setup guide.
+    S3_PUBLIC_ENDPOINT:
+      label: S3 public endpoint
+      help: Enter the deployment value described in the upstream setup guide.
+    S3_INTERNAL_ENDPOINT:
+      label: S3 internal endpoint
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  cap-web:
+    image: ghcr.io/capsoftware/cap-web:latest
+    ports:
+    - ${PORT:-23540}:3000/tcp
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      WEB_URL: ${PUBLIC_URL}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      DATABASE_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+      CAP_AWS_ACCESS_KEY: ${S3_ACCESS_KEY}
+      CAP_AWS_SECRET_KEY: ${S3_SECRET_KEY}
+      CAP_AWS_BUCKET: ${S3_BUCKET}
+      CAP_AWS_REGION: ${S3_REGION}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT}
+      S3_INTERNAL_ENDPOINT: ${S3_INTERNAL_ENDPOINT}
+      CAP_AWS_ENDPOINT: ${S3_INTERNAL_ENDPOINT}
+      S3_PATH_STYLE: 'true'
+      NEXT_RUNTIME: nodejs
+    deploy:
+      replicas: 1

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Seatsurfing
+  summary: Book shared office desks and meeting spaces
+  description: Connect a prepared PostgreSQL database. Configure your organization and administrator
+    through the application’s web interface before wider use.
+  category: management
+  website: https://github.com/seatsurfing/seatsurfing
+  source: https://github.com/seatsurfing/seatsurfing
+  docs: https://seatsurfing.app/docs/self-hosted/installation/
+  primary_service: seatsurfing
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8080
+  options:
+    POSTGRES_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  seatsurfing:
+    image: docker.io/seatsurfing/backend:latest
+    environment:
+      POSTGRES_URL: ${POSTGRES_URL}
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

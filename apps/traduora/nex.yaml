@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Traduora
+  summary: Translation management platform for teams
+  description: Translation management platform for teams.
+  category: development
+  source: https://github.com/ever-co/ever-traduora
+  website: https://traduora.co
+  docs: https://github.com/ever-co/ever-traduora#installation
+  primary_service: traduora
+  options:
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SIGNING_SECRET:
+      label: Signing secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a MySQL database. Create the first translator account on a trusted network and keep
+    the database and signing secret together.
+  web:
+    port: 8080
+services:
+  traduora:
+    image: docker.io/everco/ever-traduora:latest
+    deploy:
+      replicas: 1
+    environment:
+      TR_SERVER_PORT: '8080'
+      TR_DB_HOST: ${DB_HOST}
+      TR_DB_PORT: ${DB_PORT:-3306}
+      TR_DB_DATABASE: ${DB_NAME:-traduora}
+      TR_DB_USER: ${DB_USER}
+      TR_DB_PASSWORD: ${DB_PASSWORD}
+      TR_SECRET: ${SIGNING_SECRET}
+    ports:
+    - ${PORT:-19969}:8080/tcp

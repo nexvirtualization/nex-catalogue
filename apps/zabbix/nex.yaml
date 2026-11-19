@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zabbix
+  summary: Monitor servers and services with Zabbix
+  description: Provision PostgreSQL and give the app credentials for the same database. Change the upstream
+    initial administrator login on a trusted network. Use the installed app network for local monitoring
+    components.
+  category: monitoring
+  website: https://www.zabbix.com/
+  source: https://github.com/zabbix/zabbix
+  docs: https://www.zabbix.com/documentation/current/en/manual/installation/containers
+  primary_service: zabbix
+  post_install: Provision PostgreSQL and give the app credentials for the same database. Change the upstream
+    initial administrator login on a trusted network. Use the installed app network for local monitoring
+    components.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  zabbix:
+    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest
+    ports:
+    - ${PORT:-23595}:8080/tcp
+    environment:
+      DB_SERVER_HOST: ${DB_HOST}
+      DB_SERVER_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_NAME:-zabbix}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: UTC
+    deploy:
+      replicas: 1
+  zabbix-server:
+    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.4-latest
+    environment:
+      DB_SERVER_HOST: ${DB_HOST}
+      DB_SERVER_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_NAME:-zabbix}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 1

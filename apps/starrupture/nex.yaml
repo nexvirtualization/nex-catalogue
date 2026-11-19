@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: StarRupture
+  summary: Build a shared industrial base on Arcadia-7
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads the dedicated server and creates a new session. Join from Multiplayer with
+    the app’s Primary address on UDP 7777. Once a save exists, turn off Create world and restart the
+    app to load the saved session. The in-game management interface is disabled. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1631270/
+  source: https://github.com/indifferentbroccoli/starrupture-server-docker
+  docs: https://github.com/indifferentbroccoli/starrupture-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    NEW_WORLD:
+      label: Create world
+      type: bool
+      help: Enable this on first boot. Disable it once the first save exists.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  starrupture:
+    image: docker.io/indifferentbroccoli/starrupture-server-docker:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      SERVER_NAME: Nex StarRupture
+      DEFAULT_PORT: '7777'
+      USE_DSSETTINGS: 'true'
+      START_NEW_GAME: ${NEW_WORLD}
+      NEW_WORLD: ${NEW_WORLD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PLAYER_PASSWORD: ${JOIN_PASSWORD}
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      UPDATE_ON_START: 'true'
+    expose:
+      - 7777/udp
+    volumes:
+      - ${DATA}:/home/steam/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$${JOIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ||
+              ! "$${ADMIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, numbers or _ @ . + - in both passwords." >&2
+          exit 1
+        fi
+        if [ "$$NEW_WORLD" = true ]; then
+          export LOAD_SAVED_GAME=false
+        else
+          export LOAD_SAVED_GAME=true
+        fi
+        exec /home/steam/server/init.sh

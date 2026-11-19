@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Homelable
+  summary: Map and monitor devices and services on your network
+  description: Enter the public origin and a private scan range you administer. Use the initial administrator
+    credentials to sign in. Register your Nex app on a network that can reach those services.
+  category: monitoring
+  website: https://github.com/Pouzor/homelable
+  source: https://github.com/Pouzor/homelable
+  docs: https://github.com/Pouzor/homelable#readme
+  scalable: false
+  primary_service: homelable
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: homelable
+    scheme: http
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SCAN_RANGE:
+      label: Scan Range
+      help: An authorized CIDR range the application can reach.
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: Administrator account name.
+    APP_SECRET:
+      label: Application signing key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    BACKEND_DATA:
+      label: Graph and status data
+      help: Select This host. Stores the SQLite database and discovered systems. Include this folder in
+        a stopped Nex backup.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+services:
+  homelable:
+    image: ghcr.io/pouzor/homelable-frontend:3.6.0
+    environment:
+      BACKEND_UPSTREAM: backend:8000
+    ports:
+    - ${PORT:-8826}:80/tcp
+    deploy:
+      replicas: 1
+  backend:
+    image: ghcr.io/pouzor/homelable-backend:3.6.0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      export AUTH_PASSWORD_HASH="$$(python -c 'import bcrypt, os; print(bcrypt.hashpw(os.environ["INITIAL_ADMIN_PASSWORD"].encode(), bcrypt.gensalt()).decode())')"
+      unset INITIAL_ADMIN_PASSWORD
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      SECRET_KEY: ${APP_SECRET}
+      SQLITE_PATH: /app/data/homelable.db
+      CORS_ORIGINS: '["${PUBLIC_URL}"]'
+      AUTH_MODE: local
+      AUTH_USERNAME: ${ADMIN_USERNAME:-admin}
+      INITIAL_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SCANNER_RANGES: '["${SCAN_RANGE}"]'
+      STATUS_CHECKER_ENABLED: 'true'
+    volumes:
+    - ${BACKEND_DATA}:/app/data
+    deploy:
+      replicas: 1

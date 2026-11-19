@@ -1,0 +1,104 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Puck
+  summary: Host a physics-based multiplayer ice hockey server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the app’s Primary address on TCP and UDP 30609. Use the join password you set at install.
+    Keep automatic UPnP forwarding disabled at the network gateway. To change match settings or
+    rotate the password later, edit server_config.json in the managed serverfiles folder and restart.
+    SteamCMD downloads the server on first boot and checks for updates on restart. Allow time for the
+    first download. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2994020/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/puck
+  docs: https://steamcommunity.com/app/2994020/allnews/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    JOIN_PASSWORD:
+      label: Initial join password
+      type: password
+      help: Use 8 to 64 letters, numbers, underscores, or hyphens.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  puck:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 30609/tcp
+      - 30609/udp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        # SPDX-License-Identifier: AGPL-3.0-only
+        # Embedded in catalogue manifests that install a server through SteamCMD.
+        # A package passes a dedicated-server app ID and either linux or windows.
+        nex_steamcmd_update() {
+          local app_id="$$1" platform="$$2"
+          local archive attempt architecture steamclient
+          local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+          cd "$$HOME"
+          mkdir -p steamcmd serverfiles
+          if [[ ! -x steamcmd/steamcmd.sh ]]; then
+            archive=$$(mktemp)
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+              || ! tar -xzf "$$archive" -C steamcmd; then
+              rm -f "$$archive"
+              return 1
+            fi
+            rm -f "$$archive"
+          fi
+
+          if [[ "$$platform" == windows ]]; then
+            update+=(+@sSteamCmdForcePlatformType windows)
+          fi
+          update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+          for attempt in 1 2 3; do
+            if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+              break
+            fi
+            if [[ "$$attempt" == 3 ]]; then
+              return 1
+            fi
+            sleep "$$((attempt * 5))"
+          done
+
+          for architecture in 32 64; do
+            steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+            if [[ -f "$$steamclient" ]]; then
+              mkdir -p ".steam/sdk$$architecture"
+              ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+            fi
+          done
+          cd serverfiles
+        }
+
+        if [[ ! "$$JOIN_PASSWORD" =~ ^[A-Za-z0-9_-]{8,64}$$ ]]; then
+          echo 'Choose a join password with 8 to 64 letters, numbers, underscores, or hyphens.' >&2
+          exit 1
+        fi
+        nex_steamcmd_update 3481440 linux
+        if [[ ! -e server_config.json ]]; then
+          umask 077
+          printf '{"port":30609,"name":"Nex Puck","maxPlayers":12,"password":"%s","tickRate":200,"isPublic":false,"useVoip":false,"useWhitelist":false,"mods":[],"gameMode":"public","level":"default"}\n' "$$JOIN_PASSWORD" > server_config.json
+        fi
+        # The server logs its JSON settings at startup. Retain the rest of the output.
+        set -o pipefail
+        ./start_server.sh 2>&1 | sed -uE 's/("password"[[:space:]]*:[[:space:]]*")[^"]*/\1[redacted]/Ig'

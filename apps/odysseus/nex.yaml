@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Odysseus
+  summary: Run a private local assistant workspace
+  description: Provision a Chroma vector store, a model provider and a SearXNG instance. Finish the first
+    account setup through the web app on a trusted network and confirm the intended HTTPS origin. The
+    authentication gate remains enabled.
+  category: ai
+  website: https://odysseus-dev.github.io/odysseus
+  source: https://github.com/odysseus-dev/odysseus
+  docs: https://github.com/odysseus-dev/odysseus/blob/dev/website/setup.md
+  scalable: false
+  primary_service: odysseus
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: odysseus
+    scheme: http
+    port: 7000
+  works_with:
+  - searxng
+  - ollama
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SEARCH_URL:
+      label: Search Url
+      help: Full URL of the prepared SearXNG instance.
+    VECTOR_HOST:
+      label: Vector Host
+      help: Hostname or Nex app connection name of the Chroma server.
+    VECTOR_PORT:
+      label: Vector Port
+      help: Internal HTTP port of Chroma.
+    MODEL_HOST:
+      label: Model Host
+      help: Address of the model provider, using the upstream LLM_HOST format.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7000.
+    DATA:
+      label: Workspace state
+      help: Select This host. Stores conversations, account state and uploaded workspace files. Include
+        this folder in a stopped Nex backup.
+    LOGS:
+      label: Application logs
+      help: Select This host. Stores app logs and diagnostics. Include this folder in a stopped Nex backup.
+services:
+  odysseus:
+    image: ghcr.io/odysseus-dev/odysseus:latest
+    environment:
+      AUTH_ENABLED: 'true'
+      LOCALHOST_BYPASS: 'false'
+      ALLOWED_ORIGINS: ${PUBLIC_URL}
+      OAUTH_REDIRECT_BASE_URL: ${PUBLIC_URL}
+      SEARXNG_INSTANCE: ${SEARCH_URL}
+      CHROMADB_HOST: ${VECTOR_HOST}
+      CHROMADB_PORT: ${VECTOR_PORT:-8000}
+      LLM_HOST: ${MODEL_HOST}
+    ports:
+    - ${PORT:-8922}:7000/tcp
+    volumes:
+    - ${DATA}:/app/data
+    - ${LOGS}:/app/logs
+    deploy:
+      replicas: 1

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/getumbrel/umbrel-apps/blob/HEAD/zen/docker-compose.yml
+x-nex:
+  name: Zen Notes
+  summary: Markdown note app for writing and organizing plain-text notes in a browser
+  category: productivity
+  description: Markdown note app for writing and organizing plain-text notes in a browser. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/sheshbabu/zen
+  website: https://www.sheshbabu.com/zen
+  docs: https://www.sheshbabu.com/zen
+  primary_service: app
+  options:
+    FOLDER_1:
+      label: Data folder
+      help: Nex-managed folder mounted at /data. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Images folder
+      help: Nex-managed folder mounted at /images. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8080/tcp.
+  web:
+    port: 8080
+  post_install: Open Zen Notes and finish its first-user setup. Back up notes and images together.
+services:
+  app:
+    image: ghcr.io/sheshbabu/zen/zen:2.0.0
+    volumes:
+    - ${FOLDER_1}:/data
+    - ${FOLDER_2}:/images
+    user: 1000:1000
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8080}:8080/tcp

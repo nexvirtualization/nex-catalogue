@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: DDNet
+  summary: Host cooperative DDrace maps
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In the DDNet server browser, direct connect to the app’s Primary address on UDP 8303. The image
+    downloads DDNet on first boot. Use your Nex administrator password for the remote console in-game.
+    Stop the app before editing autoexec.cfg and storing custom maps in the managed folder.
+  category: games
+  website: https://ddnet.org/
+  source: https://github.com/ich777/docker-ddnet-server
+  docs: https://ddnet.org/settingscommands/
+  license: Zlib game server
+  architectures:
+  - amd64
+  tags:
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate for at least 12 letters or numbers.
+      type: password
+services:
+  ddnet:
+    image: ghcr.io/ich777/ddnetserver:latest
+    environment:
+      UID: '1000'
+      GID: '1000'
+      UMASK: '027'
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+    - 8303/udp
+    volumes:
+    - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      [[ "$$ADMIN_PASSWORD" =~ ^[A-Za-z0-9]{12,}$$ ]] || {
+        echo "Use at least 12 letters or numbers for the DDNet administrator password." >&2
+        exit 1
+      }
+      umask 077
+      config=/serverdata/serverfiles/autoexec.cfg
+      tmp=$$(mktemp /serverdata/serverfiles/autoexec.cfg.XXXXXX)
+      if [ -f "$$config" ]; then
+        awk '$$1 !~ /^(sv_port|sv_rcon_password|sv_rcon_mod_password|sv_rcon_helper_password)$$/' "$$config" > "$$tmp"
+      else
+        printf 'sv_name "Nex DDNet"\nsv_map "Sunny Side Up"\nsv_register 0\n' > "$$tmp"
+      fi
+      printf '\nsv_port 8303\nsv_rcon_password "%s"\n' "$$ADMIN_PASSWORD" >> "$$tmp"
+      mv "$$tmp" "$$config"
+      unset ADMIN_PASSWORD
+      exec /opt/scripts/start.sh

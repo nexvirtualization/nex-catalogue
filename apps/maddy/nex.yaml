@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Maddy Mail Server
+  summary: All-in-one mail server that implements SMTP (both MTA and MX) and IMAP
+  description: All-in-one mail server that implements SMTP (both MTA and MX) and IMAP. Replaces Postfix, Dovecot,
+    OpenDKIM, OpenSPF, OpenDMARC with single daemon.
+  category: communication
+  source: https://github.com/foxcpp/maddy
+  website: https://maddy.email/
+  docs: https://maddy.email/tutorials/setting-up/
+  primary_service: maddy
+  options:
+    MAIL_HOSTNAME:
+      label: Mail hostname
+    MAIL_DOMAIN:
+      label: Mail domain
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    PORT:
+      label: Published 25/tcp port
+      help: Host port for application listener 25/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_2:
+      label: Published 465/tcp port
+      help: Host port for application listener 465/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_3:
+      label: Published 587/tcp port
+      help: Host port for application listener 587/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_4:
+      label: Published 993/tcp port
+      help: Host port for application listener 993/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Prepare DNS, TLS certificates and account provisioning according to the upstream guide. Use
+    a dedicated primary IP for standard mail ports and leave the administrative folder private.
+services:
+  maddy:
+    image: docker.io/foxcpp/maddy:latest
+    deploy:
+      replicas: 1
+    environment:
+      MADDY_HOSTNAME: ${MAIL_HOSTNAME}
+      MADDY_DOMAIN: ${MAIL_DOMAIN}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-19892}:25/tcp
+    - ${PORT_2:-20892}:465/tcp
+    - ${PORT_3:-21892}:587/tcp
+    - ${PORT_4:-22892}:993/tcp

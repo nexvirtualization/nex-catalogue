@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Svix
+  summary: Webhooks as a service that makes it super easy for API providers to send webhooks
+  description: Webhooks as a service that makes it super easy for API providers to send webhooks.
+  category: development
+  source: https://github.com/svix/svix-webhooks
+  website: https://svix.com
+  docs: https://github.com/svix/svix-webhooks/tree/main/server
+  primary_service: svix
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_URL:
+      label: Redis url
+    JWT_SECRET:
+      label: Jwt secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 8071/tcp port
+      help: Host port for application listener 8071/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL and Redis before installing. Use the matching JWT credentials from your
+    webhook publisher and protect the HTTP API.
+  web:
+    port: 8071
+services:
+  svix:
+    image: docker.io/svix/svix-server:latest
+    deploy:
+      replicas: 1
+    environment:
+      SVIX_DB_DSN: ${DATABASE_URL}
+      SVIX_REDIS_DSN: ${REDIS_URL}
+      SVIX_JWT_SECRET: ${JWT_SECRET}
+    ports:
+    - ${PORT:-19925}:8071/tcp

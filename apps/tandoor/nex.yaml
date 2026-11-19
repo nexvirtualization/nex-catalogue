@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tandoor Recipes
+  summary: Django application to manage, tag and search recipes using either built-in models or external storage
+  description: Django application to manage, tag and search recipes using either built-in models or external
+    storage providers hosting PDFs, Images or other files.
+  category: productivity
+  source: https://github.com/TandoorRecipes/recipes
+  website: https://docs.tandoor.dev/
+  docs: https://docs.tandoor.dev/install/docker/
+  primary_service: tandoor
+  options:
+    SECRET_KEY:
+      label: Secret key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_NAME:
+      label: Db name
+    MEDIA:
+      label: Media folder
+      help: Choose the Nex-managed folder mounted at /opt/recipes/mediafiles.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision a PostgreSQL database and create the first administrator in the browser. Back up Media
+    and the PostgreSQL database together.
+  web:
+    port: 80
+services:
+  tandoor:
+    image: ghcr.io/tandoorrecipes/recipes:2.7.3
+    deploy:
+      replicas: 1
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DB_ENGINE: django.db.backends.postgresql
+      GUNICORN_MEDIA: '1'
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-tandoordb}
+    volumes:
+    - ${MEDIA}:/opt/recipes/mediafiles
+    ports:
+    - ${PORT:-19487}:80/tcp

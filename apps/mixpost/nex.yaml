@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mixpost
+  summary: Organize and schedule social media posts
+  description: Provision MySQL and Redis. Keep the dashboard private, create the administrator with upstream
+    setup, and connect the desired social accounts.
+  category: productivity
+  website: https://mixpost.app/
+  source: https://github.com/inovector/mixpost
+  docs: https://docs.mixpost.app/installation/docker/
+  primary_service: mixpost
+  post_install: Provision MySQL and Redis. Keep the dashboard private, create the administrator with upstream
+    setup, and connect the desired social accounts.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    APP_KEY:
+      label: App key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Media and app state
+      help: Managed directory mounted at /var/www/html/storage/app. Choose storage writable by the application.
+    LOGS:
+      label: Application logs
+      help: Managed directory mounted at /var/www/html/storage/logs. Choose storage writable by the application.
+services:
+  mixpost:
+    image: docker.io/inovector/mixpost:v2.6.0
+    ports:
+    - ${PORT:-23546}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html/storage/app
+    - ${LOGS}:/var/www/html/storage/logs
+    environment:
+      APP_NAME: Mixpost
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: 'false'
+      APP_URL: ${PUBLIC_URL}
+      APP_DOMAIN: ${PUBLIC_HOST}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_NAME:-mixpost}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    deploy:
+      replicas: 1

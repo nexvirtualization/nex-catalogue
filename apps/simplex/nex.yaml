@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SimpleX SMP Relay
+  summary: Run a SimpleX Chat message relay
+  description: Point the configured hostname at the client-reachable application address or host-published
+    endpoint. The relay generates its certificates during initialization. Use the server URI and fingerprint
+    from the relay logs to add it to a SimpleX Chat client.
+  category: communication
+  website: https://simplex.chat/
+  source: https://github.com/simplex-chat/simplexmq
+  docs: https://github.com/simplex-chat/simplexmq#docker
+  scalable: false
+  primary_service: simplex
+  architectures:
+  - amd64
+  - arm64
+  options:
+    RELAY_ADDRESS:
+      label: Public relay address
+      help: Hostname or public IP clients will use to connect to the relay.
+    RELAY_PASSWORD:
+      label: Relay password
+      help: Use Generate; share the relay URI only with intended users.
+      type: password
+    RELAY_PORT:
+      label: Relay Port
+      help: SMP relay port when host publication is enabled. Leave the default unless the client URI also
+        uses a custom port.
+    DATA:
+      label: Relay configuration
+      help: Select This host. Holds TLS certificates, keys and relay configuration. Include this folder
+        in a stopped Nex backup.
+    RELAY_STATE:
+      label: Relay state
+      help: Select This host. Holds the server state and logs. Include this folder in a stopped Nex backup.
+services:
+  simplex:
+    image: simplexchat/smp-server:latest
+    environment:
+      ADDR: ${RELAY_ADDRESS}
+      PASS: ${RELAY_PASSWORD}
+    ports:
+    - ${RELAY_PORT:-5223}:5223/tcp
+    volumes:
+    - ${DATA}:/etc/opt/simplex
+    - ${RELAY_STATE}:/var/opt/simplex
+    deploy:
+      replicas: 1

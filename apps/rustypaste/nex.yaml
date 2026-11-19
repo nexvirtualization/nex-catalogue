@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: rustypaste
+  summary: Receive file and text pastes through an HTTP endpoint
+  description: Prepare config.toml with your server limits and access policy. Put it in the managed
+    configuration folder and use an authenticating proxy for shared access.
+  category: tools
+  website: https://github.com/orhun/rustypaste
+  source: https://github.com/orhun/rustypaste
+  docs: https://github.com/orhun/rustypaste#docker
+  primary_service: rustypaste
+  scalable: false
+  license: MIT
+  options:
+    DATA:
+      label: Uploaded pastes
+      help: Keep uploaded pastes in this managed folder between restarts.
+    CONFIG:
+      label: Prepared configuration
+      help: Keep prepared configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  rustypaste:
+    image: docker.io/orhunp/rustypaste:latest
+    environment:
+      CONFIG: /config/config.toml
+    volumes:
+    - ${DATA}:/app/upload
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

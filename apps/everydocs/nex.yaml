@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: EveryDocs
+  summary: Organize and search personal documents
+  description: Provision a MySQL-compatible database. Back up document storage and the database together.
+  category: documents
+  website: https://github.com/jonashellmann/everydocs-core
+  source: https://github.com/jonashellmann/everydocs-core
+  docs: https://github.com/jonashellmann/everydocs-core#running-with-docker
+  primary_service: everydocs
+  post_install: Provision a MySQL-compatible database. Back up document storage and the database together.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 5678
+  options:
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 5678 inside Nex.
+    DATA:
+      label: Documents
+      help: Managed directory mounted at /var/everydocs-files. Choose storage writable by the application.
+services:
+  everydocs:
+    image: docker.io/jonashellmann/everydocs:latest
+    ports:
+    - ${PORT:-23570}:5678/tcp
+    volumes:
+    - ${DATA}:/var/everydocs-files
+    environment:
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      EVERYDOCS_DB_ADAPTER: mysql2
+      EVERYDOCS_DB_HOST: ${DB_HOST}
+      EVERYDOCS_DB_PORT: ${DB_PORT:-3306}
+      EVERYDOCS_DB_NAME: ${DB_NAME:-everydocs}
+      EVERYDOCS_DB_USER: ${DB_USER}
+      EVERYDOCS_DB_PASSWORD: ${DB_PASSWORD}
+    deploy:
+      replicas: 1

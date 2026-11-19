@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: iSponsorBlockTV
+  summary: Sync playback preferences to linked YouTube TV clients
+  description: Run the upstream interactive configurator for your own devices. Put the resulting config.json
+    in the application folder. The service waits for the file, then starts with that configuration.
+  category: media
+  website: https://github.com/dmunozv04/iSponsorBlockTV
+  source: https://github.com/dmunozv04/iSponsorBlockTV
+  docs: https://github.com/dmunozv04/iSponsorBlockTV/wiki/Installation
+  primary_service: isponsorblocktv
+  scalable: false
+  license: GPL-3.0
+  options:
+    DATA:
+      label: Linked device configuration
+      help: Keep this folder private. It stores device linkage information.
+services:
+  isponsorblocktv:
+    image: ghcr.io/dmunozv04/isponsorblocktv:latest
+    command:
+    - "if [ ! -s /app/data/config.json ]; then\n  echo \"Waiting for config.json from the iSponsorBlockTV\
+      \ configurator.\"\nfi\nwhile [ ! -s /app/data/config.json ]; do\n  sleep 10\ndone\nexec python3\
+      \ -u main.pyc"
+    entrypoint:
+    - /bin/sh
+    - -ec
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

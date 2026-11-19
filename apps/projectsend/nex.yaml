@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ProjectSend
+  summary: Share files with specific clients
+  description: ProjectSend uses an existing MySQL or MariaDB database. Managed Nex storage keeps uploaded
+    files and service configuration.
+  category: management
+  website: https://www.projectsend.org/
+  source: https://github.com/projectsend/projectsend
+  docs: https://docs.linuxserver.io/images/docker-projectsend/
+  primary_service: projectsend
+  post_install: Prepare the external database. Open the web installer on a trusted network, connect the database
+    and create the first administrator.
+  license: GPL-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    CONFIG:
+      label: ProjectSend settings
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    DATA:
+      label: Uploaded files
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  projectsend:
+    image: lscr.io/linuxserver/projectsend:latest
+    ports:
+    - ${PORT:-20248}:80/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

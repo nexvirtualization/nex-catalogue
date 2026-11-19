@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ClickHouse
+  summary: Run a column-oriented SQL database for analytics
+  description: Connect with the configured user and password. Use a trusted database network and check
+    ClickHouse upgrade and backup procedures before redeploying.
+  category: development
+  website: https://github.com/ClickHouse/ClickHouse
+  source: https://github.com/ClickHouse/ClickHouse
+  docs: https://clickhouse.com/docs/install/docker
+  primary_service: clickhouse
+  scalable: false
+  license: Apache-2.0
+  options:
+    DB_USER:
+      label: Database user
+      help: Initial ClickHouse user name.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Use Nex Generate for the user password.
+    DATA:
+      label: ClickHouse database
+      help: Tables and database state.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8123.
+    NATIVE_PORT:
+      label: Native SQL port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9000.
+services:
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_USER: ${DB_USER:-admin}
+      CLICKHOUSE_PASSWORD: ${DB_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes:
+    - ${DATA}:/var/lib/clickhouse
+    ports:
+    - ${PORT:-8123}:8123/tcp
+    - ${NATIVE_PORT:-9000}:9000/tcp
+    deploy:
+      replicas: 1

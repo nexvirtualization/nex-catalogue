@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Necesse
+  summary: Host a shared settlement and exploration world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the app’s Primary address on UDP 14159 in the multiplayer menu. The first boot creates the
+    world. First boot downloads the server through SteamCMD. Restarts check for updates. Make a stopped
+    backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1169040/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/necserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - survival
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  necesse:
+    image: ghcr.io/gameservermanagers/gameserver:nec
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 14159/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

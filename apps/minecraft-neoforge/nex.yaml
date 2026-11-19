@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft NeoForge
+  summary: Host modded Java Edition with NeoForge
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Add the app’s Primary address on TCP 25565 in Java Edition. Use NeoForge mods that support your
+    selected Minecraft version. Java 21 is provided for Minecraft 1.21 releases. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://neoforged.net/
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/server-types/forge/
+  license: Minecraft EULA and upstream server license
+  architectures:
+    - amd64
+    - arm64
+  tags:
+    - minecraft
+    - sandbox
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    MC_VERSION:
+      label: Minecraft version
+      help: Set a version supported by this server type and its Java runtime. Match every client to
+        this version.
+    DATA:
+      label: World, extensions and settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  minecraft-neoforge:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: NEOFORGE
+      MEMORY: 3G
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      VERSION: ${MC_VERSION:-1.21.1}
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

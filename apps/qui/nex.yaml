@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Qui
+  summary: Manage one or more qBittorrent clients
+  description: Create the first Qui administrator on a trusted network. Add each qBittorrent instance
+    from the web interface. Nex-hosted clients on the app network can be reached by their application
+    name and internal web port.
+  category: downloads
+  website: https://getqui.com/
+  source: https://github.com/autobrr/qui
+  docs: https://getqui.com/
+  scalable: false
+  primary_service: qui
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: qui
+    scheme: http
+    port: 7476
+  works_with:
+  - qbittorrent
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7476.
+    DATA:
+      label: Client settings
+      help: Select This host. Holds the SQLite database, login and qBittorrent instance configuration.
+        Include this folder in a stopped Nex backup.
+services:
+  qui:
+    image: ghcr.io/autobrr/qui:latest
+    ports:
+    - ${PORT:-7476}:7476/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

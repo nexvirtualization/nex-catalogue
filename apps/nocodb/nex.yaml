@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NocoDB
+  summary: Manage structured data in a no-code spreadsheet UI
+  description: Use the embedded single-node database for the app’s metadata. Set the public URL before
+    creating accounts. Configure external data sources from the web interface using the appropriate credentials.
+  category: productivity
+  website: https://www.nocodb.com/
+  source: https://github.com/nocodb/nocodb
+  docs: https://nocodb.com/docs/self-hosting/installation/docker
+  scalable: false
+  primary_service: nocodb
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: nocodb
+    scheme: http
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    JWT_SECRET:
+      label: Authentication signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: NocoDB data
+      help: Select This host. Stores the embedded metadata database and attachments. Include this folder
+        in a stopped Nex backup.
+services:
+  nocodb:
+    image: nocodb/nocodb:latest
+    environment:
+      NC_PUBLIC_URL: ${PUBLIC_URL}
+      NC_AUTH_JWT_SECRET: ${JWT_SECRET}
+    ports:
+    - ${PORT:-8393}:8080/tcp
+    volumes:
+    - ${DATA}:/usr/app/data
+    deploy:
+      replicas: 1

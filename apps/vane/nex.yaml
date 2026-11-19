@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vane
+  summary: Research questions using web search and a configurable model
+  description: Complete model provider setup on a trusted network. The image includes a search backend.
+    Use an authenticating proxy or keep the endpoint private.
+  category: ai
+  website: https://github.com/ItzCrazyKns/Vane
+  source: https://github.com/ItzCrazyKns/Vane
+  docs: https://github.com/ItzCrazyKns/Vane
+  primary_service: vane
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    DATA:
+      label: Vane settings and history
+      help: Vane application data, model configuration and search history.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  vane:
+    image: docker.io/itzcrazykns1337/vane:latest
+    volumes:
+    - ${DATA}:/home/vane/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

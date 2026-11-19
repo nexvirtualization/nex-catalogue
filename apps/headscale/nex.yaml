@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Headscale
+  summary: Control server for running a Tailscale-compatible private network
+  description: Control server for running a Tailscale-compatible private network.
+  category: networking
+  source: https://github.com/juanfont/headscale
+  website: https://headscale.net/
+  docs: https://headscale.net/0.29.5/setup/install/container/
+  primary_service: headscale
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /etc/headscale.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/lib/headscale.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Prepare config.yaml for version 0.29.5 in Configuration before installation. Set the public
+    TLS URL, listen address, and SQLite and key paths. Keep Configuration and Data in backups.
+services:
+  headscale:
+    image: docker.io/headscale/headscale:0.29.5
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/etc/headscale:ro
+    - ${DATA}:/var/lib/headscale
+    ports:
+    - ${PORT:-19914}:8080/tcp
+    command:
+    - serve

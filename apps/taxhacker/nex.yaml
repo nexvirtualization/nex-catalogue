@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TaxHacker
+  summary: Organize invoices and receipts
+  description: Provision PostgreSQL and set up the first local account. Add AI providers only if you want
+    document extraction. Back up the data folder and keep it private.
+  category: finance
+  website: https://taxhacker.app/
+  source: https://github.com/vas3k/TaxHacker
+  docs: https://github.com/vas3k/TaxHacker#self-hosted
+  primary_service: taxhacker
+  post_install: Provision PostgreSQL and set up the first local account. Add AI providers only if you want
+    document extraction. Back up the data folder and keep it private.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 7331
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 7331 inside Nex.
+    DATA:
+      label: Receipts, invoices and settings
+      help: Managed directory mounted at /app/data. Choose storage writable by the application.
+services:
+  taxhacker:
+    image: ghcr.io/vas3k/taxhacker:latest
+    ports:
+    - ${PORT:-23558}:7331/tcp
+    volumes:
+    - ${DATA}:/app/data
+    environment:
+      SELF_HOSTED_MODE: 'true'
+      UPLOAD_PATH: /app/data/uploads
+      DATABASE_URL: ${DATABASE_URL}
+    deploy:
+      replicas: 1

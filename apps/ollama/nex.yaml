@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/runtipi/runtipi-appstore/blob/HEAD/apps/ollama-cpu/docker-compose.yml
+x-nex:
+  name: Ollama
+  summary: Get up and running with Llama 3.3, DeepSeek-R1, Phi-4, Gemma 3, and other large language models
+  category: ai
+  description: Get up and running with Llama 3.3, DeepSeek-R1, Phi-4, Gemma 3, and other large language models.
+    Back up the application folders together and keep them writable by the container.
+  source: https://github.com/ollama/ollama
+  website: https://ollama.com/
+  docs: https://ollama.com/
+  primary_service: ollama-cpu
+  options:
+    FOLDER_1:
+      label: .ollama folder
+      help: Nex-managed folder mounted at /root/.ollama. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 11434/tcp.
+  post_install: Use a compatible Ollama client to pull a model and connect to the app on port 11434. This package
+    runs on CPU and exposes an unauthenticated API.
+services:
+  ollama-cpu:
+    image: docker.io/ollama/ollama:latest
+    volumes:
+    - ${FOLDER_1}:/root/.ollama
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-11434}:11434/tcp

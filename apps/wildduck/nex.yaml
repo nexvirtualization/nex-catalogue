@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: wildduck
+  summary: Serve mailboxes over IMAP, POP3, and the WildDuck API
+  description: Provision MongoDB and Redis, add the certificate and key to Mail TLS files, and protect the
+    management API. Connect separate SMTP delivery and submission services if you need a full mail stack.
+  category: communication
+  website: https://wildduck.email/
+  source: https://github.com/zone-eu/wildduck
+  docs: https://docs.wildduck.email/docs/getting-started/installation/
+  primary_service: wildduck
+  post_install: Provision MongoDB and Redis, add the certificate and key to Mail TLS files, and protect the
+    management API. Connect separate SMTP delivery and submission services if you need a full mail stack.
+  license: EUPL-1.2
+  architectures:
+  - amd64
+  - arm64
+  options:
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    MAIL_DOMAIN:
+      label: Mail domain
+      help: Enter the deployment value described in the upstream setup guide.
+    API_TOKEN:
+      label: Api token
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    TOTP_SECRET:
+      label: Totp secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    IMAP_PORT:
+      label: Published IMAP TLS port
+      help: Host-published port for the internal 9993/tcp endpoint.
+    POP_PORT:
+      label: Published POP3 TLS port
+      help: Host-published port for the internal 9995/tcp endpoint.
+    TLS_FILES:
+      label: Mail TLS files
+      help: Place fullchain.pem and privkey.pem in this directory and restrict access to the key.
+services:
+  wildduck:
+    image: ghcr.io/zone-eu/wildduck:latest
+    ports:
+    - ${PORT:-23505}:8080/tcp
+    - ${IMAP_PORT:-24505}:9993/tcp
+    - ${POP_PORT:-25505}:9995/tcp
+    volumes:
+    - ${TLS_FILES}:/certificates:ro
+    environment:
+      APPCONF_dbs_mongo: ${MONGO_URI}
+      APPCONF_dbs_redis: ${REDIS_URL}
+      APPCONF_emailDomain: ${MAIL_DOMAIN}
+      APPCONF_imap_setup_hostname: ${MAIL_DOMAIN}
+      APPCONF_pop3_setup_hostname: ${MAIL_DOMAIN}
+      APPCONF_api_host: 0.0.0.0
+      APPCONF_api_accessToken: ${API_TOKEN}
+      APPCONF_totp_secret: ${TOTP_SECRET}
+      APPCONF_tls_cert: /certificates/fullchain.pem
+      APPCONF_tls_key: /certificates/privkey.pem
+    deploy:
+      replicas: 1

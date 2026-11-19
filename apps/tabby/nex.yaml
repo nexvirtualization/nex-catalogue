@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tabby
+  summary: Serve a local coding completion model
+  description: Runs the application on CPU using a 1B-parameter completion model. The first start downloads
+    the selected model, so allow time and storage for it. Create the initial Tabby administrator and use
+    HTTPS for editor clients.
+  category: ai
+  website: https://tabbyml.com/
+  source: https://github.com/TabbyML/tabby
+  docs: https://tabby.tabbyml.com/docs/installation/
+  scalable: false
+  primary_service: tabby
+  architectures:
+  - amd64
+  web:
+    service: tabby
+    scheme: http
+    port: 8080
+  options:
+    MODEL:
+      label: Completion model
+      help: Model identifier supported by Tabby. Start with the default CPU-sized model.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Model and application data
+      help: Select This host. Stores downloaded models, settings and accounts. Include this folder in
+        a stopped Nex backup.
+services:
+  tabby:
+    image: tabbyml/tabby:latest
+    command:
+    - serve
+    - --model
+    - ${MODEL:-StarCoder-1B}
+    - --device
+    - cpu
+    ports:
+    - ${PORT:-8158}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

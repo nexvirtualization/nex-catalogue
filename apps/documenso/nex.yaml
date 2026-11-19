@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Documenso
+  summary: Collect document signatures in a browser
+  description: Provision PostgreSQL and SMTP. Place the upstream-compatible .p12 signing certificate in Certificate
+    storage and configure the matching password before inviting signers.
+  category: documents
+  website: https://documenso.com
+  source: https://github.com/documenso/documenso
+  docs: https://docs.documenso.com/developers/self-hosting
+  primary_service: documenso
+  post_install: Provision PostgreSQL and SMTP. Place the upstream-compatible .p12 signing certificate in
+    Certificate storage and configure the matching password before inviting signers.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SECONDARY_KEY:
+      label: Secondary key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_PASSWORD:
+      label: Signing password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    CERT:
+      label: Signing certificate
+      help: Managed directory mounted at /certificate. Choose storage readable by the application.
+services:
+  documenso:
+    image: docker.io/documenso/documenso:latest
+    ports:
+    - ${PORT:-23530}:3000/tcp
+    volumes:
+    - ${CERT}:/certificate:ro
+    environment:
+      PORT: '3000'
+      NEXT_PUBLIC_WEBAPP_URL: ${PUBLIC_URL}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+      NEXT_PRIVATE_DATABASE_URL: ${DATABASE_URL}
+      NEXT_PRIVATE_DIRECT_DATABASE_URL: ${DATABASE_URL}
+      NEXT_PRIVATE_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY: ${SECONDARY_KEY}
+      NEXT_PRIVATE_SIGNING_LOCAL_FILE_PATH: /certificate/signing.p12
+      NEXT_PRIVATE_SIGNING_PASSPHRASE: ${SIGNING_PASSWORD}
+      NEXT_PRIVATE_SMTP_TRANSPORT: smtp-auth
+      NEXT_PRIVATE_SMTP_HOST: ${SMTP_HOST}
+      NEXT_PRIVATE_SMTP_PORT: ${SMTP_PORT:-587}
+      NEXT_PRIVATE_SMTP_USERNAME: ${SMTP_USER}
+      NEXT_PRIVATE_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      NEXT_PRIVATE_SMTP_FROM_ADDRESS: ${FROM_EMAIL}
+    deploy:
+      replicas: 1

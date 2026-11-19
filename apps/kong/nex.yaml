@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kong Gateway
+  summary: Route APIs through a declaratively configured gateway
+  description: Prepare kong.yml in a managed folder before installation, with your services, routes and
+    authentication plugins. Forward authorized client requests to port 8000. Keep the Admin API off in
+    this DB-less deployment.
+  category: networking
+  website: https://konghq.com/kong/
+  source: https://github.com/Kong/kong
+  docs: https://docs.konghq.com/gateway/latest/production/deployment-topologies/db-less-and-declarative-config/
+  scalable: false
+  primary_service: kong
+  architectures:
+  - amd64
+  - arm64
+  options:
+    GATEWAY_PORT:
+      label: Gateway Port
+      help: Host-published gateway port.
+    DATA:
+      label: Prepared API configuration
+      help: Select This host. Select a managed folder with kong.yml. Include this folder in a stopped
+        Nex backup.
+services:
+  kong:
+    image: kong:latest
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /settings/kong.yml
+      KONG_ADMIN_LISTEN: 'off'
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+    - ${GATEWAY_PORT:-8000}:8000/tcp
+    volumes:
+    - ${DATA}:/settings:ro
+    deploy:
+      replicas: 1

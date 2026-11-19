@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Scanopy Server
+  summary: Display inventory from existing network-discovery agents
+  description: Provision PostgreSQL and set the public HTTPS address used by authorized agents. Create
+    the initial account, then deploy Scanopy daemons separately on the networks you manage.
+  category: monitoring
+  website: https://scanopy.net/
+  source: https://github.com/scanopy/scanopy
+  docs: https://github.com/scanopy/scanopy#readme
+  scalable: false
+  primary_service: scanopy
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: scanopy
+    scheme: http
+    port: 60072
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 60072.
+    DATA:
+      label: Scanopy state
+      help: Select This host. Stores application data outside PostgreSQL. Include this folder in a stopped
+        Nex backup.
+services:
+  scanopy:
+    image: ghcr.io/scanopy/scanopy/server:latest
+    environment:
+      SCANOPY_DATABASE_URL: ${DATABASE_URL}
+      SCANOPY_WEB_EXTERNAL_PATH: /app/static
+      SCANOPY_PUBLIC_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8833}:60072/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

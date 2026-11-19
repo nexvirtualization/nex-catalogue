@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: solidtime
+  summary: Track project time, clients and billable work
+  description: Provision PostgreSQL and configure your HTTPS endpoint. Complete the first-account flow
+    on a trusted network.
+  category: productivity
+  website: https://github.com/solidtime-io/solidtime
+  source: https://github.com/solidtime-io/solidtime
+  docs: https://docs.solidtime.io/self-hosting
+  primary_service: solidtime
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    DB_HOST:
+      label: Database hostname
+      help: Reachable PostgreSQL server.
+    DB_DATABASE:
+      label: Database name
+      help: Prepared database.
+    DB_USERNAME:
+      label: Database username
+      help: Dedicated database account.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Database account password.
+    APP_KEY:
+      label: Laravel application key
+      type: password
+      help: Use the upstream-generated Laravel key and preserve it for restore.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  solidtime:
+    image: docker.io/solidtime/solidtime:latest
+    environment:
+      DB_CONNECTION: pgsql
+      DB_PORT: '5432'
+      APP_ENV: production
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

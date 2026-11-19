@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tasks.md
+  summary: Organize tasks in a Markdown-backed board
+  description: Task files and the app configuration are stored in separate Nex folders.
+  category: productivity
+  website: https://github.com/BaldissaraMatheus/Tasks.md
+  source: https://github.com/BaldissaraMatheus/Tasks.md
+  docs: https://github.com/BaldissaraMatheus/Tasks.md
+  primary_service: tasks-md
+  post_install: Open the task board on a trusted network. Back up Tasks and Configuration to preserve boards
+    and settings.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    TASKS:
+      label: Task Markdown files
+      help: Managed directory mounted at /tasks. Choose storage writable by the application.
+    CONFIG:
+      label: Board configuration
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+services:
+  tasks-md:
+    image: docker.io/baldissaramatheus/tasks.md:latest
+    ports:
+    - ${PORT:-20236}:8080/tcp
+    volumes:
+    - ${TASKS}:/tasks
+    - ${CONFIG}:/config
+    deploy:
+      replicas: 1

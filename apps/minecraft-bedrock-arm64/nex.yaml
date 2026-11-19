@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Bedrock ARM64
+  summary: Host Minecraft Bedrock Edition on an ARM64 server
+  description: >-
+    Run one copy on an ARM64 host and store the world on This host. The image runs Mojang’s server
+    through Box64. Give the app a Fixed IPv4 address on a reachable cluster network and enter the
+    same address in Advertised IPv4. Add the app in Bedrock Edition on TCP 19132. NetherNet media
+    uses UDP 19140–19149.
+  category: games
+  website: https://www.minecraft.net/en-us/download/server/bedrock
+  source: https://github.com/itzg/docker-minecraft-bedrock-server
+  docs: https://github.com/itzg/docker-minecraft-bedrock-server#nethernet
+  license: Minecraft EULA and upstream server license
+  architectures: [arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    APP_IPV4:
+      label: Advertised IPv4 address
+      help: >-
+        Enter the same IPv4 address chosen under Network. Players need to be able to reach that
+        address.
+    PLAYERS:
+      label: Allowed Bedrock players
+      help: >-
+        Enter comma-separated gamertag and Xbox user ID pairs, such as PlayerName:1234567890.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-bedrock-arm64:
+    image: ghcr.io/itzg/minecraft-bedrock-server:latest
+    environment:
+      EULA: ${EULA}
+      ALLOW_LIST: 'true'
+      ALLOW_LIST_USERS: ${PLAYERS}
+      ONLINE_MODE: 'true'
+      TRANSPORT: nethernet
+      SERVER_UDP_PORTS: "${APP_IPV4}:19140-19149:19140-19149"
+    expose:
+      - 19132/tcp
+      - 19140-19149/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

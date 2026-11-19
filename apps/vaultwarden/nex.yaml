@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vaultwarden
+  summary: Store passwords with Bitwarden-compatible clients
+  description: Bitwarden-compatible password server with SQLite. In Settings enter the public HTTPS URL and use
+    Generate for a unique Administrator token. Public registration stays disabled; after HTTPS is ready open /admin
+    with that token to invite your first account. In Nginx Proxy Manager forward to this installation's Name inside
+    applications shown on Nex Review/Summary, port 80, and enable WebSockets. Use the shared Nex application network
+    for that connection. Web vaults require HTTPS, apart from browser localhost exceptions. On Basics choose Runs
+    on, Only these hosts and one host; keep state folders on This host. This keeps one copy on that host with no
+    automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all state folders before
+    updates.
+  category: security
+  website: https://github.com/dani-garcia/vaultwarden
+  source: https://github.com/dani-garcia/vaultwarden
+  license: AGPL-3.0
+  scalable: false
+  tags:
+  - passwords
+  - vault
+  - bitwarden
+  options:
+    DOMAIN:
+      label: Public HTTPS URL
+      help: Full public HTTPS URL, such as https://vault.example.org. In Nginx Proxy Manager use this app's Nex
+        Name inside applications and internal port 80 as the upstream, with a trusted certificate and WebSockets
+        enabled.
+    ADMIN_TOKEN:
+      label: Administrator token
+      help: Use Generate for a unique long Administrator token; open /admin over HTTPS to invite accounts. Nex password
+        fields hide the answer in the UI, but deployment settings and backup manifests retain it; protect access
+        to Nex and its backup repository.
+      type: password
+    PORT:
+      label: Web port
+      help: HTTP host endpoint when host publication is enabled. Another Nex app such as Nginx Proxy Manager uses
+        Name inside applications:80 instead of this host port. A dedicated primary address uses internal port 80.
+    DATA:
+      label: Vault data
+      help: Keep Vault data on This host; Nex creates and initializes the /data volume. Include it in a stopped
+        Nex backup; it holds the SQLite database, attachments, keys and admin configuration. No host filesystem
+        bootstrap is required.
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    environment:
+      DOMAIN: ${DOMAIN}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      SIGNUPS_ALLOWED: 'false'
+    ports:
+    - ${PORT:-8222}:80/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

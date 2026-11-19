@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: myCart
+  summary: Host a small self-hosted shopping cart
+  description: Choose managed folders initialized with the upstream myCart init procedure before starting
+    the package. Set the HTTPS proxy to forward requests to internal port 8080. Configure your payment
+    provider and site settings before making it public.
+  category: productivity
+  website: https://github.com/shurco/mycart
+  source: https://github.com/shurco/mycart
+  docs: https://github.com/shurco/mycart#run-using-docker
+  scalable: false
+  primary_service: mycart
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: mycart
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Cart database and configuration
+      help: Select This host. Choose the initialized myCart base folder. Include this folder in a stopped
+        Nex backup.
+    DIGITALS:
+      label: Digital goods
+      help: Select This host. Stores private digital product files. Include this folder in a stopped Nex
+        backup.
+    UPLOADS:
+      label: Public uploads
+      help: Select This host. Stores product images and other upload data. Include this folder in a stopped
+        Nex backup.
+    SITE:
+      label: Website files
+      help: Select This host. Stores custom shop templates and site files. Include this folder in a stopped
+        Nex backup.
+services:
+  mycart:
+    image: ghcr.io/shurco/mycart:latest
+    ports:
+    - ${PORT:-8842}:8080/tcp
+    volumes:
+    - ${DATA}:/lc_base
+    - ${DIGITALS}:/lc_digitals
+    - ${UPLOADS}:/lc_uploads
+    - ${SITE}:/site
+    deploy:
+      replicas: 1

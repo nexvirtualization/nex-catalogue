@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Drone CI
+  summary: Coordinate CI jobs with authorized build runners
+  description: Register a supported source-control OAuth application and a separate trusted Drone runner.
+    Use the same RPC secret for the runner and keep access restricted to your chosen repositories.
+  category: development
+  website: https://github.com/harness/harness/tree/drone
+  source: https://github.com/harness/harness/tree/drone
+  docs: https://docs.drone.io/server/provider/gitea/
+  primary_service: drone-ci
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    DRONE_SERVER_HOST:
+      label: Public CI hostname
+      help: Hostname and optional port without the scheme.
+    DRONE_GITEA_SERVER:
+      label: Gitea address
+      help: Full URL of your Gitea instance.
+    DRONE_GITEA_CLIENT_ID:
+      label: Gitea OAuth client ID
+      help: Client ID of the authorized Gitea app.
+    DRONE_GITEA_CLIENT_SECRET:
+      label: Gitea OAuth secret
+      type: password
+      help: Client secret of the Gitea OAuth app.
+    DRONE_RPC_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DATA:
+      label: Drone database and state
+      help: Keep drone database and state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  drone-ci:
+    image: docker.io/drone/drone:latest
+    environment:
+      DRONE_SERVER_PROTO: https
+      DRONE_SERVER_HOST: ${DRONE_SERVER_HOST}
+      DRONE_GITEA_SERVER: ${DRONE_GITEA_SERVER}
+      DRONE_GITEA_CLIENT_ID: ${DRONE_GITEA_CLIENT_ID}
+      DRONE_GITEA_CLIENT_SECRET: ${DRONE_GITEA_CLIENT_SECRET}
+      DRONE_RPC_SECRET: ${DRONE_RPC_SECRET}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

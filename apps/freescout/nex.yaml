@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FreeScout
+  summary: Manage support mailboxes and tickets
+  description: Provision MariaDB and create the initial admin account. Complete mailbox integration and back
+    up uploads with the database.
+  category: communication
+  website: https://freescout.net/
+  source: https://github.com/freescout-help-desk/freescout
+  docs: https://github.com/nfrastack/container-freescout
+  primary_service: freescout
+  post_install: Provision MariaDB and create the initial admin account. Complete mailbox integration and
+    back up uploads with the database.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Configuration and uploads
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+    LOGS:
+      label: Application logs
+      help: Managed directory mounted at /logs. Choose storage writable by the application.
+services:
+  freescout:
+    image: docker.io/nfrastack/freescout:2.2.25
+    ports:
+    - ${PORT:-23494}:80/tcp
+    volumes:
+    - ${DATA}:/data
+    - ${LOGS}:/logs
+    environment:
+      APP_URL: ${PUBLIC_URL}
+      DB_TYPE: mariadb
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-freescout}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASS: ${ADMIN_PASSWORD}
+      FREESCOUT_APP_DEBUG: 'false'
+    deploy:
+      replicas: 1

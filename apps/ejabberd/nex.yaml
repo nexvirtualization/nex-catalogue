@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ejabberd
+  summary: XMPP instant messaging server
+  description: XMPP instant messaging server.
+  category: communication
+  source: https://github.com/processone/ejabberd
+  website: https://www.ejabberd.im/
+  docs: https://docs.ejabberd.im/CONTAINER/
+  primary_service: ejabberd
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /opt/ejabberd/conf.
+    DATABASE:
+      label: Database folder
+      help: Choose the Nex-managed folder mounted at /opt/ejabberd/database.
+    PORT:
+      label: Published 5280/tcp port
+      help: Host port for application listener 5280/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 5222/tcp port
+      help: Host port for application listener 5222/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_3:
+      label: Published 5269/tcp port
+      help: Host port for application listener 5269/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Configure ejabberd.yml and certificates for your XMPP domain. Open /admin on the HTTP listener
+    and use the upstream CLI to register the administrator on first install.
+  web:
+    port: 5280
+services:
+  ejabberd:
+    image: docker.io/ejabberd/ecs:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/opt/ejabberd/conf
+    - ${DATABASE}:/opt/ejabberd/database
+    ports:
+    - ${PORT:-19886}:5280/tcp
+    - ${PORT_2:-20886}:5222/tcp
+    - ${PORT_3:-21886}:5269/tcp

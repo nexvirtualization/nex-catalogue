@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RSS-Bridge
+  summary: Generate feeds for sites without native RSS
+  description: Select a bridge and generate a feed URL for your reader. The server fetches source content and
+    caches results. The managed Configuration folder retains your enabled bridge list and local configuration.
+  category: reading
+  website: https://github.com/RSS-Bridge/rss-bridge
+  source: https://github.com/RSS-Bridge/rss-bridge
+  docs: https://rss-bridge.github.io/rss-bridge/For_Hosts/Installation.html
+  license: Unlicense
+  primary_service: rss-bridge
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the web interface to generate an RSS or Atom URL. Keep the service on a trusted network
+    or behind authentication. To limit the available bridges, put config.ini.php in Configuration and restart.
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Configuration
+      help: Holds config.ini.php and bridge settings at /config. Use one copy; back up local settings.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  rss-bridge:
+    image: ghcr.io/rss-bridge/rss-bridge:latest
+    ports:
+    - ${PORT:-18103}:80/tcp
+    volumes:
+    - ${CONFIG}:/config
+    deploy:
+      replicas: 1

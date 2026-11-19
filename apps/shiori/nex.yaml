@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Shiori
+  summary: Store bookmarks and archive web pages
+  description: Set your own administrator credentials at first sign-in. Keep the archive folder in stopped
+    SQLite backups.
+  category: reading
+  website: https://github.com/go-shiori/shiori
+  source: https://github.com/go-shiori/shiori
+  docs: https://github.com/go-shiori/shiori/blob/master/docs/Installation.md
+  primary_service: shiori
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Bookmark archive
+      help: Shiori database, cached pages and site assets.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  shiori:
+    image: ghcr.io/go-shiori/shiori:latest
+    volumes:
+    - ${DATA}:/srv/shiori
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

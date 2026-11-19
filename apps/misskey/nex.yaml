@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Misskey
+  summary: Run a federated social community
+  description: Create the PostgreSQL database and Redis-compatible queue first. Prepare default.yml using
+    upstream’s Docker example with your public HTTPS origin and database endpoints. Configure a reverse
+    proxy with WebSocket support before site setup.
+  category: communication
+  website: https://misskey.io/
+  source: https://github.com/misskey-dev/misskey
+  docs: https://github.com/misskey-dev/misskey/blob/develop/compose_example.yml
+  scalable: false
+  primary_service: misskey
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: misskey
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  - valkey
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    CONFIG:
+      label: Prepared federation configuration
+      help: Select This host. Select a managed folder containing default.yml and its deployment-specific
+        settings. Include this folder in a stopped Nex backup.
+    DATA:
+      label: Uploaded media
+      help: Select This host. Stores files uploaded by users and federated attachments. Include this folder
+        in a stopped Nex backup.
+services:
+  misskey:
+    image: misskey/misskey:latest
+    ports:
+    - ${PORT:-8876}:3000/tcp
+    volumes:
+    - ${CONFIG}:/misskey/.config:ro
+    - ${DATA}:/misskey/files
+    deploy:
+      replicas: 1

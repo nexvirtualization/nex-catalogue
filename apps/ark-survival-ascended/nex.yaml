@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'ARK: Survival Ascended'
+  summary: 'Host a persistent ARK: Survival Ascended world'
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the Ascended client and search for your session from the unofficial server browser. Gameplay
+    runs on UDP 7777 and 7778. The first launch downloads the Windows server through SteamCMD and runs
+    it under Proton. The persistent directory holds the installation and saves. The administrator password
+    also authenticates the shutdown connection. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2399830/
+  source: https://github.com/gregoirechauvet/ark-server
+  docs: https://github.com/gregoirechauvet/ark-server
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - survival
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate for a password of at least 12 letters or numbers.
+      type: password
+services:
+  ark-survival-ascended:
+    image: ghcr.io/gregoirechauvet/ark-server:proton-10
+    environment:
+      SESSION_NAME: Nex ARK Ascended
+      SERVER_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+    - 7777/udp
+    - 7778/udp
+    volumes:
+    - ${DATA}:/home/steam/ark
+    user: 0:0
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      [[ "$$SERVER_ADMIN_PASSWORD" =~ ^[A-Za-z0-9]{12,}$$ ]] || {
+        echo "Use at least 12 letters or numbers for the administrator password." >&2
+        exit 1
+      }
+      mkdir -p /home/steam/ark/ShooterGame/Saved
+      chown steam:steam /home/steam/ark /home/steam/ark/ShooterGame /home/steam/ark/ShooterGame/Saved
+      exec setpriv --reuid=steam --regid=steam --init-groups /home/steam/entrypoint.sh
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

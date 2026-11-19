@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Luanti
+  summary: Host a private Minetest Game world with the Luanti engine
+  description: >-
+    Choose one host and a registered client-reachable primary network. On first start the server
+    installs Minetest Game from the Luanti project and generates a world. In the Luanti client,
+    choose Join Game and enter APP-IP, port 30000, a player name and the initial join password.
+    Claim the administrator name before sharing the password. Take a stopped Nex backup before
+    redeploying the image.
+  category: games
+  website: https://www.luanti.org/
+  source: https://github.com/luanti-org/luanti
+  docs: https://docs.luanti.org/for-server-hosts/setup/containers/
+  license: LGPL-2.1-or-later
+  architectures: [amd64, arm64]
+  tags: [sandbox, building, co-op, dedicated-server]
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Use a single line of text for the server name.
+    ADMIN_NAME:
+      label: Administrator name
+      help: Choose a Luanti player name and join under it before inviting other players.
+    JOIN_PASSWORD:
+      label: Initial join password
+      type: password
+      help: New players use this password once to create their local accounts. Use a single line of text.
+    WORLD_DATA:
+      label: World and settings
+      help: Select This host. This folder includes the world, player accounts, mods and installed game.
+services:
+  luanti:
+    image: ghcr.io/luanti-org/luanti:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Luanti}
+      ADMIN_NAME: ${ADMIN_NAME}
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        games=/var/lib/minetest/.minetest/games
+        game="$$games/minetest"
+        if [ ! -f "$$game/game.conf" ]; then
+          if [ -e "$$game" ]; then
+            echo "The Minetest Game folder is incomplete. Restore its game.conf or remove the incomplete folder." >&2
+            exit 1
+          fi
+          mkdir -p "$$games"
+          temp=$$(mktemp -d /var/lib/minetest/.minetest/.nex-game.XXXXXX)
+          trap 'rm -rf "$$temp"' EXIT
+          curl --fail --silent --show-error --location --retry 3 \
+            https://codeload.github.com/luanti-org/minetest_game/tar.gz/9e895af6e9feb98332fa1a778001442f5669bc20 \
+            --output "$$temp/game.tar.gz"
+          (cd "$$temp" && echo '325854277f8f171ebf395ac60aa8cd07250dd5a009f39f2027a56fa691e7e4ea  game.tar.gz' | sha256sum -c)
+          mkdir "$$temp/minetest"
+          tar -xzf "$$temp/game.tar.gz" -C "$$temp/minetest" --strip-components=1
+          test -f "$$temp/minetest/game.conf"
+          mv "$$temp/minetest" "$$game"
+          rm -rf "$$temp"
+          trap - EXIT
+        fi
+        umask 077
+        printf '%s\n' "server_name = $$SERVER_NAME" "name = $$ADMIN_NAME" "default_password = $$JOIN_PASSWORD" \
+          'disallow_empty_password = true' 'server_announce = false' 'enable_damage = true' \
+          > /var/lib/minetest/nex.conf
+        exec /usr/local/bin/luantiserver --config /var/lib/minetest/nex.conf --gameid minetest --worldname world
+    expose: ['30000/udp']
+    volumes:
+      - ${WORLD_DATA}:/var/lib/minetest
+    stop_grace_period: 1m
+    deploy:
+      replicas: 1

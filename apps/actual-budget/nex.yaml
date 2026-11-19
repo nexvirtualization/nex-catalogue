@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Actual Budget
+  summary: Plan your spending with envelope budgeting
+  description: >-
+    Personal budgeting with local-first accounts and server synchronization. Put it behind HTTPS
+    for browser access from other devices; the browser requires a secure context. Set the server
+    password on first access before other people can reach the setup page.
+  category: finance
+  website: https://actualbudget.org
+  source: https://github.com/actualbudget/actual
+  license: MIT
+  scalable: false
+  primary_service: actual
+  tags: [budget, finance, household]
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port; a dedicated app address uses port 5006 when host publishing is off. Connect an HTTPS proxy to Name inside applications:5006; browser access from other devices requires HTTPS.
+    DATA:
+      label: Budgets and server settings
+      help: Persistent budget files and server database at /data. Prefer This host for SQLite and back up this folder as well as exporting budgets regularly.
+services:
+  actual:
+    image: ghcr.io/actualbudget/actual:latest
+    ports:
+      - "${PORT:-5006}:5006/tcp"
+    volumes:
+      - "${DATA}:/data"
+    deploy:
+      replicas: 1

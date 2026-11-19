@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Coder
+  summary: Control remote development workspaces
+  description: Provision PostgreSQL and provide the client-facing HTTPS URL. Use Coder templates that
+    deploy with a supported remote provisioner. This control plane runs without access to a Docker host
+    socket.
+  category: development
+  website: https://coder.com/
+  source: https://github.com/coder/coder
+  docs: https://coder.com/docs/install/docker
+  scalable: false
+  primary_service: coder
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: coder
+    scheme: http
+    port: 7080
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7080.
+services:
+  coder:
+    image: ghcr.io/coder/coder:latest
+    environment:
+      CODER_PG_CONNECTION_URL: ${DATABASE_URL}
+      CODER_HTTP_ADDRESS: 0.0.0.0:7080
+      CODER_ACCESS_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8807}:7080/tcp
+    deploy:
+      replicas: 1

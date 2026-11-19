@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sons of the Forest
+  summary: Host a persistent co-op survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In Multiplayer, look for Nex Sons of the Forest in the dedicated-server browser. Keep UDP 8766,
+    27016 and 9700 reachable. The join password seeds userdata/dedicatedserver.cfg on first boot.
+    Edit that file with the app stopped to change it later. First start downloads the dedicated server
+    from Steam. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1326470/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/sonsoftheforest
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/sonsoftheforest#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - co-op
+    - survival
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -. Applied when the world is initialized.
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  sons-of-the-forest:
+    image: ghcr.io/ich777/steamcmd:sonsoftheforest
+    environment:
+      GAME_ID: '2465200'
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 8766/udp
+      - 27016/udp
+      - 9700/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$${JOIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, numbers or _ @ . + - in the join password." >&2
+          exit 1
+        fi
+        config=/serverdata/serverfiles/userdata/dedicatedserver.cfg
+        if [ ! -e "$$config" ]; then
+          mkdir -p "$${config%/*}"
+          umask 077
+          cat > "$$config" <<EOF
+        {
+          "IpAddress": "0.0.0.0",
+          "GamePort": 8766,
+          "QueryPort": 27016,
+          "BlobSyncPort": 9700,
+          "ServerName": "Nex Sons of the Forest",
+          "MaxPlayers": 8,
+          "Password": "$$JOIN_PASSWORD",
+          "LanOnly": false,
+          "SaveSlot": 1,
+          "SaveMode": "Continue",
+          "GameMode": "Normal",
+          "SaveInterval": 600,
+          "IdleDayCycleSpeed": 0.0,
+          "IdleTargetFramerate": 5,
+          "ActiveTargetFramerate": 60,
+          "LogFilesEnabled": false,
+          "TimestampLogFilenames": true,
+          "TimestampLogEntries": true,
+          "GameSettings": {},
+          "CustomGameModeSettings": {},
+          "SkipNetworkAccessibilityTest": true
+        }
+        EOF
+        fi
+        exec /opt/scripts/start.sh

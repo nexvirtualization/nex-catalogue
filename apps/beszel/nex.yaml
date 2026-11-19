@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Beszel
+  summary: Monitor systems through existing Beszel agents
+  description: Open the hub and create the first administrative account. Add a system and install its
+    Beszel agent separately, then enter the agent endpoint and pair it with the hub.
+  category: monitoring
+  website: https://beszel.dev/
+  source: https://github.com/henrygd/beszel
+  docs: https://beszel.dev/guide/getting-started
+  scalable: false
+  primary_service: beszel
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: beszel
+    scheme: http
+    port: 8090
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8090.
+    DATA:
+      label: Monitoring data
+      help: Select This host. Stores monitored systems, accounts, and resource history. Include this folder
+        in a stopped Nex backup.
+services:
+  beszel:
+    image: henrygd/beszel:latest
+    ports:
+    - ${PORT:-8773}:8090/tcp
+    volumes:
+    - ${DATA}:/beszel_data
+    deploy:
+      replicas: 1

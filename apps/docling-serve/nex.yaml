@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Docling Serve
+  summary: Convert documents to structured data through an API
+  description: CPU build of the document conversion server. Start with a host that can accommodate document
+    processing and model downloads. Restrict the API and optional web UI to trusted users.
+  category: documents
+  website: https://github.com/docling-project/docling-serve
+  source: https://github.com/docling-project/docling-serve
+  docs: https://github.com/docling-project/docling-serve#readme
+  scalable: false
+  primary_service: docling-serve
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: docling-serve
+    scheme: http
+    port: 5001
+    path: /ui
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5001.
+services:
+  docling-serve:
+    image: ghcr.io/docling-project/docling-serve-cpu:latest
+    environment:
+      DOCLING_SERVE_ENABLE_UI: 'true'
+    ports:
+    - ${PORT:-5001}:5001/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RetroArch
+  summary: Run a private browser-hosted RetroArch desktop
+  description: Use HTTPS to open the private desktop and sign in with the web password from Nex. Open
+    your own compatible game files through the mounted library.
+  category: tools
+  website: https://www.retroarch.com/
+  source: https://github.com/libretro/RetroArch
+  docs: https://docs.linuxserver.io/images/docker-retroarch/
+  scalable: false
+  primary_service: retroarch
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: retroarch
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    ROMS:
+      label: Game library
+      help: Select This host. Store ROMs and legally obtained game files. This library is optional to
+        install but required to launch games. Include this folder in a stopped Nex backup.
+services:
+  retroarch:
+    image: lscr.io/linuxserver/retroarch:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8116}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${ROMS}:/roms
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

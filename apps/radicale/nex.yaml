@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Radicale
+  summary: Sync private calendars and contacts over HTTP extensions
+  description: Connect CalDAV and CardDAV clients through an HTTPS proxy. The package manages the admin
+    password from Nex and stores calendar collections in the application folder.
+  category: productivity
+  website: https://github.com/Kozea/Radicale
+  source: https://github.com/Kozea/Radicale
+  docs: https://radicale.org/v3.html
+  primary_service: radicale
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 5232
+  options:
+    ACCESS_PASSWORD:
+      label: Dav access password
+      type: password
+      help: Use Nex Generate. Connect with the username admin.
+    DATA:
+      label: Calendar and contact data
+      help: Radicale collection files and the authentication database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5232.
+services:
+  radicale:
+    image: ghcr.io/kozea/radicale:stable
+    command:
+    - 'umask 077
+
+      printf ''%s
+
+      '' "$$RADICALE_PASSWORD" | htpasswd -iBc /var/lib/radicale/nex-htpasswd admin
+
+      unset RADICALE_PASSWORD
+
+      exec /app/bin/radicale --hosts 0.0.0.0:5232 --auth-type htpasswd --auth-htpasswd-filename /var/lib/radicale/nex-htpasswd
+      --auth-htpasswd-encryption bcrypt --storage-filesystem-folder /var/lib/radicale/collections'
+    entrypoint:
+    - /bin/sh
+    - -ec
+    environment:
+      RADICALE_PASSWORD: ${ACCESS_PASSWORD}
+    volumes:
+    - ${DATA}:/var/lib/radicale
+    ports:
+    - ${PORT:-5232}:5232/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Directus
+  summary: Manage structured content and expose it over an API
+  description: Sign in with the initial administrator credentials, configure roles and permissions,
+    and set the public address for client access.
+  category: development
+  website: https://github.com/directus/directus
+  source: https://github.com/directus/directus
+  docs: https://directus.io/docs/self-hosting/quickstart
+  primary_service: directus
+  scalable: false
+  license: GPL-3.0-only
+  web:
+    port: 8055
+  options:
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email to use at first sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate.
+    SECRET:
+      label: Application secret
+      type: password
+      help: Use Nex Generate and retain the secret for restore.
+    BASE_URL:
+      label: Public web address
+      help: Enter the full browser-facing address including the scheme.
+    DATABASE:
+      label: Content database
+      help: Keep content database in this managed folder between restarts.
+    UPLOADS:
+      label: Uploads
+      help: Keep uploads in this managed folder between restarts.
+    EXTENSIONS:
+      label: Extensions
+      help: Keep extensions in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8055.
+services:
+  directus:
+    image: docker.io/directus/directus:latest
+    environment:
+      SECRET: ${SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DB_CLIENT: sqlite3
+      DB_FILENAME: /directus/database/data.db
+      PUBLIC_URL: ${BASE_URL}
+    volumes:
+    - ${DATABASE}:/directus/database
+    - ${UPLOADS}:/directus/uploads
+    - ${EXTENSIONS}:/directus/extensions
+    ports:
+    - ${PORT:-8055}:8055/tcp
+    deploy:
+      replicas: 1

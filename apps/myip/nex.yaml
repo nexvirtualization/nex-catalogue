@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MyIP
+  summary: Inspect your IP address, DNS and browser network settings
+  description: Run MyIP diagnostics from a browser. MaxMind GeoLite2 credentials are required for geolocation
+    and network ownership results. Keep the service accessible only to trusted users.
+  category: networking
+  website: https://ipcheck.ing
+  source: https://github.com/jason5ng32/MyIP
+  docs: https://docs.ipcheck.ing/developer/getting-started/
+  license: AGPL-3.0
+  primary_service: myip
+  architectures:
+  - amd64
+  - arm64
+  post_install: For a proxy, send trustworthy forwarded IP headers and set Allowed domains to the browser-facing
+    hostname. Complete the dataset download before testing location lookups.
+  web:
+    port: 18966
+  options:
+    MAXMIND_ACCOUNT_ID:
+      label: MaxMind account ID
+      help: Account ID for a MaxMind GeoLite2 account.
+    MAXMIND_LICENSE_KEY:
+      label: MaxMind licence key
+      help: GeoLite2 licence key for the account above.
+      type: password
+    ALLOWED_DOMAINS:
+      label: Allowed domains
+      help: Comma-separated browser-facing domain names for the backend allowlist. Use the address clients actually
+        open.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 18966. This setting is used when host port publishing is enabled.
+services:
+  myip:
+    image: docker.io/jason5ng32/myip:latest
+    ports:
+    - ${PORT:-18112}:18966/tcp
+    environment:
+      MAXMIND_ACCOUNT_ID: ${MAXMIND_ACCOUNT_ID}
+      MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY}
+      DATASET_AUTO_UPDATE: 'true'
+      ALLOWED_DOMAINS: ${ALLOWED_DOMAINS}
+    deploy:
+      replicas: 1

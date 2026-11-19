@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/runtipi/runtipi-appstore/blob/HEAD/apps/mstream/docker-compose.yml
+x-nex:
+  name: mStream
+  summary: Music streaming server with GUI management tools
+  category: media
+  description: Music streaming server with GUI management tools. Runs on Mac, Windows, and Linux. Back up the
+    application folders together and keep them writable by the container.
+  source: https://github.com/IrosTheBeggar/mStream
+  website: https://mstream.io/
+  docs: https://mstream.io/
+  primary_service: mstream
+  options:
+    TZ:
+      label: Tz
+    FOLDER_1:
+      label: Data folder
+      help: Nex-managed folder mounted at /data. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Music folder
+      help: Nex-managed folder mounted at /music. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 3000/tcp.
+  web:
+    port: 3000
+  post_install: Finish first-run setup and choose /music as a library. Mount it as a Nex share for existing
+    audio files.
+services:
+  mstream:
+    image: lscr.io/linuxserver/mstream:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: ${TZ}
+    volumes:
+    - ${FOLDER_1}:/data
+    - ${FOLDER_2}:/music
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-3000}:3000/tcp

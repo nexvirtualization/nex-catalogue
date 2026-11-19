@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CodiMD
+  summary: Edit and publish shared Markdown notes
+  description: Provision a PostgreSQL database and configure the hostname for the public HTTPS proxy.
+    Review the upstream account registration settings before letting other users reach the service.
+  category: productivity
+  website: https://hackmd.io/
+  source: https://github.com/hackmdio/codimd
+  docs: https://hackmdio.github.io/codimd/
+  scalable: false
+  primary_service: codimd
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: codimd
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_HOST:
+      label: Public Host
+      help: Public DNS hostname for the editor, without scheme or port.
+    APP_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Note uploads
+      help: Select This host. Stores files uploaded in the editor. Include this folder in a stopped Nex
+        backup.
+services:
+  codimd:
+    image: hackmdio/hackmd:latest
+    environment:
+      CMD_DB_URL: ${DATABASE_URL}
+      CMD_DOMAIN: ${PUBLIC_HOST}
+      CMD_PROTOCOL_USESSL: 'true'
+      CMD_SESSION_SECRET: ${APP_SECRET}
+      CMD_ALLOW_ANONYMOUS: 'false'
+    ports:
+    - ${PORT:-8459}:3000/tcp
+    volumes:
+    - ${DATA}:/home/hackmd/app/public/uploads
+    deploy:
+      replicas: 1

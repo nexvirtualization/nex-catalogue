@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: tubesync
+  summary: Maintain a local video archive from subscribed sources
+  description: Use the configured HTTP Basic credentials to open the dashboard. Add the sources you
+    want to archive and set retention and download settings.
+  category: downloads
+  website: https://github.com/meeb/tubesync
+  source: https://github.com/meeb/tubesync
+  docs: https://github.com/meeb/tubesync
+  primary_service: tubesync
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 4848
+  options:
+    ADMIN_USER:
+      label: Dashboard username
+      help: Username for HTTP Basic authentication.
+    ADMIN_PASSWORD:
+      label: Dashboard password
+      type: password
+      help: Use Nex Generate. Use HTTPS for connections beyond the trusted application network.
+    CONFIG:
+      label: TubeSync configuration
+      help: Keep tubesync configuration in this managed folder between restarts.
+    DOWNLOADS:
+      label: Downloaded media
+      help: Keep downloaded media in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4848.
+services:
+  tubesync:
+    image: ghcr.io/meeb/tubesync:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      HTTP_USER: ${ADMIN_USER:-admin}
+      HTTP_PASS: ${ADMIN_PASSWORD}
+    volumes:
+    - ${CONFIG}:/config
+    - ${DOWNLOADS}:/downloads
+    ports:
+    - ${PORT:-4848}:4848/tcp
+    deploy:
+      replicas: 1

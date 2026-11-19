@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TeslaMate
+  summary: Powerful data logger for Tesla vehicles
+  description: Powerful data logger for Tesla vehicles.
+  category: monitoring
+  source: https://github.com/teslamate-org/teslamate
+  website: https://github.com/teslamate-org/teslamate
+  docs: https://docs.teslamate.org/docs/installation/docker/
+  primary_service: teslamate
+  options:
+    ENCRYPTION_KEY:
+      label: Encryption key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_NAME:
+      label: Db name
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    TZ:
+      label: Tz
+    IMPORT:
+      label: Import folder
+      help: Choose the Nex-managed folder mounted at /opt/app/import.
+    PORT:
+      label: Published 4000/tcp port
+      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a PostgreSQL database before installing. Keep the UI behind authentication and store
+    backups of the encryption key. MQTT integration and Grafana dashboards are separate.
+  web:
+    port: 4000
+services:
+  teslamate:
+    image: docker.io/teslamate/teslamate:latest
+    deploy:
+      replicas: 1
+    environment:
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      DATABASE_USER: ${DB_USER}
+      DATABASE_PASS: ${DB_PASSWORD}
+      DATABASE_NAME: ${DB_NAME:-teslamate}
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT:-5432}
+      DISABLE_MQTT: 'true'
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+    - ${IMPORT}:/opt/app/import
+    ports:
+    - ${PORT:-19878}:4000/tcp

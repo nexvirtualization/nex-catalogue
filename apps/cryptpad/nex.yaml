@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CryptPad
+  summary: Edit and share encrypted documents collaboratively
+  description: CryptPad has a main web origin and a separate sandbox origin. Both must be configured with
+    HTTPS at the reverse proxy.
+  category: productivity
+  website: https://cryptpad.org
+  source: https://github.com/cryptpad/cryptpad
+  docs: https://github.com/cryptpad/cryptpad/blob/main/docker-compose.yml
+  primary_service: cryptpad
+  post_install: Configure both browser origins at your proxy and forward WebSockets. Use the CryptPad installation
+    checks and confirm document creation and editing.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    MAIN_URL:
+      label: Main HTTPS origin
+      help: Full HTTPS origin where users open CryptPad.
+    SANDBOX_URL:
+      label: Sandbox HTTPS origin
+      help: A distinct HTTPS origin dedicated to CryptPad’s isolated editor frames.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    BLOB:
+      label: Encrypted attachments
+      help: Managed directory mounted at /cryptpad/blob. Choose storage writable by the application.
+    BLOCK:
+      label: Encrypted login blocks
+      help: Managed directory mounted at /cryptpad/block. Choose storage writable by the application.
+    DATA:
+      label: Service data
+      help: Managed directory mounted at /cryptpad/data. Choose storage writable by the application.
+    FILES:
+      label: Encrypted documents
+      help: Managed directory mounted at /cryptpad/datastore. Choose storage writable by the application.
+    CONFIG:
+      label: Service configuration
+      help: Managed directory mounted at /cryptpad/config. Choose storage writable by the application.
+    CUSTOM:
+      label: Customization
+      help: Managed directory mounted at /cryptpad/customize. Choose storage writable by the application.
+    OFFICE_DIST:
+      label: Office integration assets
+      help: Managed directory mounted at /cryptpad/www/common/onlyoffice/dist. Choose storage writable by
+        the application.
+    OFFICE_CONF:
+      label: Office integration options
+      help: Managed directory mounted at /cryptpad/onlyoffice-conf. Choose storage writable by the application.
+services:
+  cryptpad:
+    image: docker.io/cryptpad/cryptpad:latest
+    ports:
+    - ${PORT:-20271}:3000/tcp
+    volumes:
+    - ${BLOB}:/cryptpad/blob
+    - ${BLOCK}:/cryptpad/block
+    - ${DATA}:/cryptpad/data
+    - ${FILES}:/cryptpad/datastore
+    - ${CONFIG}:/cryptpad/config
+    - ${CUSTOM}:/cryptpad/customize
+    - ${OFFICE_DIST}:/cryptpad/www/common/onlyoffice/dist
+    - ${OFFICE_CONF}:/cryptpad/onlyoffice-conf
+    environment:
+      CPAD_MAIN_DOMAIN: ${MAIN_URL}
+      CPAD_SANDBOX_DOMAIN: ${SANDBOX_URL}
+    deploy:
+      replicas: 1

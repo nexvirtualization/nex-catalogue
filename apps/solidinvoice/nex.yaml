@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SolidInvoice
+  summary: Create and send quotes and invoices
+  description: Open the web installer on a trusted network. Select the supported database and complete
+    administrator setup before making it available through HTTPS.
+  category: finance
+  website: https://solidinvoice.co
+  source: https://github.com/SolidInvoice/SolidInvoice
+  docs: https://github.com/SolidInvoice/SolidInvoice#readme
+  scalable: false
+  primary_service: solidinvoice
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: solidinvoice
+    scheme: http
+    port: 8765
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8765.
+    DATA:
+      label: Billing application state
+      help: Select This host. Stores configuration and generated application state. Include this folder
+        in a stopped Nex backup.
+services:
+  solidinvoice:
+    image: solidinvoice/solidinvoice:latest
+    ports:
+    - ${PORT:-8390}:8765/tcp
+    volumes:
+    - ${DATA}:/etc/solidinvoice
+    deploy:
+      replicas: 1

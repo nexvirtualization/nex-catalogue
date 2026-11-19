@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mailpit
+  summary: Capture test email and inspect it in a browser
+  description: This development SMTP server collects messages without delivering them to recipients. This install
+    keeps mail temporarily and uses one copy so the SMTP listener and UI share the same mailbox.
+  category: development
+  website: https://mailpit.axllent.org/
+  source: https://github.com/axllent/mailpit
+  docs: https://mailpit.axllent.org/docs/install/docker/
+  license: MIT
+  primary_service: mailpit
+  architectures:
+  - amd64
+  - arm64
+  post_install: Use the app connection name on port 1025 as the SMTP server for a Nex application. Keep SMTP
+    and the web interface on a trusted network.
+  web:
+    port: 8025
+  options:
+    SMTP_PORT:
+      label: Published SMTP port
+      help: Set the port used by clients outside Nex when host port publishing is enabled. The internal SMTP
+        listener is 1025.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8025. This setting is used when host port publishing is enabled.
+services:
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    ports:
+    - ${PORT:-18120}:8025/tcp
+    - ${SMTP_PORT:-18152}:1025/tcp
+    deploy:
+      replicas: 1

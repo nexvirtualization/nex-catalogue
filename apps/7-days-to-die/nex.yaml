@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 7 Days to Die
+  summary: Build and defend a shared world against zombie hordes
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep the folders on This host
+    with one eligible x86-64 host. First boot downloads the dedicated server from Steam and prepares the world.
+    From Join a Game, connect to the application's IPv4 address on port 26900 using the player password.
+    Allow TCP 26900 and UDP 26900–26902 for players. Steam checks for updates on start. Back up the world
+    folder with the app stopped before updating. This package starts a private vanilla PC server.
+  category: games
+  website: https://7daystodie.com/
+  source: https://github.com/RunOnFlux/7dtd-server-flux
+  docs: https://wiki.7d2d.net/hosting/
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+    DATA:
+      label: World and configuration
+      help: Include this folder in stopped backups. It holds the saves, generated worlds, and server configuration.
+    SERVER_FILES:
+      label: Downloaded server files
+      help: Steam can rebuild this folder. Allow space for the download and installation.
+    MODS:
+      label: Mods folder
+      help: This folder can stay empty for vanilla play. Back it up if you add compatible mods.
+services:
+  7-days-to-die:
+    image: docker.io/runonflux/7dtd-server-flux:latest
+    expose:
+      - "26900/tcp"
+      - "26900/udp"
+      - "26901/udp"
+      - "26902/udp"
+    environment:
+      SDTD_ServerName: ${SERVER_NAME:-7 Days to Die}
+      SDTD_ServerPassword: ${SERVER_PASSWORD}
+      SDTD_ServerVisibility: "0"
+      STEAM_BRANCH: public
+      FLUX_CROSSPLAY: "false"
+      FLUX_BACKUP_KEEP: "0"
+    volumes:
+      - ${DATA}:/mnt/7dtd/data
+      - ${SERVER_FILES}:/mnt/7dtd/server
+      - ${MODS}:/mnt/7dtd/mods
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

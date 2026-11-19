@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://silverbullet.md/Install/Docker
+x-nex:
+  name: SilverBullet
+  summary: Note-taking application optimized for people with a hacker mindset
+  category: productivity
+  description: Note-taking application optimized for people with a hacker mindset. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/silverbulletmd/silverbullet
+  website: https://silverbullet.md/
+  docs: https://silverbullet.md/
+  primary_service: silverbullet
+  options:
+    FOLDER_1:
+      label: Space folder
+      help: Nex-managed folder mounted at /space. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 3000/tcp.
+    WEB_USER:
+      label: Space username
+    WEB_PASSWORD:
+      label: Space password
+      help: Choose a strong password without a colon.
+      type: password
+  web:
+    port: 3000
+  post_install: Sign in with the configured username and password. The space folder contains all Markdown pages
+    and assets.
+services:
+  silverbullet:
+    image: ghcr.io/silverbulletmd/silverbullet:v2
+    environment:
+      SB_USER: ${WEB_USER:-admin}:${WEB_PASSWORD}
+    volumes:
+    - ${FOLDER_1}:/space
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-3000}:3000/tcp

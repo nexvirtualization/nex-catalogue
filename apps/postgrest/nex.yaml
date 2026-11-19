@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PostgREST
+  summary: Turns tables, views, and functions in an existing PostgreSQL database into a REST API
+  description: Turns tables, views, and functions in an existing PostgreSQL database into a REST API.
+  category: development
+  source: https://github.com/PostgREST/postgrest
+  website: https://postgrest.org/
+  docs: https://docs.postgrest.org/en/stable/references/configuration.html
+  primary_service: postgrest
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: A PostgreSQL URI with the authenticator role and the database name.
+    DB_SCHEMAS:
+      label: Db schemas
+    ANON_ROLE:
+      label: Anon role
+    JWT_SECRET:
+      label: Jwt secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL roles and grants in advance. Include the database role password in the
+    connection URI and use a JWT signing secret of at least 32 characters.
+services:
+  postgrest:
+    image: docker.io/postgrest/postgrest:latest
+    deploy:
+      replicas: 1
+    environment:
+      PGRST_DB_URI: ${DATABASE_URL}
+      PGRST_DB_SCHEMAS: ${DB_SCHEMAS:-public}
+      PGRST_DB_ANON_ROLE: ${ANON_ROLE}
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+    ports:
+    - ${PORT:-19950}:3000/tcp

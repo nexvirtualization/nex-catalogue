@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Onset
+  summary: Run multiplayer scenarios for the Onset scripting sandbox
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use UDP 7777 for gameplay, UDP 7776 for discovery and TCP 7775 for client file downloads. Place
+    gamemode assets in the managed server folder before enabling them. SteamCMD downloads the server
+    on first boot and checks for updates on restart. Allow time for the first download. Make a stopped
+    backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1105810/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/onset
+  docs: https://dev.playonset.com/wiki/DedicatedServer
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  onset:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    expose:
+      - 7777/udp
+      - 7776/udp
+      - 7775/tcp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        # SPDX-License-Identifier: AGPL-3.0-only
+        # Embedded in catalogue manifests that install a server through SteamCMD.
+        # A package passes a dedicated-server app ID and either linux or windows.
+        nex_steamcmd_update() {
+          local app_id="$$1" platform="$$2"
+          local archive attempt architecture steamclient
+          local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+          cd "$$HOME"
+          mkdir -p steamcmd serverfiles
+          if [[ ! -x steamcmd/steamcmd.sh ]]; then
+            archive=$$(mktemp)
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+              || ! tar -xzf "$$archive" -C steamcmd; then
+              rm -f "$$archive"
+              return 1
+            fi
+            rm -f "$$archive"
+          fi
+
+          if [[ "$$platform" == windows ]]; then
+            update+=(+@sSteamCmdForcePlatformType windows)
+          fi
+          update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+          for attempt in 1 2 3; do
+            if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+              break
+            fi
+            if [[ "$$attempt" == 3 ]]; then
+              return 1
+            fi
+            sleep "$$((attempt * 5))"
+          done
+
+          for architecture in 32 64; do
+            steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+            if [[ -f "$$steamclient" ]]; then
+              mkdir -p ".steam/sdk$$architecture"
+              ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+            fi
+          done
+          cd serverfiles
+        }
+
+        nex_steamcmd_update 1204170 linux
+        exec ./OnsetServer --noinput

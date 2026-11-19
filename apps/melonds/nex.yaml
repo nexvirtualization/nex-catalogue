@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: melonDS
+  summary: Run a Nintendo DS emulator in a private browser desktop
+  description: Sign in to the private HTTPS desktop. Open compatible game and firmware files you provide.
+    Save emulation state in the managed game files folder or configuration folder.
+  category: tools
+  website: https://github.com/melonDS-emu/melonDS
+  source: https://github.com/melonDS-emu/melonDS
+  docs: https://docs.linuxserver.io/images/docker-melonds/
+  scalable: false
+  primary_service: melonds
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: melonds
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    GAME_FILES:
+      label: Game files
+      help: Select This host. Stores the compatible ROM or firmware files you provide. Include this folder
+        in a stopped Nex backup.
+services:
+  melonds:
+    image: lscr.io/linuxserver/melonds:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8165}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${GAME_FILES}:/games
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Graylog
+  summary: Search, aggregate, and analyze infrastructure logs
+  description: Provision a compatible MongoDB and self-managed OpenSearch before starting. Use a trailing
+    slash in the Graylog HTTPS URL. Create inputs for the protocols you will receive and publish only their
+    required ports.
+  category: monitoring
+  website: https://www.graylog.org/
+  source: https://github.com/Graylog2/graylog2-server
+  docs: https://go2docs.graylog.org/current/downloading_and_installing_graylog/docker_installation_os.htm
+  primary_service: graylog
+  post_install: Provision a compatible MongoDB and self-managed OpenSearch before starting. Use a trailing
+    slash in the Graylog HTTPS URL. Create inputs for the protocols you will receive and publish only their
+    required ports.
+  license: SSPL-1.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9000
+  options:
+    SEARCH_URI:
+      label: Search uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ROOT_PASSWORD_SHA256:
+      label: Root password sha256
+      help: Enter the 64-character SHA-256 digest of the administrator password.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9000 inside Nex.
+    GELF_PORT:
+      label: Published GELF TCP input
+      help: Host-published port for the internal 12201/tcp endpoint.
+    DATA:
+      label: Graylog configuration and journal
+      help: Managed directory mounted at /usr/share/graylog/data. Choose storage writable by the application.
+services:
+  graylog:
+    image: docker.io/graylog/graylog:7.2
+    ports:
+    - ${PORT:-23568}:9000/tcp
+    - ${GELF_PORT:-24568}:12201/tcp
+    volumes:
+    - ${DATA}:/usr/share/graylog/data
+    environment:
+      GRAYLOG_NODE_ID_FILE: /usr/share/graylog/data/config/node-id
+      GRAYLOG_HTTP_BIND_ADDRESS: 0.0.0.0:9000
+      GRAYLOG_ELASTICSEARCH_HOSTS: ${SEARCH_URI}
+      GRAYLOG_MONGODB_URI: ${MONGO_URI}
+      GRAYLOG_PASSWORD_SECRET: ${SIGNING_SECRET}
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${ROOT_PASSWORD_SHA256}
+      GRAYLOG_HTTP_EXTERNAL_URI: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

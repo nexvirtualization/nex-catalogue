@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MiroTalk SFU
+  summary: Host WebRTC meetings with server-side media forwarding
+  description: Choose a dedicated Primary network reachable by participants. Route the web interface through
+    HTTPS and allow TCP and UDP 40000 to the app address. Set the public browser URL and announced address
+    before opening rooms.
+  category: communication
+  website: https://sfu.mirotalk.com
+  source: https://github.com/miroslavpejic85/mirotalksfu
+  docs: https://github.com/miroslavpejic85/mirotalksfu/blob/main/.env.template
+  scalable: false
+  primary_service: mirotalk-sfu
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: mirotalk-sfu
+    scheme: http
+    port: 3010
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    RTC_ADDRESS:
+      label: Rtc Address
+      help: Client-reachable IP address or DNS name announced for RTC.
+    HOST_USERS:
+      label: Authorized host accounts
+      help: Use the upstream HOST_USERS format, with at least one username, strong password and permitted
+        rooms.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3010.
+services:
+  mirotalk-sfu:
+    image: mirotalk/sfu:latest
+    environment:
+      SERVER_HOST_URL: ${PUBLIC_URL}
+      SFU_ANNOUNCED_IP: ${RTC_ADDRESS}
+      SFU_LISTEN_IP: 0.0.0.0
+      SFU_MIN_PORT: '40000'
+      SFU_MAX_PORT: '40000'
+      SFU_NUM_WORKERS: '1'
+      SFU_SERVER: 'true'
+      HOST_PROTECTED: 'true'
+      HOST_USER_AUTH: 'true'
+      HOST_USERS: ${HOST_USERS}
+    ports:
+    - ${PORT:-3010}:3010/tcp
+    expose:
+    - 40000/tcp
+    - 40000/udp
+    deploy:
+      replicas: 1

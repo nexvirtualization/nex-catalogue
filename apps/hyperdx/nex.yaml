@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HyperDX
+  summary: Inspect application logs, traces and metrics with ClickStack
+  description: Complete HyperDX onboarding on a trusted endpoint. Route authenticated ingestion to the
+    matching OpenTelemetry port. This single-container profile keeps analytics and user data on the
+    same host.
+  category: monitoring
+  website: https://github.com/hyperdxio/hyperdx
+  source: https://github.com/hyperdxio/hyperdx
+  docs: https://clickhouse.com/docs/use-cases/observability/clickstack/deployment/all-in-one
+  primary_service: hyperdx
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    LOGDATA:
+      label: ClickHouse analytics data
+      help: Keep clickhouse analytics data in this managed folder between restarts.
+    ACCOUNTS:
+      label: HyperDX user data
+      help: Keep hyperdx user data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    OTLP_GRPC:
+      label: OTLP gRPC ingest
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4317.
+    OTLP_HTTP:
+      label: OTLP HTTP ingest
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4318.
+services:
+  hyperdx:
+    image: docker.io/clickhouse/clickstack-all-in-one:latest
+    volumes:
+    - ${LOGDATA}:/var/lib/clickhouse
+    - ${ACCOUNTS}:/data/db
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${OTLP_GRPC:-4317}:4317/tcp
+    - ${OTLP_HTTP:-4318}:4318/tcp
+    deploy:
+      replicas: 1

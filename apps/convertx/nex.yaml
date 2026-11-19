@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ConvertX
+  summary: Convert documents, images and other files in a browser
+  description: Use a client-facing HTTPS proxy for sign-in. Complete first-account registration on a
+    trusted endpoint before letting other users connect.
+  category: tools
+  website: https://github.com/C4illin/ConvertX
+  source: https://github.com/C4illin/ConvertX
+  docs: https://github.com/C4illin/ConvertX
+  primary_service: convertx
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    SIGNING_KEY:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and keep the key unchanged across restarts.
+    DATA:
+      label: Accounts and conversion data
+      help: ConvertX SQLite data, uploads and outputs.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:latest
+    environment:
+      JWT_SECRET: ${SIGNING_KEY}
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

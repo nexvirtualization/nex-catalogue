@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: QuestDB
+  summary: Store and query time-series data
+  description: Keep the database in a private network and configure access controls before allowing
+    client connections. Use the web SQL console or connect supported clients directly.
+  category: development
+  website: https://github.com/questdb/questdb
+  source: https://github.com/questdb/questdb
+  docs: https://questdb.com/docs/deployment/docker/
+  primary_service: questdb
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 9000
+  options:
+    DATA:
+      label: Time-series database
+      help: Keep time-series database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9000.
+    PG_PORT:
+      label: PostgreSQL protocol port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8812.
+    LINE_PORT:
+      label: Line-protocol ingest port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9009.
+services:
+  questdb:
+    image: docker.io/questdb/questdb:latest
+    volumes:
+    - ${DATA}:/var/lib/questdb
+    ports:
+    - ${PORT:-9000}:9000/tcp
+    - ${PG_PORT:-8812}:8812/tcp
+    - ${LINE_PORT:-9009}:9009/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Donetick
+  summary: Share and track recurring household chores
+  description: Donetick uses a SQLite database on managed Nex storage. App-specific configuration stays separate.
+  category: productivity
+  website: https://donetick.com
+  source: https://github.com/donetick/donetick
+  docs: https://github.com/donetick/donetick
+  primary_service: donetick
+  post_install: Open the web interface and configure your household and first users. Back up the database
+    and any custom configuration.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 2021
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 2021 inside Nex.
+    DATA:
+      label: Tasks and accounts
+      help: Managed directory mounted at /donetick-data. Choose storage writable by the application.
+    CONFIG:
+      label: Donetick configuration
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+services:
+  donetick:
+    image: docker.io/donetick/donetick:latest
+    ports:
+    - ${PORT:-20221}:2021/tcp
+    volumes:
+    - ${DATA}:/donetick-data
+    - ${CONFIG}:/config
+    environment:
+      DT_ENV: selfhosted
+      DT_SQLITE_PATH: /donetick-data/donetick.db
+    deploy:
+      replicas: 1

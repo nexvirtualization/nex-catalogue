@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vintage Story
+  summary: Host a persistent wilderness survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use Multiplayer and add the app’s Primary address on port 42420. Match the client to the stable
+    server version. A restart checks the publisher for updates. Make a stopped backup before applying
+    game updates.
+  category: games
+  website: https://www.vintagestory.at/
+  source: https://github.com/indifferentbroccoli/vintage-story-server-docker
+  docs: https://github.com/indifferentbroccoli/vintage-story-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - multiplayer
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed in the game’s server browser.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  vintage-story:
+    image: docker.io/indifferentbroccoli/vintage-story-server-docker:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Vintage Story}
+      SERVER_PASSWORD: ${JOIN_PASSWORD}
+      PUID: '1000'
+      PGID: '1000'
+      VS_VERSION: latest
+      VS_BRANCH: stable
+      UPDATE_ON_START: 'true'
+    expose:
+      - 42420/tcp
+      - 42420/udp
+    volumes:
+      - ${DATA}:/home/vintagestory/server-data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

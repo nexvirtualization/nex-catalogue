@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kestra
+  summary: Run workflows in a single-node orchestration service
+  description: Prepare PostgreSQL with a dedicated database account. Sign in with the configured credentials
+    on a trusted network or through HTTPS. Use task runners that do not require Docker host access.
+  category: development
+  website: https://kestra.io
+  source: https://github.com/kestra-io/kestra
+  docs: https://kestra.io/docs/installation/docker
+  scalable: false
+  primary_service: kestra
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: kestra
+    scheme: http
+    port: 8080
+  works_with:
+  - postgresql
+  options:
+    JDBC_URL:
+      label: Jdbc Url
+      help: Enter jdbc:postgresql://host:5432/database for the prepared database.
+    DB_USER:
+      label: Db User
+      help: Database user with permission to run migrations.
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for initial application sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    DB_PASSWORD:
+      label: Database password
+      help: Use a database password safe in a YAML plain scalar, such as an alphanumeric password.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Workflow storage
+      help: Select This host. Stores workflow inputs, files and execution data. Include this folder in
+        a stopped Nex backup.
+    WORK:
+      label: Task working directory
+      help: Select This host. Used by compatible task runners for working files. Include this folder in
+        a stopped Nex backup.
+services:
+  kestra:
+    image: kestra/kestra:latest
+    environment:
+      KESTRA_CONFIGURATION: "datasources:\n  postgres:\n    url: ${JDBC_URL}\n    driverClassName: org.postgresql.Driver\n\
+        \    username: ${DB_USER}\n    password: ${DB_PASSWORD}\nkestra:\n  server:\n    basic-auth:\n\
+        \      enabled: true\n      username: ${ADMIN_EMAIL}\n      password: ${ADMIN_PASSWORD}\n  repository:\n\
+        \    type: postgres\n  queue:\n    type: postgres\n  storage:\n    type: local\n    local:\n \
+        \     base-path: /app/storage\n  tasks:\n    tmp-dir:\n      path: /app/work\n"
+    command:
+    - server
+    - standalone
+    ports:
+    - ${PORT:-8809}:8080/tcp
+    volumes:
+    - ${DATA}:/app/storage
+    - ${WORK}:/app/work
+    deploy:
+      replicas: 1

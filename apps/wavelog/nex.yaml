@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wavelog
+  summary: Log amateur radio contacts and manage station records
+  description: Before deployment, create an empty MariaDB database and a dedicated account. Prepare the
+    configuration folder so UID 33 can write to it. Open /install on a trusted network using the final
+    public address and enter the database host, database name, and account there.
+  category: productivity
+  website: https://www.wavelog.org
+  source: https://github.com/wavelog/wavelog
+  docs: https://docs.wavelog.org/getting-started/installation/docker/
+  scalable: false
+  primary_service: wavelog
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: wavelog
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    CONFIG:
+      label: Application configuration
+      help: Select This host. Choose an empty folder writable by UID 33 and GID 33 for a fresh installation.
+        The installer writes config.php and database.php here. Include this folder in a stopped Nex backup.
+    UPLOADS:
+      label: Uploaded files
+      help: Select This host. Stores files uploaded through Wavelog. Include this folder in a stopped
+        Nex backup.
+    USERDATA:
+      label: User data
+      help: Select This host. Stores user-managed files. Include this folder in a stopped Nex backup.
+services:
+  wavelog:
+    image: ghcr.io/wavelog/wavelog:latest
+    environment:
+      CI_ENV: docker
+      PUID: '33'
+      PGID: '33'
+    ports:
+    - ${PORT:-8452}:80/tcp
+    volumes:
+    - ${CONFIG}:/var/www/html/application/config/docker
+    - ${UPLOADS}:/var/www/html/uploads
+    - ${USERDATA}:/var/www/html/userdata
+    deploy:
+      replicas: 1

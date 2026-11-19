@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Yacy
+  summary: Run a locally controlled search engine and crawler
+  description: On a trusted network, sign in with the upstream default administrator credentials and
+    change the password. Choose permitted sites to index and review peer network settings.
+  category: tools
+  website: https://github.com/yacy/yacy_search_server
+  source: https://github.com/yacy/yacy_search_server
+  docs: https://github.com/yacy/yacy_search_server
+  primary_service: yacy
+  scalable: false
+  license: GPL-2.0
+  web:
+    port: 8090
+  options:
+    DATA:
+      label: Search index and preferences
+      help: Keep search index and preferences in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8090.
+services:
+  yacy:
+    image: docker.io/yacy/yacy_search_server:latest
+    volumes:
+    - ${DATA}:/opt/yacy_search_server/DATA
+    ports:
+    - ${PORT:-8090}:8090/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Yamtrack
+  summary: Track the media you watch, read and play
+  description: Create the first account on a trusted network and review its registration settings. The
+    included event broker stays on the private app network.
+  category: media
+  website: https://github.com/FuzzyGrim/Yamtrack
+  source: https://github.com/FuzzyGrim/Yamtrack
+  docs: https://github.com/FuzzyGrim/Yamtrack
+  primary_service: yamtrack
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and retain it through restores.
+    DATA:
+      label: Media tracking database
+      help: Keep media tracking database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  yamtrack:
+    image: ghcr.io/fuzzygrim/yamtrack:latest
+    environment:
+      SECRET: ${SECRET}
+      REDIS_URL: redis://broker:6379
+    volumes:
+    - ${DATA}:/yamtrack/db
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1
+  broker:
+    image: docker.io/valkey/valkey:latest
+    deploy:
+      replicas: 1

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Palworld
+  summary: Explore and build together in a private Palworld world
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep the server folder on This host
+    with one eligible host. Wait for the Steam download on first boot. Connect from the game's multiplayer menu
+    to the application's IPv4 address on UDP 8211. The server is unlisted. Allow players to reach only UDP 8211
+    at your network firewall. The password-protected REST API on TCP 8212 is used to save the world on shutdown.
+    The server checks for game updates on restart. Back up the server folder with the app stopped before updating.
+  category: games
+  website: https://www.palworldgame.com/
+  source: https://github.com/thijsvanloef/palworld-server-docker
+  docs: https://docs.palworldgame.com/
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Generate a separate password for the administrator and the save API. Share only the player password.
+    DATA:
+      label: Server files and saves
+      help: Keep this folder on This host. It holds the world, configuration, and downloaded server files.
+services:
+  palworld:
+    image: docker.io/thijsvanloef/palworld-server-docker:latest
+    expose:
+      - "8211/udp"
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Palworld}
+      SERVER_PASSWORD: ${SERVER_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      COMMUNITY: "false"
+      RCON_ENABLED: "false"
+      REST_API_ENABLED: "true"
+      UPDATE_ON_BOOT: "true"
+      AUTO_UPDATE_ENABLED: "false"
+    volumes:
+      - ${DATA}:/palworld
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

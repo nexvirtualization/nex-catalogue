@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Routr
+  summary: Route SIP traffic for your own phone infrastructure
+  description: Select a prepared routr.yaml configuration directory and migrate the PostgreSQL schema
+    upstream before starting. Use a reachable SIP address and restrict gateway access to permitted trunks.
+  category: communication
+  website: https://github.com/fonoster/routr
+  source: https://github.com/fonoster/routr
+  docs: https://github.com/fonoster/routr
+  primary_service: routr
+  scalable: false
+  license: MIT
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    ROUTR_API_KEY:
+      label: Management API key
+      type: password
+      help: Supply the key referenced by the prepared configuration.
+    DOCKER_HOST_ADDRESS:
+      label: Public SIP address
+      help: Client-reachable IP address for your phone infrastructure.
+    CONFIG:
+      label: Prepared SIP routing configuration
+      help: Keep prepared sip routing configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 51907.
+    SIP_TCP_PORT:
+      label: SIP TCP endpoint
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5060.
+    SIP_UDP_PORT:
+      label: SIP UDP endpoint
+      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5060.
+services:
+  routr:
+    image: docker.io/fonoster/routr-one:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ROUTR_API_KEY: ${ROUTR_API_KEY}
+      DOCKER_HOST_ADDRESS: ${DOCKER_HOST_ADDRESS}
+    volumes:
+    - ${CONFIG}:/etc/routr
+    ports:
+    - ${PORT:-51907}:51907/tcp
+    - ${SIP_TCP_PORT:-5060}:5060/tcp
+    - ${SIP_UDP_PORT:-5062}:5060/udp
+    deploy:
+      replicas: 1

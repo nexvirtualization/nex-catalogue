@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Counter-Strike 2
+  summary: Host private Counter-Strike 2 matches with friends
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Select a registered primary
+    network that players can reach, then connect to APP-IP:27015 from the in-game developer
+    console using connect. Allow at least 60 GB for SteamCMD's first download. Restart through
+    Nex to check for game updates. Take a stopped backup before updating.
+  category: games
+  website: https://www.counter-strike.net/cs2
+  source: https://github.com/joedwards32/CS2
+  docs: https://developer.valvesoftware.com/wiki/Counter-Strike_2/Dedicated_Servers
+  license: Proprietary game server
+  architectures: [amd64]
+  memory_mib: 2048
+  tags:
+    - steam
+    - multiplayer
+  options:
+    STEAM_TOKEN:
+      label: Steam game server login token
+      type: password
+      help: Create a separate 32-character token for this server with Steam app ID 730.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use Generate or enter 8 to 64 letters and numbers. Share this password with your players.
+    RCON_PASSWORD:
+      label: RCON password
+      type: password
+      help: Use Generate or enter 16 to 64 letters and numbers. Keep this separate from the join password.
+    DATA:
+      label: Server data
+      help: Keeps the installed server and its configuration. Include this folder in stopped backups.
+services:
+  counter-strike-2:
+    image: docker.io/joedwards32/cs2:latest
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        [[ "$$SRCDS_TOKEN" =~ ^[[:xdigit:]]{32}$$ ]] || { echo 'Enter a valid Steam game server login token' >&2; exit 1; }
+        [[ "$$CS2_PW" =~ ^[A-Za-z0-9]{8,64}$$ ]] || { echo 'Use 8 to 64 letters and numbers for the join password' >&2; exit 1; }
+        [[ "$$CS2_RCONPW" =~ ^[A-Za-z0-9]{16,64}$$ ]] || { echo 'Use 16 to 64 letters and numbers for the RCON password' >&2; exit 1; }
+        exec /bin/bash /home/steam/entry.sh
+    environment:
+      SRCDS_TOKEN: ${STEAM_TOKEN}
+      CS2_PW: ${JOIN_PASSWORD}
+      CS2_RCONPW: ${RCON_PASSWORD}
+      CS2_SERVERNAME: Nex Counter-Strike 2
+      CS2_IP: 0.0.0.0
+    expose:
+      - "27015/udp"
+    volumes:
+      - ${DATA}:/home/steam/cs2-dedicated
+    deploy:
+      replicas: 1

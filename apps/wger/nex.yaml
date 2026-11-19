@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: wger
+  summary: Plan training routines and log health and nutrition activity
+  description: Prepare PostgreSQL and a Redis-compatible cache. Set a browser-facing URL and finish
+    account setup from a trusted network.
+  category: productivity
+  website: https://github.com/wger-project/wger
+  source: https://github.com/wger-project/wger
+  docs: https://github.com/wger-project/docker
+  primary_service: wger
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    DJANGO_DB_HOST:
+      label: Database hostname
+      help: Reachable PostgreSQL server.
+    DJANGO_DB_DATABASE:
+      label: Database name
+      help: Prepared Wger database.
+    DJANGO_DB_USER:
+      label: Database user
+      help: Dedicated database user.
+    DJANGO_DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of the database user.
+    SECRET_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DJANGO_CACHE_LOCATION:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    MEDIA:
+      label: Exercise images and uploads
+      help: Keep exercise images and uploads in this managed folder between restarts.
+    STATIC:
+      label: Generated web assets
+      help: Keep generated web assets in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  wger:
+    image: docker.io/wger/server:latest
+    environment:
+      DJANGO_DB_ENGINE: django.db.backends.postgresql
+      DJANGO_DB_PORT: '5432'
+      DJANGO_DB_HOST: ${DJANGO_DB_HOST}
+      DJANGO_DB_DATABASE: ${DJANGO_DB_DATABASE}
+      DJANGO_DB_USER: ${DJANGO_DB_USER}
+      DJANGO_DB_PASSWORD: ${DJANGO_DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      DJANGO_CACHE_LOCATION: ${DJANGO_CACHE_LOCATION}
+      SITE_URL: ${PUBLIC_URL}
+    volumes:
+    - ${MEDIA}:/home/wger/media
+    - ${STATIC}:/home/wger/static
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

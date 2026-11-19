@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: auto-mcs
+  summary: Manage Minecraft servers through the auto-mcs web interface
+  description: Set unique web credentials. The web UI runs as a server manager. A Minecraft server configured
+    for port 25565 is reachable on the dedicated app address when the registered Primary network is reachable
+    from players.
+  category: tools
+  website: https://www.auto-mcs.com
+  source: https://github.com/macarooni-man/auto-mcs
+  docs: https://github.com/macarooni-man/auto-mcs#readme
+  scalable: false
+  primary_service: auto-mcs
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: auto-mcs
+    scheme: http
+    port: 8080
+  works_with:
+  - minecraft-java
+  options:
+    WEB_USERNAME:
+      label: Web login
+      help: Account name for the server manager.
+    WEB_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    TZ:
+      label: Time zone
+      help: IANA time zone used for server logs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Server instances
+      help: Select This host. Stores Minecraft installations, worlds and manager settings. Include this
+        folder in a stopped Nex backup.
+services:
+  auto-mcs:
+    image: macarooniman/auto-mcs:latest
+    environment:
+      WEB_PORT: '8080'
+      WEB_USERNAME: ${WEB_USERNAME:-admin}
+      WEB_PASSWORD: ${WEB_PASSWORD}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8159}:8080/tcp
+    expose:
+    - 25565/tcp
+    - 7001/tcp
+    volumes:
+    - ${DATA}:/root/.auto-mcs
+    deploy:
+      replicas: 1

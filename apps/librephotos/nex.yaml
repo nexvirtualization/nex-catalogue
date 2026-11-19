@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LibrePhotos
+  summary: Index a private photo collection and create albums
+  description: Select the photo library, create the initial administrator on a trusted network and start
+    a scan. The unified image uses its embedded database and supports CPU-based processing.
+  category: media
+  website: https://github.com/LibrePhotos/librephotos
+  source: https://github.com/LibrePhotos/librephotos
+  docs: https://docs.librephotos.com/docs/installation/unified-deployment/
+  primary_service: librephotos
+  scalable: false
+  license: MIT
+  web:
+    port: 8001
+  options:
+    PHOTOS:
+      label: Photo library
+      help: Keep photo library in this managed folder between restarts.
+    DATA:
+      label: Persistent photo metadata
+      help: Keep persistent photo metadata in this managed folder between restarts.
+    LOGS:
+      label: Application logs
+      help: Keep application logs in this managed folder between restarts.
+    CACHE:
+      label: Model cache
+      help: Keep model cache in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8001.
+services:
+  librephotos:
+    image: docker.io/reallibrephotos/librephotos-unified:latest
+    volumes:
+    - ${PHOTOS}:/data
+    - ${DATA}:/protected_media
+    - ${LOGS}:/logs
+    - ${CACHE}:/root/.cache
+    ports:
+    - ${PORT:-8001}:8001/tcp
+    deploy:
+      replicas: 1

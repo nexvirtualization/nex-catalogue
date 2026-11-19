@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: InfluxDB
+  summary: Store and query time-series data with InfluxDB 3 Core
+  description: Use the single-node storage engine with a local filesystem object store. The API listens on
+    TCP 8181.
+  category: development
+  website: https://influxdata.com/
+  source: https://github.com/influxdata/influxdb
+  docs: https://docs.influxdata.com/influxdb3/core/get-started/setup/
+  primary_service: influxdb
+  post_install: Place the upstream-format token.json in Prepared bootstrap tokens before starting. Keep the
+    API on the private Nex network. Supply the operator token to the client.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  options:
+    DATA:
+      label: Time-series data
+      help: Managed directory mounted at /var/lib/influxdb3/data. Choose storage writable by the application.
+    TOKEN:
+      label: Prepared bootstrap tokens
+      help: Managed directory mounted at /nex-bootstrap. Choose storage readable by the application.
+services:
+  influxdb:
+    image: docker.io/library/influxdb:3.12.2-core
+    volumes:
+    - ${DATA}:/var/lib/influxdb3/data
+    - ${TOKEN}:/nex-bootstrap:ro
+    command:
+    - influxdb3
+    - serve
+    - --node-id=nex
+    - --object-store=file
+    - --data-dir=/var/lib/influxdb3/data
+    - --admin-token-file=/nex-bootstrap/token.json
+    deploy:
+      replicas: 1

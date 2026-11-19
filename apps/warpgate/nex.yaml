@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Warpgate
+  summary: Manage authorized gateway access to remote services
+  description: Prepare the gateway folder with the upstream Warpgate setup command before installing.
+    Select the prepared folder and open the HTTPS administration interface. This profile publishes HTTPS
+    and SSH only.
+  category: security
+  website: https://github.com/warp-tech/warpgate
+  source: https://github.com/warp-tech/warpgate
+  docs: https://warpgate.null.page/getting-started-on-docker/
+  primary_service: warpgate
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: Prepared gateway data
+      help: Select a folder initialized by Warpgate setup. It must contain warpgate.yaml, the certificate
+        and private key, and database state.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8888.
+    SSH_PORT:
+      label: SSH gateway port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 2222.
+services:
+  warpgate:
+    image: ghcr.io/warp-tech/warpgate:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8888}:8888/tcp
+    - ${SSH_PORT:-2222}:2222/tcp
+    deploy:
+      replicas: 1

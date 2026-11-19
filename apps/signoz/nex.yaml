@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SigNoz
+  summary: Explore application telemetry from a ClickHouse store
+  description: Provision and migrate the ClickHouse telemetry schema and configure a compatible external
+    SigNoz collector first. Connect observability dashboards through your trusted HTTPS endpoint.
+  category: monitoring
+  website: https://github.com/SigNoz/signoz
+  source: https://github.com/SigNoz/signoz
+  docs: https://signoz.io/docs/install/self-host/
+  primary_service: signoz
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN:
+      label: ClickHouse connection URL
+      type: password
+      help: Use an authenticated DSN pointing to the migrated telemetry store.
+    SIGNOZ_TOKENIZER_JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DATA:
+      label: Dashboard database and local state
+      help: Keep dashboard database and local state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  signoz:
+    image: docker.io/signoz/signoz:latest
+    environment:
+      SIGNOZ_SQLSTORE_PROVIDER: sqlite
+      SIGNOZ_SQLSTORE_SQLITE_PATH: /var/lib/signoz/signoz.db
+      SIGNOZ_TELEMETRYSTORE_PROVIDER: clickhouse
+      SIGNOZ_ALERTMANAGER_PROVIDER: signoz
+      SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN: ${SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN}
+      SIGNOZ_TOKENIZER_JWT_SECRET: ${SIGNOZ_TOKENIZER_JWT_SECRET}
+    volumes:
+    - ${DATA}:/var/lib/signoz
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

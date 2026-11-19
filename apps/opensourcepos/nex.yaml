@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open Source POS
+  summary: Manage a point of sale, catalogue and transaction history
+  description: Provision a MariaDB database using the upstream application schema. Connect it by a private
+    network address and change the upstream initial account password before using the register.
+  category: management
+  website: https://github.com/opensourcepos/opensourcepos
+  source: https://github.com/opensourcepos/opensourcepos
+  docs: https://github.com/opensourcepos/opensourcepos
+  primary_service: opensourcepos
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    HOSTNAME:
+      label: Allowed hostname
+      help: Browser-facing hostname without a scheme.
+    DB_USER:
+      label: Database user
+      help: MariaDB application user.
+    DB_NAME:
+      label: Database name
+      help: Initialized point-of-sale database name.
+    DB_HOST:
+      label: Database hostname
+      help: Reachable MariaDB service name or address.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the preconfigured database user.
+    UPLOADS:
+      label: Product uploads
+      help: Keep product uploads in this managed folder between restarts.
+    LOGS:
+      label: Application logs
+      help: Keep application logs in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  opensourcepos:
+    image: docker.io/jekkos/opensourcepos:latest
+    environment:
+      CI_ENVIRONMENT: production
+      ALLOWED_HOSTNAMES: ${HOSTNAME}
+      FORCE_HTTPS: 'false'
+      PHP_TIMEZONE: UTC
+      MYSQL_USERNAME: ${DB_USER:-ospos}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DB_NAME: ${DB_NAME:-ospos}
+      MYSQL_HOST_NAME: ${DB_HOST}
+    volumes:
+    - ${UPLOADS}:/app/public/uploads
+    - ${LOGS}:/app/writable/logs
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: monetr
+  summary: Plan budgets and track recurring expenses
+  description: Provision PostgreSQL before starting. Create your own account on a trusted network before
+    accepting other users.
+  category: finance
+  website: https://monetr.app/
+  source: https://github.com/monetr/monetr
+  docs: https://monetr.dev/documentation/self-hosting/
+  primary_service: monetr
+  post_install: Provision PostgreSQL before starting. Create your own account on a trusted network before
+    accepting other users.
+  license: FSL-1.1-MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 4000
+  options:
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 4000 inside Nex.
+    DATA:
+      label: Configuration and certificates
+      help: Managed directory mounted at /etc/monetr. Choose storage writable by the application.
+services:
+  monetr:
+    image: ghcr.io/monetr/monetr:1.22.2
+    ports:
+    - ${PORT:-23567}:4000/tcp
+    volumes:
+    - ${DATA}:/etc/monetr
+    environment:
+      MONETR_ALLOW_SIGN_UP: 'true'
+      MONETR_PG_USERNAME: ${DB_USER}
+      MONETR_PG_PASSWORD: ${DB_PASSWORD}
+      MONETR_PG_DATABASE: ${DB_NAME:-monetr}
+      MONETR_PG_ADDRESS: ${DB_HOST}
+      MONETR_CACHE_KIND: memory
+      MONETR_STORAGE_ENABLED: 'true'
+      MONETR_STORAGE_PROVIDER: filesystem
+    command:
+    - serve
+    - --migrate
+    - --generate-certificates
+    deploy:
+      replicas: 1

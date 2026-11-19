@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Focalboard
+  summary: Organize work on shared Kanban boards
+  description: Single-node Focalboard Personal Server. Complete initial registration on a trusted network
+    and keep its SQLite data on the selected host.
+  category: productivity
+  website: https://www.focalboard.com/
+  source: https://github.com/mattermost-community/focalboard
+  docs: https://github.com/mattermost-community/focalboard#readme
+  scalable: false
+  primary_service: focalboard
+  architectures:
+  - amd64
+  web:
+    service: focalboard
+    scheme: http
+    port: 8000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Board state
+      help: Select This host. Stores the local database and attachment files. Include this folder in a
+        stopped Nex backup.
+services:
+  focalboard:
+    image: mattermost/focalboard:latest
+    ports:
+    - ${PORT:-8457}:8000/tcp
+    volumes:
+    - ${DATA}:/opt/focalboard/data
+    deploy:
+      replicas: 1

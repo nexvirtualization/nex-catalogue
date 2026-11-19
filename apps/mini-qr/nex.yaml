@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mini QR
+  summary: QR code app for generating, scanning, styling, and sharing custom QR codes
+  description: QR code app for generating, scanning, styling, and sharing custom QR codes.
+  category: tools
+  source: https://github.com/lyqht/mini-qr
+  website: https://mini-qr-code-generator.vercel.app/
+  docs: https://github.com/lyqht/mini-qr#self-host-mini-qr
+  primary_service: mini-qr
+  options:
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Open Mini QR to generate or scan QR codes. Webcam scanning from other devices requires a browser-trusted
+    HTTPS URL.
+  web:
+    port: 8080
+services:
+  mini-qr:
+    image: ghcr.io/lyqht/mini-qr:latest
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-19655}:8080/tcp

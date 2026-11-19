@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Speedtest Tracker
+  summary: Track internet performance over time
+  description: Use a browser to complete initial account setup and schedule tests. Set a valid Laravel
+    encryption key and save it when backing up the database.
+  category: monitoring
+  website: https://docs.speedtest-tracker.dev/
+  source: https://github.com/alexjustesen/speedtest-tracker
+  docs: https://docs.linuxserver.io/images/docker-speedtest-tracker/
+  scalable: false
+  primary_service: speedtest-tracker
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: speedtest-tracker
+    scheme: http
+    port: 80
+  options:
+    LARAVEL_KEY:
+      label: Laravel application key
+      help: 'Enter base64: followed by a base64-encoded random 32-byte key. Nex Generate does not add
+        the prefix.'
+      type: password
+    PUID:
+      label: Puid
+      help: Numeric UID of the application process.
+    PGID:
+      label: Pgid
+      help: Numeric GID of the application process.
+    TEST_SCHEDULE:
+      label: Test Schedule
+      help: Cron expression controlling speed test frequency.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Speed test history
+      help: Select This host. Stores the SQLite database and web configuration. Include this folder in
+        a stopped Nex backup.
+services:
+  speedtest-tracker:
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    environment:
+      APP_KEY: ${LARAVEL_KEY}
+      DB_CONNECTION: sqlite
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      SPEEDTEST_SCHEDULE: ${TEST_SCHEDULE:-30 * * * *}
+    ports:
+    - ${PORT:-8412}:80/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

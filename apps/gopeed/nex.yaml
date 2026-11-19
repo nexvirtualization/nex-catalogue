@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gopeed
+  summary: Download files through a browser interface
+  description: Configure download and connection settings in the web UI. Keep the service on a private
+    network or behind an authenticated HTTPS proxy. Select the managed downloads folder to share downloads
+    with other Nex apps.
+  category: downloads
+  website: https://gopeed.com/
+  source: https://github.com/GopeedLab/gopeed
+  docs: https://docs.gopeed.com/
+  scalable: false
+  primary_service: gopeed
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: gopeed
+    scheme: http
+    port: 9999
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9999.
+    DATA:
+      label: Download manager data
+      help: Select This host. Stores settings, transfers and job history. Include this folder in a stopped
+        Nex backup.
+    DOWNLOADS:
+      label: Downloads
+      help: Select This host. Stores completed and incomplete downloads. Include this folder in a stopped
+        Nex backup.
+services:
+  gopeed:
+    image: liwei2633/gopeed:latest
+    ports:
+    - ${PORT:-9999}:9999/tcp
+    volumes:
+    - ${DATA}:/app/storage
+    - ${DOWNLOADS}:/app/Downloads
+    deploy:
+      replicas: 1

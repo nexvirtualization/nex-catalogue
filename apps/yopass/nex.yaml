@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Yopass
+  summary: Share secrets with expiring, encrypted links
+  description: Place the application behind an HTTPS reverse proxy before sharing secret links. The packaged
+    Memcached companion keeps ciphertext temporarily on the private app network. Restarting it clears
+    pending shares.
+  category: security
+  website: https://github.com/jhaals/yopass
+  source: https://github.com/jhaals/yopass
+  docs: https://yopass.se/docs/quickstart
+  scalable: false
+  primary_service: yopass
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: yopass
+    scheme: http
+    port: 1337
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1337.
+services:
+  yopass:
+    image: jhaals/yopass:latest
+    command:
+    - --memcached=cache:11211
+    ports:
+    - ${PORT:-8379}:1337/tcp
+    deploy:
+      replicas: 1
+  cache:
+    image: memcached:latest
+    deploy:
+      replicas: 1

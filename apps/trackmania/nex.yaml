@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Trackmania
+  summary: Host a dedicated racing room
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Register a dedicated-server account with Ubisoft at players.trackmania.com/server/dedicated and
+    provide its login and password in Nex. Find the server in the Trackmania multiplayer browser.
+    The server uses TCP and UDP 2350. Match settings and tracks are in the managed folder. Make a
+    stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2225070/
+  source: https://github.com/EvoEsports/docker-trackmania
+  docs: https://github.com/EvoEsports/docker-trackmania#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - racing
+    - multiplayer
+  options:
+    MASTER_LOGIN:
+      label: Dedicated-server login
+      help: Enter the login of the dedicated-server account.
+    MASTER_PASSWORD:
+      label: Dedicated-server password
+      type: password
+      help: Enter the password for that account.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  trackmania:
+    image: docker.io/evoesports/trackmania:latest
+    environment:
+      MASTER_LOGIN: ${MASTER_LOGIN}
+      MASTER_PASSWORD: ${MASTER_PASSWORD}
+    expose:
+      - 2350/tcp
+      - 2350/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ -z "$$MASTER_LOGIN" || -z "$$MASTER_PASSWORD" ]]; then
+          echo "Enter your Trackmania dedicated-server login and password." >&2
+          exit 1
+        fi
+        if [ ! -L /server/UserData ]; then
+          cp -an /server/UserData/. /data/
+          mv /server/UserData /server/UserData.defaults
+          ln -s /data /server/UserData
+        fi
+        config=/data/Config/nex-dedicated.cfg
+        if [ ! -f "$$config" ]; then
+          cp /data/Config/dedicated_cfg.default.txt "$$config"
+        fi
+        if [ ! -f /data/Maps/MatchSettings/default.txt ]; then
+          cp /data/Maps/MatchSettings/example.txt /data/Maps/MatchSettings/default.txt
+        fi
+        xmlstarlet ed -L \
+          -u '/dedicated/masterserver_account/login' -v "$$MASTER_LOGIN" \
+          -u '/dedicated/masterserver_account/password' -v "$$MASTER_PASSWORD" \
+          -u '/dedicated/system_config/server_port' -v '2350' \
+          -u '/dedicated/system_config/xmlrpc_allowremote' -v 'False' \
+          -u '/dedicated/server_options/name' -v 'Nex Trackmania' "$$config"
+        chmod 0600 "$$config"
+        chown -R trackmania:trackmania /data
+        exec su-exec trackmania ./TrackmaniaServer /dedicated_cfg=nex-dedicated.cfg \
+          /game_settings=MatchSettings/default.txt /noDaemon
+    user: "0:0"

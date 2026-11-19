@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MySQL Community Server
+  summary: Run MySQL Community Server with a dedicated application database
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 3306. The application
+    account has access to the initial database. The root account is for local administration. Use This host
+    for persistent data and choose one eligible host. Swarm can restart the process on that host. Check the
+    upstream upgrade path before deploying a new major version.
+  category: development
+  website: https://hub.docker.com/_/mysql
+  source: https://github.com/mysql/mysql-server
+  docs: https://hub.docker.com/_/mysql
+  license: GPL-2.0-only
+  primary_service: mysql
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    ROOT_PASSWORD:
+      label: Initial root password
+      help: Generate a separate root password for local database administration. This initializes a new database
+        only.
+      type: password
+    DB_NAME:
+      label: Initial database
+      help: Created on first startup. Use a separate database and login for each application.
+    DB_USER:
+      label: Initial database user
+      help: Used to create the application account on the first start.
+    DB_PASSWORD:
+      label: Initial database password
+      help: Generate a strong password. To rotate an existing password, change it in the database.
+      type: password
+    DATA:
+      label: Persistent data
+      help: Choose This host and one eligible host. Back up the data before updating.
+services:
+  mysql:
+    image: docker.io/library/mysql:latest
+    ports:
+      - ${PORT:-3307}:3306/tcp
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MYSQL_ROOT_HOST: localhost
+      MYSQL_DATABASE: ${DB_NAME:-app}
+      MYSQL_USER: ${DB_USER:-app}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ${DATA}:/var/lib/mysql
+    deploy:
+      replicas: 1

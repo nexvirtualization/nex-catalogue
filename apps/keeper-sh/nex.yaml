@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Keeper.sh
+  summary: Sync calendars through configurable providers
+  description: Open Keeper on the configured HTTPS origin. Configure calendar connectors in the application
+    and retain the installation secrets.
+  category: productivity
+  website: https://keeper.sh/
+  source: https://github.com/ridafkih/keeper.sh
+  docs: https://github.com/ridafkih/keeper.sh#self-hosting
+  primary_service: keeper-sh
+  post_install: Open Keeper on the configured HTTPS origin. Configure calendar connectors in the application
+    and retain the installation secrets.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Keeper database
+      help: Managed directory mounted at /var/lib/postgresql/data. Choose storage writable by the application.
+services:
+  keeper-sh:
+    image: ghcr.io/ridafkih/keeper-standalone:2
+    ports:
+    - ${PORT:-23499}:80/tcp
+    volumes:
+    - ${DATA}:/var/lib/postgresql/data
+    environment:
+      BETTER_AUTH_SECRET: ${SIGNING_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      TRUSTED_ORIGINS: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

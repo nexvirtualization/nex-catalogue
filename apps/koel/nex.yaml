@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Koel
+  summary: Stream music from a shared library
+  description: Prepare a compatible MariaDB or MySQL database. Complete the first sign-in with the upstream
+    Docker administrator and change its password. Point Koel at /music and trigger the initial library
+    scan.
+  category: media
+  website: https://koel.dev/
+  source: https://github.com/koel/koel
+  docs: https://docs.koel.dev/usage/user-management
+  scalable: false
+  primary_service: koel
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: koel
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is koel.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    APP_KEY:
+      label: Laravel application key
+      help: 'Enter base64: followed by a base64-encoded random 32-byte key.'
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Music library
+      help: Select This host. Select the managed collection of music files. Include this folder in a stopped
+        Nex backup.
+    ARTWORK:
+      label: Artwork
+      help: Select This host. Stores generated and uploaded artwork. Include this folder in a stopped
+        Nex backup.
+services:
+  koel:
+    image: phanan/koel:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME:-koel}
+      DB_CONNECTION: mysql
+      DB_PORT: '3306'
+      APP_URL: ${PUBLIC_URL}
+      APP_KEY: ${APP_KEY}
+    ports:
+    - ${PORT:-8890}:80/tcp
+    volumes:
+    - ${DATA}:/music:ro
+    - ${ARTWORK}:/var/www/html/storage/app/public/images
+    deploy:
+      replicas: 1

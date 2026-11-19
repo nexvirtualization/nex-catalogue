@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SurfSense
+  summary: Search and chat with documents and connected sources from a self-hosted workspace.
+  description: Provide the instance password before first launch. This installation runs local models
+    on the CPU and requires an AMD64 node. For remote access, configure a TLS proxy with the WebSocket
+    support described in the documentation.
+  category: ai
+  website: https://github.com/MODSetter/SurfSense
+  source: https://github.com/MODSetter/SurfSense
+  docs: https://www.surfsense.com/docs/v2/docker
+  primary_service: surfsense
+  scalable: false
+  license: Apache-2.0
+  architectures:
+  - amd64
+  web:
+    port: 80
+  options:
+    SURFSENSE_PASSWORD:
+      label: Instance password
+      type: password
+      help: Use a unique password of at least eight characters before the first launch.
+    DATA:
+      label: SurfSense workspace and models
+      help: Keep surfsense workspace and models in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  surfsense:
+    image: ghcr.io/modsetter/surfsense:latest
+    stop_grace_period: 30s
+    environment:
+      SURFSENSE_LOCAL_PUBLIC_PORT: ${PORT:-4929}
+      SURFSENSE_PASSWORD: ${SURFSENSE_PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-4929}:80/tcp
+    deploy:
+      replicas: 1

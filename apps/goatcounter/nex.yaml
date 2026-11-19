@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GoatCounter
+  summary: Collect lightweight website traffic statistics
+  description: Create the initial site through the web setup wizard. Serve the public tracking script
+    through your configured HTTPS proxy and protect administrative access.
+  category: monitoring
+  website: https://github.com/arp242/goatcounter
+  source: https://github.com/arp242/goatcounter
+  docs: https://www.goatcounter.com/help/self-host
+  primary_service: goatcounter
+  scalable: false
+  license: EUPL-1.2
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: GoatCounter data
+      help: SQLite analytics database and persistent configuration.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  goatcounter:
+    image: docker.io/arp242/goatcounter:latest
+    volumes:
+    - ${DATA}:/home/goatcounter/goatcounter-data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

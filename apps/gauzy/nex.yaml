@@ -1,0 +1,192 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ever Gauzy
+  summary: Manage teams, time tracking, and workforce operations
+  description: Provision PostgreSQL and Redis. Generate separate strong secrets for signing, refresh, verification
+    and sessions. On a trusted HTTPS hostname sign in with the supervisor account you configured.
+  category: productivity
+  website: https://gauzy.co
+  source: https://github.com/ever-co/ever-gauzy
+  docs: https://github.com/ever-co/ever-gauzy/blob/develop/docker-compose.caddy.yml
+  primary_service: gauzy
+  post_install: Provision PostgreSQL and Redis. Generate separate strong secrets for signing, refresh, verification
+    and sessions. On a trusted HTTPS hostname sign in with the supervisor account you configured.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    JWT_SECRET:
+      label: Jwt secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REFRESH_SECRET:
+      label: Refresh secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    VERIFICATION_SECRET:
+      label: Verification secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SESSION_SECRET:
+      label: Session secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    TEAM_ADMIN_EMAIL:
+      label: Team admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    TEAM_ADMIN_PASSWORD:
+      label: Team admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    EMPLOYEE_EMAIL:
+      label: Employee email
+      help: Enter the deployment value described in the upstream setup guide.
+    EMPLOYEE_PASSWORD:
+      label: Employee password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Uploaded files
+      help: Managed directory mounted at /srv/gauzy/apps/api/public. Choose storage writable by the application.
+services:
+  gauzy:
+    image: docker.io/library/caddy:latest
+    ports:
+    - ${PORT:-23491}:8080/tcp
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      printf '%s\n' '{
+        auto_https off
+      }
+      :8080 {
+        @api path /api /api/* /graphql /public/* /swg /swg/* /swg-json /swg-yaml
+        handle @api {
+          reverse_proxy api:3000 {
+            header_up -CF-Connecting-IP
+          }
+        }
+        handle {
+          reverse_proxy webapp:4200
+        }
+      }' | exec caddy run --config - --adapter caddyfile
+    deploy:
+      replicas: 1
+  api:
+    image: ghcr.io/ever-co/gauzy-api:latest
+    environment:
+      NODE_ENV: production
+      DEMO: 'false'
+      API_BASE_URL: ${PUBLIC_URL}
+      CLIENT_BASE_URL: ${PUBLIC_URL}
+      ALLOWED_ORIGINS: ${PUBLIC_URL}
+      DB_TYPE: postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-gauzy}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      TRUST_PROXY: '1'
+      REDIS_ENABLED: 'true'
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_TOKEN_SECRET: ${REFRESH_SECRET}
+      JWT_VERIFICATION_TOKEN_SECRET: ${VERIFICATION_SECRET}
+      EXPRESS_SESSION_SECRET: ${SESSION_SECRET}
+      DEMO_SUPER_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      DEMO_SUPER_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DEMO_ADMIN_EMAIL: ${TEAM_ADMIN_EMAIL}
+      DEMO_ADMIN_PASSWORD: ${TEAM_ADMIN_PASSWORD}
+      DEMO_EMPLOYEE_EMAIL: ${EMPLOYEE_EMAIL}
+      DEMO_EMPLOYEE_PASSWORD: ${EMPLOYEE_PASSWORD}
+      FILE_PROVIDER: LOCAL
+    volumes:
+    - ${DATA}:/srv/gauzy/apps/api/public
+    entrypoint:
+    - ./entrypoint.compose.sh
+    command:
+    - node
+    - main.js
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/ever-co/gauzy-worker:latest
+    environment:
+      NODE_ENV: production
+      DEMO: 'false'
+      API_BASE_URL: ${PUBLIC_URL}
+      CLIENT_BASE_URL: ${PUBLIC_URL}
+      ALLOWED_ORIGINS: ${PUBLIC_URL}
+      DB_TYPE: postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-gauzy}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      TRUST_PROXY: '1'
+      REDIS_ENABLED: 'true'
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_TOKEN_SECRET: ${REFRESH_SECRET}
+      JWT_VERIFICATION_TOKEN_SECRET: ${VERIFICATION_SECRET}
+      EXPRESS_SESSION_SECRET: ${SESSION_SECRET}
+      DEMO_SUPER_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      DEMO_SUPER_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DEMO_ADMIN_EMAIL: ${TEAM_ADMIN_EMAIL}
+      DEMO_ADMIN_PASSWORD: ${TEAM_ADMIN_PASSWORD}
+      DEMO_EMPLOYEE_EMAIL: ${EMPLOYEE_EMAIL}
+      DEMO_EMPLOYEE_PASSWORD: ${EMPLOYEE_PASSWORD}
+      FILE_PROVIDER: LOCAL
+      GAUZY_DOCS_QUEUE_WORKER_ENABLED: 'false'
+    entrypoint:
+    - ./entrypoint.compose.sh
+    command:
+    - node
+    - main.js
+    deploy:
+      replicas: 1
+  webapp:
+    image: ghcr.io/ever-co/gauzy-webapp:latest
+    environment:
+      NODE_ENV: production
+      DEMO: 'false'
+      API_BASE_URL: ${PUBLIC_URL}
+      CLIENT_BASE_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

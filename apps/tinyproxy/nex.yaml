@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tinyproxy
+  summary: Light-weight HTTP/HTTPS proxy daemon
+  description: Light-weight HTTP/HTTPS proxy daemon.
+  category: networking
+  source: https://github.com/tinyproxy/tinyproxy
+  website: https://tinyproxy.github.io/
+  docs: https://github.com/kalaksi/docker-tinyproxy#readme
+  primary_service: tinyproxy
+  options:
+    CLIENT_NETWORKS:
+      label: Client networks
+    PROXY_USER:
+      label: Proxy user
+    PROXY_PASSWORD:
+      label: Proxy password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 8888/tcp port
+      help: Host port for application listener 8888/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Supply a space-separated set of trusted client subnets and use an alphanumeric proxy password.
+    Configure authorized clients to use the app address and proxy credentials.
+services:
+  tinyproxy:
+    image: docker.io/kalaksi/tinyproxy:latest
+    deploy:
+      replicas: 1
+    environment:
+      ALLOWED_NETWORKS: ${CLIENT_NETWORKS}
+      AUTH_USER: ${PROXY_USER}
+      AUTH_PASSWORD: ${PROXY_PASSWORD}
+      LOG_LEVEL: Notice
+    ports:
+    - ${PORT:-19963}:8888/tcp

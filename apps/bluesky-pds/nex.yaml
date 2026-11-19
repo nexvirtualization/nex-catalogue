@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bluesky-PDS
+  summary: Run a personal data server on the AT Protocol
+  description: Set your public hostname, then configure TLS and DNS for the host and its account subdomains.
+    Your recovery email and keys must be protected. Use an application-compatible HTTPS proxy.
+  category: communication
+  website: https://github.com/bluesky-social/pds
+  source: https://github.com/bluesky-social/pds
+  docs: https://github.com/bluesky-social/pds#self-hosting-a-bluesky-pds
+  primary_service: bluesky-pds
+  scalable: false
+  license: MIT License or Apache License 2.0
+  options:
+    HOSTNAME:
+      label: Public PDS hostname
+      help: DNS hostname without a scheme or port.
+    ADMIN_EMAIL:
+      label: Administrator email
+      help: Set the administrator email address before onboarding.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use Nex Generate.
+    JWT_SECRET:
+      label: Session signing secret
+      type: password
+      help: Use Nex Generate and preserve it for restore.
+    PLC_PRIVATE_KEY:
+      label: PLC rotation private key
+      type: password
+      help: Supply a 32-byte secp256k1 private key as 64 hexadecimal characters. Keep a secure backup.
+    DATA:
+      label: Account records and blobs
+      help: Keep account records and blobs in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  bluesky-pds:
+    image: ghcr.io/bluesky-social/pds:0.4.5051
+    environment:
+      PDS_HOSTNAME: ${HOSTNAME}
+      PDS_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      PDS_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PDS_JWT_SECRET: ${JWT_SECRET}
+      PDS_PLC_ROTATION_KEY_K256_PRIVATE_KEY_HEX: ${PLC_PRIVATE_KEY}
+      PDS_DATA_DIRECTORY: /pds
+      PDS_BLOBSTORE_DISK_LOCATION: /pds/blocks
+      PDS_BSKY_APP_VIEW_URL: https://api.bsky.app
+      PDS_BSKY_APP_VIEW_DID: did:web:api.bsky.app
+      PDS_CRAWLERS: https://bsky.network
+    volumes:
+    - ${DATA}:/pds
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

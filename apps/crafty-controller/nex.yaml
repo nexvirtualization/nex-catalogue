@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Crafty Controller
+  summary: Manage Minecraft servers from a web console
+  description: The Crafty console runs separately from the Minecraft servers it starts and stores server
+    data, settings and backups in Nex storage.
+  category: management
+  website: https://craftycontrol.com/
+  source: https://gitlab.com/crafty-controller/crafty-4
+  docs: https://docs.craftycontrol.com/pages/getting-started/installation/docker/
+  primary_service: crafty-controller
+  post_install: Use HTTPS on internal port 8443. Find the initial login in the Configuration folder. For
+    players connecting directly, use a client-reachable app address and configure the chosen Minecraft listener
+    in Crafty.
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8443
+    scheme: https
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8443 inside Nex.
+    BACKUPS:
+      label: World backups
+      help: Managed directory mounted at /crafty/backups. Choose storage writable by the application.
+    LOGS:
+      label: Server logs
+      help: Managed directory mounted at /crafty/logs. Choose storage writable by the application.
+    SERVERS:
+      label: Minecraft servers
+      help: Managed directory mounted at /crafty/servers. Choose storage writable by the application.
+    CONFIG:
+      label: Crafty configuration
+      help: Managed directory mounted at /crafty/app/config. Choose storage writable by the application.
+    IMPORT:
+      label: Server import inbox
+      help: Managed directory mounted at /crafty/import. Choose storage writable by the application.
+services:
+  crafty-controller:
+    image: registry.gitlab.com/crafty-controller/crafty-4:latest
+    ports:
+    - ${PORT:-20252}:8443/tcp
+    volumes:
+    - ${BACKUPS}:/crafty/backups
+    - ${LOGS}:/crafty/logs
+    - ${SERVERS}:/crafty/servers
+    - ${CONFIG}:/crafty/app/config
+    - ${IMPORT}:/crafty/import
+    deploy:
+      replicas: 1

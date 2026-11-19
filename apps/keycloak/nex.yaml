@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Keycloak
+  summary: Single sign-on and identity management backed by PostgreSQL
+  description: >-
+    OpenID Connect and SAML identity provider running in production mode. All copies
+    use the same external PostgreSQL database for application state and cluster discovery.
+    Start with one copy to bootstrap the administrator, then increase Copies on the
+    Docker network. Terminate TLS at a reverse proxy. If the proxy is on the shared
+    application network, use the app connection name and port 8080 with host publishing
+    off. Keep direct HTTP access private. Back up PostgreSQL separately before upgrading.
+  category: security
+  website: https://www.keycloak.org/
+  source: https://github.com/keycloak/keycloak
+  docs: https://www.keycloak.org/server/configuration-production
+  license: Apache-2.0
+  scalable: true
+  scale: [keycloak]
+  primary_service: keycloak
+  web: {port: 8080}
+  tags: [identity, single-sign-on, oidc, saml]
+  options:
+    PUBLIC_URL:
+      label: Public HTTPS URL
+      help: Full canonical HTTPS URL used by browsers and clients, for example https://identity.example.com. Configure the reverse proxy to overwrite X-Forwarded headers.
+    TRUSTED_PROXIES:
+      label: Trusted reverse proxy addresses
+      help: Comma-separated addresses or CIDR ranges for the reverse proxies as seen by Keycloak. Keep the list limited to the networks your proxies use to reach Keycloak.
+    CACHE_BIND_ADDRESS:
+      label: Cluster bind address selection
+      help: SITE_LOCAL selects a private container address. If the default binds to a network peers cannot reach, select a private overlay explicitly with match-address and a regular expression matching its subnet. Keycloak peers use TCP ports 7800 and 57800 on the overlay.
+    DATABASE_URL:
+      label: PostgreSQL JDBC URL
+      help: Use a dedicated database reachable from all selected hosts, for example jdbc:postgresql://postgres.example.com:5432/keycloak. Include TLS options as required by your database.
+    DATABASE_USER:
+      label: PostgreSQL user
+      help: Database role with permission to create and migrate the Keycloak schema.
+    DATABASE_PASSWORD:
+      label: PostgreSQL password
+      type: password
+    ADMIN_USER:
+      label: Initial administrator
+      help: Used to create the temporary administrator on first startup. Sign in, create a permanent administrator, then remove the temporary account.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Generate a strong temporary password. Changing this field after bootstrap does not reset an account.
+    PORT:
+      label: HTTP backend port
+      help: When host publishing is enabled, keep this port private and use an HTTPS reverse proxy for client access. A proxy on the shared application network uses internal port 8080.
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: [start, --server-async-bootstrap=false]
+    environment:
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: "${PUBLIC_URL}"
+      KC_PROXY_HEADERS: xforwarded
+      KC_PROXY_TRUSTED_ADDRESSES: "${TRUSTED_PROXIES}"
+      KC_DB: postgres
+      KC_DB_URL: "${DATABASE_URL}"
+      KC_DB_USERNAME: "${DATABASE_USER}"
+      KC_DB_PASSWORD: "${DATABASE_PASSWORD}"
+      KC_CACHE_STACK: jdbc-ping
+      KC_CACHE_EMBEDDED_NETWORK_BIND_ADDRESS: "${CACHE_BIND_ADDRESS:-SITE_LOCAL}"
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: "${ADMIN_USER:-admin}"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+    ports:
+      - "${PORT:-8091}:8080/tcp"
+    healthcheck:
+      test:
+        - CMD
+        - /bin/bash
+        - -ec
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000;
+          printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          read -r status <&3;
+          [[ "$$status" == "HTTP/1.1 200 "* ]]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 5m
+    deploy:
+      replicas: 1

@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Manyfold
+  summary: Organize digital models for 3D printing
+  description: The upstream all-in-one image provides its database and cache. Create the initial user
+    and add a Library using /models as the media path. The library folder must be writable by the configured
+    account.
+  category: tools
+  website: https://manyfold.app
+  source: https://github.com/manyfold3d/manyfold
+  docs: https://manyfold.app/get-started/docker
+  scalable: false
+  primary_service: manyfold
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: manyfold
+    scheme: http
+    port: 3214
+  options:
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Enter a long random secret for the session cookie.
+      type: password
+    PUID:
+      label: Puid
+      help: Numeric UID of the model library owner.
+    PGID:
+      label: Pgid
+      help: Numeric GID of the model library owner.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3214.
+    DATA:
+      label: Asset catalogue
+      help: Select This host. Stores the embedded database and plugins. Include this folder in a stopped
+        Nex backup.
+    MODEL_LIBRARY:
+      label: 3D model library
+      help: Select This host. Stores 3D models the app scans or manages. Include this folder in a stopped
+        Nex backup.
+services:
+  manyfold:
+    image: ghcr.io/manyfold3d/manyfold-solo:latest
+    environment:
+      SECRET_KEY_BASE: ${SESSION_SECRET}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+    ports:
+    - ${PORT:-3214}:3214/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${MODEL_LIBRARY}:/models
+    deploy:
+      replicas: 1

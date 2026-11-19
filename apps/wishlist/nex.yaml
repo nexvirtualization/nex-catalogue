@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Wishlist
+  summary: Organize and share wish lists and gift ideas
+  description: Set the public address to the URL users will enter before creating accounts. Be sure it
+    includes the port for non-default HTTP or HTTPS ports.
+  category: productivity
+  website: https://github.com/cmintey/wishlist
+  source: https://github.com/cmintey/wishlist
+  docs: https://github.com/cmintey/wishlist#readme
+  scalable: false
+  primary_service: wishlist
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: wishlist
+    scheme: http
+    port: 3280
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full client-facing URL with scheme and port where needed.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3280.
+    DATA:
+      label: Wishlist database
+      help: Select This host. Stores accounts and wish lists. Include this folder in a stopped Nex backup.
+    UPLOADS:
+      label: Uploads
+      help: Select This host. Stores user-uploaded media. Include this folder in a stopped Nex backup.
+services:
+  wishlist:
+    image: ghcr.io/cmintey/wishlist:latest
+    environment:
+      ORIGIN: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-3280}:3280/tcp
+    volumes:
+    - ${DATA}:/usr/src/app/data
+    - ${UPLOADS}:/usr/src/app/uploads
+    deploy:
+      replicas: 1

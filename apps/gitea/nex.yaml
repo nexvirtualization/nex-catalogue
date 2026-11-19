@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gitea
+  summary: Self-hosted Git with pull requests, issues and packages
+  description: >-
+    Lightweight Git service with a web interface, code review, issue tracking, wikis and a package registry.
+    Uses the built-in SQLite database, so repositories, settings and data all live in one folder. One copy only.
+  category: development
+  website: https://about.gitea.com
+  source: https://github.com/go-gitea/gitea
+  license: MIT
+  scalable: false
+  tags: [git, code, devops]
+  options:
+    PORT:
+      label: Web port
+      help: Published HTTP port; Gitea still listens on container port 3000. Until the install page is finished, anyone who opens it can claim the administrator account, so complete it straight after deploying on a trusted network. Open sign-up stays disabled; the administrator adds other users.
+    SSH_PORT:
+      label: SSH port
+      help: Published TCP port for git over SSH, shown in clone URLs. Use an unused port; the host's own SSH normally holds 22.
+    USER_UID:
+      label: User ID
+      help: Numeric UID that owns repository and database files. The data folder must be writable by this UID or the group below.
+    USER_GID:
+      label: Group ID
+      help: Numeric GID for repository and database files; match the selected folder's write permissions.
+    DATA:
+      label: Repositories and settings
+      help: >-
+        Persistent /data for repositories, the SQLite database, app.ini, SSH host keys and uploads.
+        Choose This host for the default setup. Before using a share, make sure the configured
+        Gitea UID and GID can traverse and write the selected folder and its existing Gitea data.
+        Gitea's startup also needs to initialize files and set ownership and permissions, which
+        the share may restrict. Back up this folder.
+services:
+  gitea:
+    image: docker.gitea.com/gitea:latest
+    environment:
+      USER_UID: "${USER_UID:-1000}"
+      USER_GID: "${USER_GID:-1000}"
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__server__SSH_PORT: "${SSH_PORT:-2222}"
+      GITEA__service__DISABLE_REGISTRATION: "true"
+    ports:
+      - "${PORT:-3000}:3000/tcp"
+      - "${SSH_PORT:-2222}:22/tcp"
+    volumes:
+      - "${DATA}:/data"
+    deploy:
+      replicas: 1

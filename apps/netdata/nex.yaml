@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Netdata
+  summary: Aggregate metrics streamed by existing Netdata agents
+  description: Configure stream.conf in the managed configuration folder and set an API key for authorized
+    child agents. Point each agent to this app’s internal port 19999. Put the dashboard behind an authenticating
+    HTTPS proxy.
+  category: monitoring
+  website: https://www.netdata.cloud/
+  source: https://github.com/netdata/netdata
+  docs: https://learn.netdata.cloud/docs/observability-centralization-points/metrics-centralization-points/netdata-parent
+  scalable: false
+  primary_service: netdata
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: netdata
+    scheme: http
+    port: 19999
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 19999.
+    DATA:
+      label: Netdata configuration
+      help: Select This host. Stores stream.conf and chart configuration. Include this folder in a stopped
+        Nex backup.
+    LIB:
+      label: Monitoring state
+      help: Select This host. Stores library state and streaming identity. Include this folder in a stopped
+        Nex backup.
+    CACHE:
+      label: Metric cache
+      help: Select This host. Stores local metric history and cache files. Include this folder in a stopped
+        Nex backup.
+services:
+  netdata:
+    image: netdata/netdata:latest
+    ports:
+    - ${PORT:-19999}:19999/tcp
+    volumes:
+    - ${DATA}:/etc/netdata
+    - ${LIB}:/var/lib/netdata
+    - ${CACHE}:/var/cache/netdata
+    deploy:
+      replicas: 1

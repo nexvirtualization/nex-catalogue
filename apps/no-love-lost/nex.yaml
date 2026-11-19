@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: No Love Lost
+  summary: Host password-protected Nectar raids
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Steam downloads the Windows dedicated server and its Steamworks runtime at first boot. Find Nex
+    No Love Lost in the session list and share your join password with players. Game traffic uses
+    TCP and UDP 7777, with queries on UDP 27015. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1873120/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/no-love-lost
+  docs: https://store.steampowered.com/news/posts/?appids=1873120&enddate=1710190716&feed=steam_community_announcements
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - extraction
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    DATA:
+      label: Game files, compatibility prefix, and settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  no-love-lost:
+    image: ghcr.io/ptero-eggs/steamcmd:proton
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      WINEDEBUG: -all
+      PROTON_USE_XALIA: '0'
+    expose:
+      - 7777/tcp
+      - 7777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$$JOIN_PASSWORD" =~ ^[A-Za-z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, digits, or _ @ . + - in the join password." >&2
+          exit 1
+        fi
+
+        # SPDX-License-Identifier: AGPL-3.0-only
+        # Embedded in catalogue manifests that install a server through SteamCMD.
+        # A package passes a dedicated-server app ID and either linux or windows.
+        nex_steamcmd_update() {
+          local app_id="$$1" platform="$$2"
+          local archive attempt architecture steamclient
+          local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+          cd "$$HOME"
+          mkdir -p steamcmd serverfiles
+          if [[ ! -x steamcmd/steamcmd.sh ]]; then
+            archive=$$(mktemp)
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+              || ! tar -xzf "$$archive" -C steamcmd; then
+              rm -f "$$archive"
+              return 1
+            fi
+            rm -f "$$archive"
+          fi
+
+          if [[ "$$platform" == windows ]]; then
+            update+=(+@sSteamCmdForcePlatformType windows)
+          fi
+          update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+          for attempt in 1 2 3; do
+            if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+              break
+            fi
+            if [[ "$$attempt" == 3 ]]; then
+              return 1
+            fi
+            sleep "$$((attempt * 5))"
+          done
+
+          for architecture in 32 64; do
+            steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+            if [[ -f "$$steamclient" ]]; then
+              mkdir -p ".steam/sdk$$architecture"
+              ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+            fi
+          done
+          cd serverfiles
+        }
+
+
+        nex_steamcmd_update 2833050 windows
+
+        export STEAM_COMPAT_CLIENT_INSTALL_PATH="$$HOME/.steam/steam"
+
+        export STEAM_COMPAT_DATA_PATH="$$STEAM_COMPAT_CLIENT_INSTALL_PATH/steamapps/compatdata/2833050"
+
+        mkdir -p "$$STEAM_COMPAT_DATA_PATH"
+
+        install_steamworks() {
+          local target="$$1"
+          if [[ ! -f "$$target/steamclient64.dll" ]]; then
+            "$$HOME/steamcmd/steamcmd.sh"       +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +@sSteamCmdForcePlatformType windows       +force_install_dir "$$target" +login anonymous +app_update 1007 +quit
+            test -f "$$target/steamclient64.dll"
+          fi
+        }
+
+        binary_dir="$$PWD/NoLoveLost/Binaries/Win64"
+        server="$$binary_dir/NoLoveLostServer-Win64-Shipping.exe"
+        test -f "$$server"
+        install_steamworks "$$binary_dir"
+        exec xvfb-run -a -s "-nolisten tcp" proton run "$$server" \
+          -port=7777 -queryport=27015 '-servername=Nex No Love Lost' \
+          "-serverpassword=$$JOIN_PASSWORD" -Unattended -stdout -FullStdOutLogOutput -log
+    stop_signal: SIGINT

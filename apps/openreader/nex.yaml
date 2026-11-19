@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenReader
+  summary: Read documents aloud with synchronized narration
+  description: Set an HTTPS app address and route the separate playback endpoint to internal port 8081. Sign
+    in, then use the built-in voice or configure another text-to-speech provider.
+  category: reading
+  website: https://docs.openreader.richardr.dev/
+  source: https://github.com/richardr1126/openreader
+  docs: https://docs.openreader.richardr.dev/deploy/docker-compose/
+  primary_service: openreader
+  post_install: Set an HTTPS app address and route the separate playback endpoint to internal port 8081.
+    Sign in, then use the built-in voice or configure another text-to-speech provider.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3003
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PLAYBACK_SECRET:
+      label: Playback secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PLAYBACK_URL:
+      label: Playback url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3003 inside Nex.
+    PLAYBACK_PORT:
+      label: Published playback port
+      help: Host-published port for the internal 8081/tcp endpoint.
+    DATA:
+      label: Documents, metadata and audio
+      help: Managed directory mounted at /app/docstore. Choose storage writable by the application.
+services:
+  openreader:
+    image: ghcr.io/richardr1126/openreader:latest
+    ports:
+    - ${PORT:-23510}:3003/tcp
+    - ${PLAYBACK_PORT:-24510}:8081/tcp
+    volumes:
+    - ${DATA}:/app/docstore
+    environment:
+      BASE_URL: ${PUBLIC_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_TRUSTED_ORIGINS: ${PUBLIC_URL}
+      TTS_PLAYBACK_TOKEN_SECRET: ${PLAYBACK_SECRET}
+      COMPUTE_WORKER_HOST: 0.0.0.0
+      COMPUTE_WORKER_PUBLIC_URL: ${PLAYBACK_URL}
+    deploy:
+      replicas: 1

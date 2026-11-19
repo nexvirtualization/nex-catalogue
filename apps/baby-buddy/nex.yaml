@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/coollabsio/coolify/blob/HEAD/templates/compose/babybuddy.yaml
+x-nex:
+  name: Baby Buddy
+  summary: Helps caregivers track baby sleep, feedings, diaper changes, and tummy time
+  category: tools
+  description: Helps caregivers track baby sleep, feedings, diaper changes, and tummy time. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/babybuddy/babybuddy
+  website: https://github.com/babybuddy/babybuddy
+  docs: https://github.com/babybuddy/babybuddy
+  primary_service: babybuddy
+  options:
+    PUBLIC_URL:
+      label: Browser origin
+      help: Enter the exact browser origin including the scheme and port.
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8000/tcp.
+  web:
+    port: 8000
+  post_install: Open the web app on a trusted network, replace the upstream initial login and add your household.
+    Include the config folder in backups.
+services:
+  babybuddy:
+    image: lscr.io/linuxserver/babybuddy:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: Europe/Madrid
+      CSRF_TRUSTED_ORIGINS: ${PUBLIC_URL}
+    volumes:
+    - ${FOLDER_1}:/config
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8000}:8000/tcp

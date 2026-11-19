@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dovecot
+  summary: Serve mailboxes over IMAP
+  description: Prepare Dovecot configuration for authentication, TLS and the mailbox path. Use a dedicated
+    app network for standard IMAP ports.
+  category: communication
+  website: https://www.dovecot.org/
+  source: https://github.com/dovecot/core
+  docs: https://doc.dovecot.org/main/installation/docker.html
+  primary_service: dovecot
+  post_install: Prepare Dovecot configuration for authentication, TLS and the mailbox path. Use a dedicated
+    app network for standard IMAP ports.
+  license: MIT/LGPL-2.1
+  architectures:
+  - amd64
+  - arm64
+  options:
+    CONFIG:
+      label: Prepared mail configuration
+      help: Managed directory mounted at /etc/dovecot. Choose storage readable by the application.
+    MAIL:
+      label: Mailbox storage
+      help: Managed directory mounted at /srv/mail. Choose storage writable by the application.
+services:
+  dovecot:
+    image: docker.io/dovecot/dovecot:latest
+    volumes:
+    - ${CONFIG}:/etc/dovecot:ro
+    - ${MAIL}:/srv/mail
+    deploy:
+      replicas: 1

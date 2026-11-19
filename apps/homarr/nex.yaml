@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Homarr
+  summary: Build dashboards with service tiles and widgets
+  description: Complete onboarding on a trusted network. Configure integrations by service URL. Integrations
+    that need the host Docker socket need a separate deployment arrangement.
+  category: management
+  website: https://github.com/homarr-labs/homarr
+  source: https://github.com/homarr-labs/homarr
+  docs: https://homarr.dev/docs/getting-started/installation/docker/
+  primary_service: homarr
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 7575
+  options:
+    ENCRYPTION_KEY:
+      label: Encryption key
+      type: password
+      help: Enter exactly 64 hexadecimal characters. Retain this key for restore.
+    DATA:
+      label: Homarr application data
+      help: Dashboards, users and settings.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7575.
+services:
+  homarr:
+    image: ghcr.io/homarr-labs/homarr:latest
+    environment:
+      SECRET_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    volumes:
+    - ${DATA}:/appdata
+    ports:
+    - ${PORT:-7575}:7575/tcp
+    deploy:
+      replicas: 1

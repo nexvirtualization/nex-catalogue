@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SwingMusic
+  summary: Play music from a managed media library in a browser
+  description: Add your music in the library folder, initialize your account and configure the /music
+    library in SwingMusic.
+  category: media
+  website: https://github.com/swingmx/swingmusic
+  source: https://github.com/swingmx/swingmusic
+  docs: https://github.com/swingmx/swingmusic
+  primary_service: swingmusic
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 1970
+  options:
+    CONFIG:
+      label: Music application data
+      help: SwingMusic settings, caches and database.
+    MUSIC:
+      label: Music library
+      help: Your audio collection.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1970.
+services:
+  swingmusic:
+    image: ghcr.io/swingmx/swingmusic:latest
+    volumes:
+    - ${CONFIG}:/config
+    - ${MUSIC}:/music
+    ports:
+    - ${PORT:-1970}:1970/tcp
+    deploy:
+      replicas: 1

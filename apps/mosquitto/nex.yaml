@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mosquitto
+  summary: Run a protected MQTT message broker
+  description: Clients connect to the broker over TCP. An explicit broker configuration and credentials file
+    load from a read-only managed folder.
+  category: networking
+  website: https://mosquitto.org/
+  source: https://github.com/eclipse-mosquitto/mosquitto
+  docs: https://mosquitto.org/man/mosquitto-conf-5.html
+  primary_service: mosquitto
+  post_install: Before starting, place mosquitto.conf and a credentials file in Configuration. Define a listener
+    on port 1883, disable anonymous access, and set the persistence directory to /mosquitto/data.
+  license: EPL-2.0 OR BSD-3-Clause
+  architectures:
+  - amd64
+  - arm64
+  options:
+    MQTT_PORT:
+      label: Published MQTT port
+      help: Host-published port for the internal 1883/tcp endpoint.
+    CONFIG:
+      label: Prepared broker configuration
+      help: Managed directory mounted at /mosquitto/config. Choose storage readable by the application.
+    DATA:
+      label: Persistent broker data
+      help: Managed directory mounted at /mosquitto/data. Choose storage writable by the application.
+services:
+  mosquitto:
+    image: docker.io/library/eclipse-mosquitto:latest
+    ports:
+    - ${MQTT_PORT:-21203}:1883/tcp
+    volumes:
+    - ${CONFIG}:/mosquitto/config:ro
+    - ${DATA}:/mosquitto/data
+    deploy:
+      replicas: 1

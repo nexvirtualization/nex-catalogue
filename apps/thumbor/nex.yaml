@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Thumbor
+  summary: Resize and process images with signed requests
+  description: This Thumbor profile uses the local-file loader, with source images from a managed folder. The
+    signing key controls access to transformation URLs.
+  category: development
+  website: http://thumbor.org/
+  source: https://github.com/thumbor/thumbor
+  docs: https://thumbor.readthedocs.io/en/latest/hosting.html
+  license: MIT
+  primary_service: thumbor
+  architectures:
+  - amd64
+  - arm64
+  post_install: Upload images to Image sources. Sign a Thumbor URL against a file path from that folder, then
+    send it to the app. Keep a backup of the signing key and original images.
+  web:
+    port: 8888
+  options:
+    SIGNING_KEY:
+      label: Signing key
+      help: Generate a secret shared with your trusted URL signer. Changing it invalidates signed URLs.
+      type: password
+    IMAGES:
+      label: Image sources
+      help: Folder containing source images, mounted read-only at /image-sources. Files must be readable by
+        the container.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8888. This setting is used when host port publishing is enabled.
+services:
+  thumbor:
+    image: ghcr.io/thumbor/thumbor:latest
+    ports:
+    - ${PORT:-18124}:8888/tcp
+    environment:
+      THUMBOR_SIGNING_KEY: ${SIGNING_KEY}
+    volumes:
+    - ${IMAGES}:/image-sources:ro
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - |-
+      cat > /tmp/nex-thumbor.conf <<'PYCONF'
+      import os
+      SECURITY_KEY = os.environ['THUMBOR_SIGNING_KEY']
+      ALLOW_UNSAFE_URL = False
+      LOADER = 'thumbor.loaders.file_loader'
+      FILE_LOADER_ROOT_PATH = '/image-sources'
+      UPLOAD_ENABLED = False
+      PYCONF
+      exec thumbor --conf=/tmp/nex-thumbor.conf
+    deploy:
+      replicas: 1

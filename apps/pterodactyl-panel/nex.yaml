@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pterodactyl
+  summary: Administer game servers on separately provisioned Wings hosts
+  description: Provide MariaDB and Redis and prepare the panel settings. Deploy Wings separately on
+    compatible hosts, then add those nodes in the panel. Keep the administration endpoint protected.
+  category: management
+  website: https://github.com/pterodactyl/panel
+  source: https://github.com/pterodactyl/panel
+  docs: https://pterodactyl.io/panel/1.0/getting_started.html
+  primary_service: pterodactyl-panel
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    DB_HOST:
+      label: Database hostname
+      help: Reachable MariaDB service.
+    DB_DATABASE:
+      label: Database name
+      help: Prepared panel database.
+    DB_USERNAME:
+      label: Database username
+      help: Dedicated user for the panel.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of that database account.
+    REDIS_HOST:
+      label: Redis hostname
+      help: Reachable queue and cache service.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    VAR:
+      label: Persistent panel state
+      help: Keep persistent panel state in this managed folder between restarts.
+    LOGS:
+      label: Panel logs
+      help: Keep panel logs in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  pterodactyl-panel:
+    image: ghcr.io/pterodactyl/panel:latest
+    environment:
+      APP_ENV: production
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_DRIVER: redis
+      DB_PORT: '3306'
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      APP_URL: ${PUBLIC_URL}
+    volumes:
+    - ${VAR}:/app/var
+    - ${LOGS}:/app/storage/logs
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

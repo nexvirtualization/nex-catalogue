@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ClipCascade
+  summary: Synchronize your clipboard across connected devices
+  description: Sign in from a trusted network and change the default administrator password. Set client
+    URLs to the HTTPS proxy endpoint and use authenticated accounts.
+  category: productivity
+  website: https://github.com/Sathvik-Rao/ClipCascade
+  source: https://github.com/Sathvik-Rao/ClipCascade
+  docs: https://github.com/Sathvik-Rao/ClipCascade
+  primary_service: clipcascade
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8080
+  options:
+    FILE_PASSWORD:
+      label: Database file encryption password
+      type: password
+      help: Use Nex Generate. Preserve the value when reusing the database.
+    DB_PASSWORD:
+      label: Database user password
+      type: password
+      help: Use Nex Generate. Preserve the value when reusing the database.
+    DATA:
+      label: User database
+      help: Keep user database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  clipcascade:
+    image: docker.io/sathvikrao/clipcascade:latest
+    environment:
+      CC_P2P_ENABLED: 'false'
+      CC_MAX_MESSAGE_SIZE_IN_MiB: '1'
+      CC_SERVER_DB_PASSWORD: ${FILE_PASSWORD} ${DB_PASSWORD}
+    volumes:
+    - ${DATA}:/database
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Postiz
+  summary: Plan and schedule content through supported publishing accounts
+  description: Prepare PostgreSQL, Redis and Temporal before opening Postiz. Complete initial setup
+    on a trusted network and configure only the publishing accounts you administer.
+  category: communication
+  website: https://github.com/gitroomhq/postiz-app
+  source: https://github.com/gitroomhq/postiz-app
+  docs: https://docs.postiz.com/installation/
+  primary_service: postiz
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 5000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    TEMPORAL_ADDRESS:
+      label: Temporal endpoint
+      help: Reachable Temporal server hostname and port.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    CONFIG:
+      label: Postiz configuration
+      help: Keep postiz configuration in this managed folder between restarts.
+    UPLOADS:
+      label: Publication assets
+      help: Keep publication assets in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    environment:
+      FRONTEND_URL: ${PUBLIC_URL}
+      NEXT_PUBLIC_BACKEND_URL: ${PUBLIC_URL}/api
+      BACKEND_INTERNAL_URL: http://127.0.0.1:3000
+      STORAGE_PROVIDER: local
+      UPLOAD_DIRECTORY: /uploads
+      NEXT_PUBLIC_UPLOAD_DIRECTORY: /uploads
+      RUN_CRON: 'true'
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      TEMPORAL_ADDRESS: ${TEMPORAL_ADDRESS}
+      MAIN_URL: ${PUBLIC_URL}
+    volumes:
+    - ${CONFIG}:/config
+    - ${UPLOADS}:/uploads
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Photoview
+  summary: Browse and index photographs from a managed photo library
+  description: Configure a MariaDB or PostgreSQL database as documented upstream. Connect it through
+    the private application network and then finish the first-run photo library setup.
+  category: media
+  website: https://github.com/photoview/photoview
+  source: https://github.com/photoview/photoview
+  docs: https://photoview.github.io/
+  primary_service: photoview
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    DB_URL:
+      label: MariaDB connection string
+      type: password
+      help: Use a dedicated database and the upstream DSN syntax.
+    CACHE:
+      label: Photo thumbnail cache
+      help: Keep photo thumbnail cache in this managed folder between restarts.
+    PHOTOS:
+      label: Photo library
+      help: Keep photo library in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  photoview:
+    image: docker.io/photoview/photoview:latest
+    environment:
+      PHOTOVIEW_DATABASE_DRIVER: mysql
+      PHOTOVIEW_MYSQL_URL: ${DB_URL}
+    volumes:
+    - ${CACHE}:/app/cache
+    - ${PHOTOS}:/photos
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

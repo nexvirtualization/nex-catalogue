@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Terraria tModLoader
+  summary: Host modded Terraria for matching clients
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    The first boot creates a world. Use the tModLoader client on the same release and join by the
+    app’s Primary address on TCP 7777. To add mods, stop the app and follow the image’s guide to install
+    a modpack in the managed folder. Make a stopped backup before applying game updates.
+  category: games
+  website: https://www.tmodloader.net/
+  source: https://github.com/PassiveLemon/terraria-docker
+  docs: https://github.com/PassiveLemon/terraria-docker#readme
+  license: MIT mod loader and proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - mods
+  options:
+    WORLD_NAME:
+      label: World name
+      help: Keep the same name when restoring the world.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    MODPACK:
+      label: Modpack directory
+      required: false
+      help: Optional name of a modpack directory in the managed folder.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  terraria-tmodloader:
+    image: docker.io/passivelemon/terraria-docker:tmodloader-latest
+    environment:
+      WORLDNAME: ${WORLD_NAME:-World}
+      PASSWORD: ${JOIN_PASSWORD}
+      AUTOCREATE: '2'
+      MODPACK: ${MODPACK:-}
+    expose:
+      - 7777/tcp
+    volumes:
+      - ${DATA}:/opt/terraria/config
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

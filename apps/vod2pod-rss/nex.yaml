@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: vod2pod-rss
+  summary: Convert stream archives into podcast feeds
+  description: Open the app and provide a supported archive URL. Use a trusted network and a reachable feed
+    address for podcast clients.
+  category: media
+  website: https://github.com/madiele/vod2pod-rss
+  source: https://github.com/madiele/vod2pod-rss
+  docs: https://github.com/madiele/vod2pod-rss
+  primary_service: vod2pod-rss
+  post_install: Open the app and provide a supported archive URL. Use a trusted network and a reachable feed
+    address for podcast clients.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  vod2pod-rss:
+    image: docker.io/madiele/vod2pod-rss:latest
+    ports:
+    - ${PORT:-23515}:8080/tcp
+    environment:
+      BASE_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PostgreSQL
+  summary: Run a PostgreSQL server for other applications
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 5432. The initial
+    account is a database superuser. Create a lower-privilege account for each application. Use This host
+    for persistent data and choose one eligible host. Swarm can restart the process on that host. Back up
+    and follow PostgreSQL major-version upgrade steps when latest advances.
+  category: development
+  website: https://hub.docker.com/_/postgres
+  source: https://github.com/postgres/postgres
+  docs: https://hub.docker.com/_/postgres
+  license: PostgreSQL
+  primary_service: postgresql
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    DB_USER:
+      label: Initial superuser
+      help: Creates a PostgreSQL superuser on first startup. Use it to provision separate application roles.
+    DB_PASSWORD:
+      label: Initial database password
+      help: Generate a strong password. To rotate an existing password, change it in the database.
+      type: password
+    DB_NAME:
+      label: Initial database
+      help: Created on first startup. Use a separate database and login for each application.
+    DATA:
+      label: Persistent data
+      help: Choose This host and one eligible host. Back up the data before updating.
+services:
+  postgresql:
+    image: docker.io/library/postgres:latest
+    ports:
+      - ${PORT:-5432}:5432/tcp
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-postgres}
+    volumes:
+      - ${DATA}:/var/lib/postgresql
+    deploy:
+      replicas: 1

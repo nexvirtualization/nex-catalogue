@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SuperTuxKart
+  summary: Host LAN kart races with friends
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the local multiplayer server list on the same player network. The race server uses UDP 2759
+    on the application’s Primary address. The server writes its settings to server_config.xml on first
+    boot. Make a stopped backup before applying game updates.
+  category: games
+  website: https://supertuxkart.net/
+  source: https://github.com/Sudo-Ivan/poderized-game-servers/tree/main/poderized/supertuxkart
+  docs: https://github.com/supertuxkart/stk-code/blob/master/NETWORKING.md
+  license: GPL-3.0-or-later
+  architectures:
+    - amd64
+  tags:
+    - racing
+    - lan
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  supertuxkart:
+    image: ghcr.io/sudo-ivan/poderized-game-servers/supertuxkart:latest
+    environment:
+      STK_MODE: lan
+      STK_SERVER_NAME: Nex SuperTuxKart
+      STK_PORT: '2759'
+      STK_FIREWALLED: 'false'
+    expose:
+      - 2759/udp
+    volumes:
+      - ${DATA}:/opt/supertuxkart/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

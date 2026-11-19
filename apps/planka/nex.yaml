@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Planka
+  summary: Collaborate on real-time Kanban boards
+  description: Provision PostgreSQL and set the client-facing HTTPS URL. Use the configured email and
+    password to sign in to the initial administrator account.
+  category: productivity
+  website: https://planka.app/
+  source: https://github.com/plankanban/planka
+  docs: https://docs.planka.cloud/docs/installation/docker/production-version/
+  scalable: false
+  primary_service: planka
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: planka
+    scheme: http
+    port: 1337
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for initial application sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    APP_SECRET:
+      label: Application signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1337.
+    DATA:
+      label: Board files
+      help: Select This host. Stores board assets and user uploads outside the database. Include this
+        folder in a stopped Nex backup.
+services:
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BASE_URL: ${PUBLIC_URL}
+      SECRET_KEY: ${APP_SECRET}
+      DEFAULT_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      DEFAULT_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DEFAULT_ADMIN_NAME: Administrator
+      DEFAULT_ADMIN_USERNAME: admin
+    ports:
+    - ${PORT:-8413}:1337/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

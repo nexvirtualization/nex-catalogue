@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vector
+  summary: Collect, transform and forward observability events
+  description: Select the prepared configuration folder containing vector.yaml. Define the authenticated
+    sources and sinks your pipeline should use, and configure log delivery before startup.
+  category: monitoring
+  website: https://github.com/vectordotdev/vector
+  source: https://github.com/vectordotdev/vector
+  docs: https://vector.dev/docs/setup/installation/platforms/docker/
+  primary_service: vector
+  scalable: false
+  license: MPL-2.0
+  options:
+    CONFIG:
+      label: Prepared pipeline configuration
+      help: Keep prepared pipeline configuration in this managed folder between restarts.
+    DATA:
+      label: Pipeline buffers
+      help: Keep pipeline buffers in this managed folder between restarts.
+services:
+  vector:
+    image: docker.io/timberio/vector:latest-debian
+    command:
+    - --config
+    - /etc/vector/vector.yaml
+    volumes:
+    - ${CONFIG}:/etc/vector
+    - ${DATA}:/var/lib/vector
+    deploy:
+      replicas: 1

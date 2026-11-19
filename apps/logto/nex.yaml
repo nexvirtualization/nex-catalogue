@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Logto
+  summary: Add centralized sign-in and user management
+  description: Provision PostgreSQL. Use separate client-reachable HTTPS endpoints for authentication
+    and the Admin Console. Forward each endpoint to its corresponding internal port and use the first
+    setup flow to create the administrator.
+  category: security
+  website: https://logto.io/
+  source: https://github.com/logto-io/logto
+  docs: https://docs.logto.io/logto-oss/get-started-with-oss
+  scalable: false
+  primary_service: logto
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: logto
+    scheme: http
+    port: 3002
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    OIDC_URL:
+      label: Oidc Url
+      help: Public HTTPS authentication endpoint.
+    ADMIN_URL:
+      label: Admin Url
+      help: Public HTTPS address of the Admin Console.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3002.
+    OIDC_PORT:
+      label: Oidc Port
+      help: Host-published Logto authentication port. Use internal port 3001 from a Nex reverse proxy.
+services:
+  logto:
+    image: ghcr.io/logto-io/logto:latest
+    environment:
+      DB_URL: ${DATABASE_URL}
+      TRUST_PROXY_HEADER: '1'
+      ENDPOINT: ${OIDC_URL}
+      ADMIN_ENDPOINT: ${ADMIN_URL}
+    ports:
+    - ${PORT:-8426}:3002/tcp
+    - ${OIDC_PORT:-3001}:3001/tcp
+    deploy:
+      replicas: 1

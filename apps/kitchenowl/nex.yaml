@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: KitchenOwl
+  summary: Plan meals and share household shopping lists
+  description: Create the first household account and access it through an HTTPS reverse proxy with WebSocket
+    support. The all-in-one profile includes the service and its local SQLite database.
+  category: productivity
+  website: https://kitchenowl.org/
+  source: https://github.com/TomBursch/kitchenowl
+  docs: https://docs.kitchenowl.org/self-hosting/
+  scalable: false
+  primary_service: kitchenowl
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: kitchenowl
+    scheme: http
+    port: 8080
+  options:
+    AUTH_SECRET:
+      label: Authentication signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Household data
+      help: Select This host. Stores recipes, shopping lists, users and uploads. Include this folder in
+        a stopped Nex backup.
+services:
+  kitchenowl:
+    image: tombursch/kitchenowl:latest
+    environment:
+      JWT_SECRET_KEY: ${AUTH_SECRET}
+    ports:
+    - ${PORT:-8446}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

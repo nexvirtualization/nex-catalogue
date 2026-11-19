@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Teeworlds
+  summary: Host a classic 2D multiplayer arena
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Connect to the Primary address on UDP 8303 from the Teeworlds server browser. The default config
+    cycle runs deathmatch. Stop the app before editing teeworlds/dm.cfg. Make a stopped backup before
+    applying game updates.
+  category: games
+  website: https://www.teeworlds.com/
+  source: https://github.com/ich777/docker-teeworlds-server
+  docs: https://github.com/ich777/docker-teeworlds-server#readme
+  license: zlib
+  architectures:
+    - amd64
+  tags:
+    - arena
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  teeworlds:
+    image: ghcr.io/ich777/teeworldsserver:latest
+    environment:
+      GAME_CONFIG: dm.cfg
+    expose:
+      - 8303/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

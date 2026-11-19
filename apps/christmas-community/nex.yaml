@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Christmas Community
+  summary: Share and organize community gift wish lists
+  description: Complete setup on a trusted network and keep the wish-list community behind authentication
+    when needed.
+  category: productivity
+  website: https://github.com/Wingysam/Christmas-Community
+  source: https://github.com/Wingysam/Christmas-Community
+  docs: https://github.com/Wingysam/Christmas-Community
+  primary_service: christmas-community
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Wish-list database and uploaded assets
+      help: Keep wish-list database and uploaded assets in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  christmas-community:
+    image: docker.io/wingysam/christmas-community:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

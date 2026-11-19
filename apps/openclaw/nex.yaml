@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenClaw
+  summary: Run a private assistant gateway for configured model providers
+  description: Select a folder initialized by OpenClaw onboarding. Configure allowed browser origins,
+    keep the endpoint private, and preserve the gateway token separately.
+  category: ai
+  website: https://github.com/openclaw/openclaw
+  source: https://github.com/openclaw/openclaw
+  docs: https://docs.openclaw.ai/install/docker
+  primary_service: openclaw
+  scalable: false
+  license: MIT
+  web:
+    port: 18789
+  options:
+    GATEWAY_TOKEN:
+      label: Gateway access token
+      type: password
+      help: Use Nex Generate or match the token used during onboarding.
+    DATA:
+      label: Prepared OpenClaw settings and workspace
+      help: Keep prepared openclaw settings and workspace in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 18789.
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    command:
+    - node
+    - dist/index.js
+    - gateway
+    - --bind
+    - lan
+    - --port
+    - '18789'
+    environment:
+      OPENCLAW_GATEWAY_TOKEN: ${GATEWAY_TOKEN}
+      HOME: /home/node
+    volumes:
+    - ${DATA}:/home/node/.openclaw
+    ports:
+    - ${PORT:-18789}:18789/tcp
+    deploy:
+      replicas: 1

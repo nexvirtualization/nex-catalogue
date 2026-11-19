@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Owncast
+  summary: Host a live video stream and chat room
+  description: Change the default stream key and administrator password before letting anyone reach
+    the streaming port. Connect your encoder to the client-reachable RTMP address.
+  category: media
+  website: https://github.com/owncast/owncast
+  source: https://github.com/owncast/owncast
+  docs: https://owncast.online/quickstart/
+  primary_service: owncast
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Owncast data
+      help: Configuration, stream state and persistent assets.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    RTMP_PORT:
+      label: RTMP ingest port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1935.
+services:
+  owncast:
+    image: docker.io/owncast/owncast:latest
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${RTMP_PORT:-1935}:1935/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open Archiver
+  summary: Search and manage an independent mail archive
+  description: Provision PostgreSQL, a Redis-compatible queue and Meilisearch before starting. Keep
+    mail ingestion and archive access on a trusted HTTPS endpoint.
+  category: communication
+  website: https://github.com/LogicLabs-OU/OpenArchiver
+  source: https://github.com/LogicLabs-OU/OpenArchiver
+  docs: https://docs.openarchiver.com/
+  primary_service: open-archiver
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    MEILI_HOST:
+      label: Search service address
+      help: Reachable Meilisearch URL.
+    MEILI_MASTER_KEY:
+      label: Search access key
+      type: password
+      help: Use a scoped key where supported.
+    JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    ENCRYPTION_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DATA:
+      label: Mail archive content
+      help: Keep mail archive content in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  open-archiver:
+    image: docker.io/logiclabshq/open-archiver:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      MEILI_HOST: ${MEILI_HOST}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

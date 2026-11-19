@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://raw.githubusercontent.com/technitiumsoftware/dnsserver/HEAD/docker-compose.yml
+x-nex:
+  name: Technitium DNS Server
+  summary: Authoritative/recursive DNS server with ad blocking functionality
+  category: networking
+  description: Authoritative/recursive DNS server with ad blocking functionality. Back up the application folders
+    together and keep them writable by the container.
+  source: https://github.com/TechnitiumSoftware/DnsServer
+  website: https://technitium.com/dns/
+  docs: https://technitium.com/dns/
+  primary_service: dns-server
+  options:
+    FOLDER_1:
+      label: Dns folder
+      help: Nex-managed folder mounted at /etc/dns. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Dns folder
+      help: Nex-managed folder mounted at /var/log/technitium/dns. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 5380/tcp.
+    PORT_2:
+      label: Published UDP port
+      help: Host port for the listener on 53/udp.
+    PORT_3:
+      label: Published TCP port
+      help: Host port for the listener on 53/tcp.
+    DNS_ADMIN_PASSWORD:
+      label: DNS administrator password
+      type: password
+  web:
+    port: 5380
+  post_install: Select a dedicated client-reachable primary network for clients using standard port 53. Open
+    the web UI on port 5380 and change the initial account before exposing it.
+services:
+  dns-server:
+    image: docker.io/technitium/dns-server:latest
+    environment:
+      DNS_SERVER_DOMAIN: dns-server
+      DNS_SERVER_LOG_FOLDER_PATH: /var/log/technitium/dns
+      DNS_SERVER_ADMIN_PASSWORD: ${DNS_ADMIN_PASSWORD}
+    volumes:
+    - ${FOLDER_1}:/etc/dns
+    - ${FOLDER_2}:/var/log/technitium/dns
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-5380}:5380/tcp
+    - ${PORT_2:-20053}:53/udp
+    - ${PORT_3:-20056}:53/tcp

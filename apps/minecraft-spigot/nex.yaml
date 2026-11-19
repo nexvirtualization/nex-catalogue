@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Spigot
+  summary: Build and run a Java Edition server for Spigot plugins
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Spigot BuildTools
+    compiles the server on first startup and caches the result. Allow time for compilation and
+    downloads. Use Minecraft 26.3 with the supplied Java 25 JDK. Make a stopped backup before
+    applying updates.
+  category: games
+  website: https://www.spigotmc.org/
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/server-types/bukkit-spigot/#build-from-source
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-spigot:
+    image: ghcr.io/itzg/minecraft-server:java25-jdk
+    environment:
+      EULA: ${EULA}
+      TYPE: SPIGOT
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: '26.3'
+      BUILD_FROM_SOURCE: 'true'
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 30m

@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Authentik
+  summary: Manage sign-in, identity providers, and application access
+  description: Provision PostgreSQL and give the server and worker shared writable data. Set up the initial
+    akadmin password using the trusted HTTPS URL. Install any external outposts separately.
+  category: security
+  website: https://goauthentik.io/
+  source: https://github.com/goauthentik/authentik
+  docs: https://docs.goauthentik.io/install-config/install/docker-compose
+  primary_service: authentik
+  post_install: Provision PostgreSQL and give the server and worker shared writable data. Set up the initial
+    akadmin password using the trusted HTTPS URL. Install any external outposts separately.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9000
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9000 inside Nex.
+    DATA:
+      label: Uploaded files and identity assets
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  authentik:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    ports:
+    - ${PORT:-23577}:9000/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: ${DB_HOST}
+      AUTHENTIK_POSTGRESQL__PORT: ${DB_PORT:-5432}
+      AUTHENTIK_POSTGRESQL__NAME: ${DB_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__USER: ${DB_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${SIGNING_SECRET}
+    command:
+    - server
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: ${DB_HOST}
+      AUTHENTIK_POSTGRESQL__PORT: ${DB_PORT:-5432}
+      AUTHENTIK_POSTGRESQL__NAME: ${DB_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__USER: ${DB_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${DB_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${SIGNING_SECRET}
+    deploy:
+      replicas: 1
+    command:
+    - worker
+    volumes:
+    - ${DATA}:/data

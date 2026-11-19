@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Saltcorn
+  summary: No-code database application builder for web and mobile applications
+  description: No-code database application builder for web and mobile applications. One platform for user interface,
+    data backend, durable workflows, email, PDF generation, and AI applications.
+  category: development
+  source: https://github.com/saltcorn/saltcorn
+  website: https://saltcorn.com/
+  docs: https://github.com/saltcorn/saltcorn/tree/master/deploy
+  primary_service: saltcorn
+  options:
+    SESSION_SECRET:
+      label: Session secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_USER:
+      label: Db user
+    DB_NAME:
+      label: Db name
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Prepare PostgreSQL and the schema permissions described upstream. Complete the Saltcorn setup
+    in the browser and back up the database.
+  web:
+    port: 3000
+services:
+  saltcorn:
+    image: docker.io/saltcorn/saltcorn:latest
+    deploy:
+      replicas: 1
+    environment:
+      SALTCORN_SESSION_SECRET: ${SESSION_SECRET}
+      PGHOST: ${DB_HOST}
+      PGPORT: ${DB_PORT:-5432}
+      PGUSER: ${DB_USER}
+      PGDATABASE: ${DB_NAME:-saltcorn}
+      PGPASSWORD: ${DB_PASSWORD}
+    ports:
+    - ${PORT:-19973}:3000/tcp
+    command:
+    - serve

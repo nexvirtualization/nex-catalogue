@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Habitica
+  summary: Track tasks and habits in a browser game
+  description: Provision a compatible MongoDB instance and use the client-facing HTTPS URL. Complete
+    account creation on a trusted network.
+  category: productivity
+  website: https://github.com/HabitRPG/habitica
+  source: https://github.com/HabitRPG/habitica
+  docs: https://github.com/awinterstein/habitica-docker
+  primary_service: habitica
+  scalable: false
+  license: GPL-3.0/CC-BY-SA-3.0
+  web:
+    port: 3000
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL including the scheme.
+    DB_URL:
+      label: MongoDB connection URL
+      type: password
+      help: Connection URL for the existing database. Keep access private.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  habitica:
+    image: docker.io/awinterstein/habitica-server:latest
+    environment:
+      NODE_DB_URI: ${DB_URL}
+      BASE_URL: ${BASE_URL}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

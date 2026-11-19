@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kapowarr
+  summary: Catalog and organize a comic library
+  description: Choose a managed media folder and add it as the library in Kapowarr. Set the application
+    password on a trusted network before making the interface available to other users.
+  category: media
+  website: https://casvt.github.io/Kapowarr/
+  source: https://github.com/Casvt/Kapowarr
+  docs: https://github.com/Casvt/Kapowarr#readme
+  scalable: false
+  primary_service: kapowarr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: kapowarr
+    scheme: http
+    port: 5656
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for downloads and import history.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5656.
+    DATA:
+      label: Comic catalogue
+      help: Select This host. Stores the catalogue database and app settings. Include this folder in a
+        stopped Nex backup.
+    DOWNLOADS:
+      label: Temporary downloads
+      help: Select This host. Stores incomplete or staged files. Include this folder in a stopped Nex
+        backup.
+    MEDIA:
+      label: Comic media
+      help: Select This host. Stores the comics managed by Kapowarr. Include this folder in a stopped
+        Nex backup.
+services:
+  kapowarr:
+    image: mrcas/kapowarr:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-5656}:5656/tcp
+    volumes:
+    - ${DATA}:/app/db
+    - ${DOWNLOADS}:/app/temp_downloads
+    - ${MEDIA}:/media
+    deploy:
+      replicas: 1

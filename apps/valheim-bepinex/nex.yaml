@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Valheim BepInEx
+  summary: Host a modded Valheim survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Put compatible plugins in bepinex/plugins in the managed configuration directory while stopped.
+    Install matching mods on player clients. Connect to the Primary address on UDP 2456. Steam downloads
+    the dedicated server on first start. Make a stopped backup before applying game updates.
+  category: games
+  website: https://www.valheim.com/
+  source: https://github.com/community-valheim-tools/valheim-server-docker
+  docs: https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - mods
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players in the multiplayer browser.
+    WORLD_NAME:
+      label: World name
+      help: Keep the same name when restoring the world.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use at least five characters. Keep the server name out of the password.
+    DATA:
+      label: Worlds and mod settings
+      help: Choose This host and include this folder in stopped backups.
+    GAME_FILES:
+      label: Downloaded game files
+      help: Choose This host and include this folder in stopped backups.
+services:
+  valheim-bepinex:
+    image: ghcr.io/community-valheim-tools/valheim-server:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Valheim}
+      WORLD_NAME: ${WORLD_NAME:-World}
+      SERVER_PASS: ${JOIN_PASSWORD}
+      SERVER_PUBLIC: 'false'
+      CROSSPLAY: 'false'
+      UPDATE_CRON: ''
+      RESTART_CRON: ''
+      BEPINEX: 'true'
+    expose:
+      - 2456/udp
+      - 2457/udp
+    volumes:
+      - ${DATA}:/config
+      - ${GAME_FILES}:/opt/valheim
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

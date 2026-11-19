@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Family Accounting Tool
+  summary: Track shared household expenses
+  description: Create a MariaDB database and dedicated account first. Provide a strong signing secret.
+    Complete account setup before sharing the app with other household members.
+  category: finance
+  website: https://github.com/nymanjens/facto
+  source: https://github.com/nymanjens/facto
+  docs: https://github.com/nymanjens/facto#readme
+  scalable: false
+  primary_service: family-accounting-tool
+  architectures:
+  - amd64
+  web:
+    service: family-accounting-tool
+    scheme: http
+    port: 9000
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is facto.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    SESSION_SECRET:
+      label: Application signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9000.
+services:
+  family-accounting-tool:
+    image: nymanjens/facto:latest
+    environment:
+      FACTO_DB_HOST: ${DB_HOST}
+      FACTO_DB_USER: ${DB_USER}
+      FACTO_DB_PASSWORD: ${DB_PASSWORD}
+      FACTO_DB_NAME: ${DB_NAME:-facto}
+      APPLICATION_SECRET: ${SESSION_SECRET}
+      DATABASE_URL: jdbc:mysql://${DB_HOST}:3306/${DB_NAME:-facto}?user=${DB_USER}&password=${DB_PASSWORD}&disableMariaDbDriver
+    command:
+    - bin/server
+    ports:
+    - ${PORT:-8385}:9000/tcp
+    deploy:
+      replicas: 1

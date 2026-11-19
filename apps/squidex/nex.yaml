@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Squidex
+  summary: Headless CMS, based on MongoDB, CQRS and Event Sourcing
+  description: Headless CMS, based on MongoDB, CQRS and Event Sourcing.
+  category: development
+  source: https://github.com/Squidex/squidex
+  website: https://squidex.io
+  docs: https://docs.squidex.io/id-01-getting-started/installation/platforms/install-on-docker
+  primary_service: squidex
+  options:
+    PUBLIC_URL:
+      label: Public url
+    MONGODB_URL:
+      label: Mongodb url
+    ADMIN_EMAIL:
+      label: Admin email
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    ASSETS:
+      label: Assets folder
+      help: Choose the Nex-managed folder mounted at /app/Assets.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision MongoDB and set the exact public base URL. Access the application through matching
+    HTTPS when used remotely. Back up the assets and database together.
+  web:
+    port: 80
+services:
+  squidex:
+    image: docker.io/squidex/squidex:latest
+    deploy:
+      replicas: 1
+    environment:
+      URLS__BASEURL: ${PUBLIC_URL}
+      EVENTSTORE__MONGODB__CONFIGURATION: ${MONGODB_URL}
+      STORE__MONGODB__CONFIGURATION: ${MONGODB_URL}
+      IDENTITY__ADMINEMAIL: ${ADMIN_EMAIL}
+      IDENTITY__ADMINPASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+    - ${ASSETS}:/app/Assets
+    ports:
+    - ${PORT:-19954}:80/tcp

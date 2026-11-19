@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Directory Lister
+  summary: Browse a read-only directory through a web browser
+  description: Populate the managed folder with files to share. This package mounts those files read-only
+    inside the app. Restrict access with Nex networking or an authenticated HTTPS reverse proxy if the
+    files are private.
+  category: tools
+  website: https://www.directorylister.com/
+  source: https://github.com/DirectoryLister/DirectoryLister
+  docs: https://github.com/DirectoryLister/DirectoryLister#readme
+  scalable: false
+  primary_service: directory-lister
+  architectures:
+  - amd64
+  web:
+    service: directory-lister
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Published files
+      help: Select This host. Select or upload the files Directory Lister will serve. Include this folder
+        in a stopped Nex backup.
+services:
+  directory-lister:
+    image: directorylister/directorylister:latest
+    ports:
+    - ${PORT:-8123}:80/tcp
+    volumes:
+    - ${DATA}:/data:ro
+    deploy:
+      replicas: 1

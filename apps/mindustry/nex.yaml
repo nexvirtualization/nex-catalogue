@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mindustry
+  summary: Host a multiplayer automation and tower-defense server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use Join Game, Add Server and enter the app’s Primary address on port 6567. The first boot downloads
+    the latest official server JAR and hosts a default map. Restart checks for updates. Place custom
+    maps in the managed config/maps directory. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1127400/
+  source: https://github.com/Anuken/Mindustry
+  docs: https://github.com/MindustryGame/wiki/blob/master/docs/servers.md
+  license: GPL-3.0-only
+  architectures:
+    - amd64
+    - arm64
+  tags:
+    - automation
+    - strategy
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  mindustry:
+    image: ghcr.io/ptero-eggs/yolks:java_21
+    expose:
+      - 6567/tcp
+      - 6567/udp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        cd "$$HOME"
+        file=server-release.jar
+        pending=$$(mktemp)
+        trap 'rm -f "$$pending"' EXIT
+        if curl --fail --silent --show-error --location --retry 3 --remote-time      --time-cond "$$file" 'https://github.com/Anuken/Mindustry/releases/latest/download/server-release.jar' -o "$$pending"; then
+          if [[ -s "$$pending" ]]; then
+            mv "$$pending" "$$file"
+          fi
+        elif [[ ! -s "$$file" ]]; then
+          exit 1
+        else
+          printf 'Update unavailable, using the last installed Mindustry server.\n' >&2
+        fi
+        test -s "$$file"
+        rm -f "$$pending"
+        trap - EXIT
+        exec java -jar "$$file" host

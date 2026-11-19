@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Presenton
+  summary: Create and edit presentations with a configurable model provider
+  description: Open Presenton from a trusted network or an authenticating proxy. Configure your model
+    provider and keep generated projects in the application folder.
+  category: productivity
+  website: https://github.com/presenton/presenton
+  source: https://github.com/presenton/presenton
+  docs: https://github.com/presenton/presenton
+  primary_service: presenton
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Presentations and application data
+      help: Keep presentations and application data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  presenton:
+    image: ghcr.io/presenton/presenton:latest
+    volumes:
+    - ${DATA}:/app_data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

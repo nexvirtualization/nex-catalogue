@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GlobaLeaks
+  summary: Whistleblowing software enabling anyone to easily set up and maintain a secure reporting platform
+  description: Whistleblowing software enabling anyone to easily set up and maintain a secure reporting platform.
+  category: security
+  source: https://github.com/globaleaks/globaleaks-whistleblowing-software
+  website: https://www.globaleaks.org/
+  docs: https://docs.globaleaks.org/en/stable/setup/installation.html
+  primary_service: globaleaks
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/globaleaks.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 8443/tcp port
+      help: Host port for application listener 8443/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Complete the initial wizard and confirm the documented initial privacy and HTTPS settings before
+    accepting submissions. The upstream image is for AMD64.
+  web:
+    port: 8080
+  architectures:
+  - amd64
+services:
+  globaleaks:
+    image: docker.io/globaleaks/globaleaks:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${DATA}:/var/globaleaks
+    ports:
+    - ${PORT:-19993}:8080/tcp
+    - ${PORT_2:-20993}:8443/tcp

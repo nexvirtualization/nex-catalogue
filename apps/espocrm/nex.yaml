@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: EspoCRM
+  summary: Manage customer relationships, sales and service records
+  description: Create a private MariaDB database before deploying. Sign in as admin with the configured
+    password and configure workflow scheduling separately if needed.
+  category: management
+  website: https://github.com/espocrm/espocrm
+  source: https://github.com/espocrm/espocrm
+  docs: https://docs.espocrm.com/administration/installation-by-docker/
+  primary_service: espocrm
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    ESPOCRM_DATABASE_HOST:
+      label: Database hostname
+      help: Reachable MariaDB server.
+    ESPOCRM_DATABASE_NAME:
+      label: Database name
+      help: Prepared MariaDB database.
+    ESPOCRM_DATABASE_USER:
+      label: Database user
+      help: Dedicated application account.
+    ESPOCRM_DATABASE_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of that database user.
+    ESPOCRM_ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    DATA:
+      label: CRM data and configuration
+      help: Keep crm data and configuration in this managed folder between restarts.
+    CUSTOM:
+      label: Server customizations
+      help: Keep server customizations in this managed folder between restarts.
+    CLIENT:
+      label: Browser customizations
+      help: Keep browser customizations in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  espocrm:
+    image: docker.io/espocrm/espocrm:latest
+    environment:
+      ESPOCRM_DATABASE_PLATFORM: Mysql
+      ESPOCRM_ADMIN_USERNAME: admin
+      ESPOCRM_DATABASE_HOST: ${ESPOCRM_DATABASE_HOST}
+      ESPOCRM_DATABASE_NAME: ${ESPOCRM_DATABASE_NAME}
+      ESPOCRM_DATABASE_USER: ${ESPOCRM_DATABASE_USER}
+      ESPOCRM_DATABASE_PASSWORD: ${ESPOCRM_DATABASE_PASSWORD}
+      ESPOCRM_ADMIN_PASSWORD: ${ESPOCRM_ADMIN_PASSWORD}
+      ESPOCRM_SITE_URL: ${PUBLIC_URL}
+    volumes:
+    - ${DATA}:/var/www/html/data
+    - ${CUSTOM}:/var/www/html/custom
+    - ${CLIENT}:/var/www/html/client/custom
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

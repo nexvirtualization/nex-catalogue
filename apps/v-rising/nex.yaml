@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: V Rising
+  summary: Host a private PC world for your vampire clan
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep both folders on This host
+    with one eligible x86-64 host. After Steam downloads the server and the world starts, choose Direct
+    Connect in the PC client and enter the application's IPv4 address on UDP 9876. Steam and EOS public
+    listing are off. Steam checks for game updates at startup. Back up the world folder with the app stopped
+    before updating.
+  category: games
+  website: https://playvrising.com/
+  source: https://github.com/RunOnFlux/vrising-server-flux
+  docs: https://github.com/StunlockStudios/vrising-dedicated-server-instructions
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+    DATA:
+      label: World and configuration
+      help: Include this folder in stopped backups.
+    SERVER_FILES:
+      label: Downloaded server files
+      help: Steam can rebuild this folder.
+services:
+  v-rising:
+    image: docker.io/runonflux/vrising-server-flux:latest
+    expose:
+      - "9876/udp"
+    environment:
+      VR_NAME: ${SERVER_NAME:-V Rising}
+      VR_PASSWORD: ${SERVER_PASSWORD}
+      VR_GAME_PORT: "9876"
+      VR_QUERY_PORT: "9877"
+      VR_LIST_ON_STEAM: "false"
+      VR_LIST_ON_EOS: "false"
+      VR_RCON_ENABLED: "false"
+    volumes:
+      - ${DATA}:/mnt/vrising/persistentdata
+      - ${SERVER_FILES}:/mnt/vrising/server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

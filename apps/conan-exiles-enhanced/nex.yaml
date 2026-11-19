@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Conan Exiles Enhanced
+  summary: Host a persistent world for Enhanced clients
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the Enhanced client and direct connect to the app’s Primary address on UDP 7777. Steam discovery
+    uses UDP 7778 and 27015. The first launch downloads the native dedicated server and restarts check
+    for updates. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/440900/
+  source: https://github.com/indifferentbroccoli/conan-exiles-enhanced-server-docker
+  docs: https://github.com/indifferentbroccoli/conan-exiles-enhanced-server-docker
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - survival
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate for at least 12 letters or numbers.
+      type: password
+    RCON_PASSWORD:
+      label: Remote console password
+      help: Use Generate for a second password of at least 12 letters or numbers.
+      type: password
+services:
+  conan-exiles-enhanced:
+    image: docker.io/indifferentbroccoli/conan-exiles-enhanced-server-docker:latest
+    environment:
+      SERVER_NAME: Nex Conan Exiles Enhanced
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      UPDATE_ON_START: 'true'
+      PUID: '1000'
+      PGID: '1000'
+    expose:
+    - 7777/udp
+    - 7778/udp
+    - 27015/udp
+    volumes:
+    - ${DATA}:/home/steam/server-files
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      for credential in "$$ADMIN_PASSWORD" "$$RCON_PASSWORD"; do
+        [[ "$$credential" =~ ^[A-Za-z0-9]{12,}$$ ]] || {
+          echo "Use at least 12 letters or numbers for each administration password." >&2
+          exit 1
+        }
+      done
+      exec /home/steam/server/init.sh
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

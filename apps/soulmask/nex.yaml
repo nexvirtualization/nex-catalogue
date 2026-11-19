@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Soulmask
+  summary: Host a persistent survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Find Nex Soulmask in the in-game server browser. The game uses UDP 8777 and Steam uses UDP 27015
+    for discovery. This package hosts one Cloud Mist Forest world in PvE mode. Steam downloads and
+    checks the server files at startup. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/2646460/
+  source: https://github.com/indifferentbroccoli/soulmask-server-docker
+  docs: https://github.com/indifferentbroccoli/soulmask-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  soulmask:
+    image: docker.io/indifferentbroccoli/soulmask-server-docker:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      SERVER_NAME: Nex Soulmask
+      SERVER_PASSWORD: ${JOIN_PASSWORD}
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GAME_MODE: pve
+      GAME_WORLD: Level01_Main
+      GAME_PORT: '8777'
+      QUERY_PORT: '27015'
+      LISTEN_ADDRESS: 0.0.0.0
+      UPDATE_ON_START: 'true'
+    expose:
+      - 8777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/steam/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$${JOIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ||
+              ! "$${ADMIN_PASSWORD}" =~ ^[a-zA-Z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, numbers or _ @ . + - in both passwords." >&2
+          exit 1
+        fi
+        exec /home/steam/server/init.sh

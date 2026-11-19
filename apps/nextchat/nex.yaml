@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NextChat
+  summary: Provides a compact AI chat client for multiple model providers on web, desktop, and mobile devices
+  description: Provides a compact AI chat client for multiple model providers on web, desktop, and mobile devices.
+  category: ai
+  source: https://github.com/ChatGPTNextWeb/NextChat
+  website: https://nextchat.club/
+  docs: https://github.com/ChatGPTNextWeb/NextChat#deploy
+  primary_service: nextchat
+  options:
+    ACCESS_CODE:
+      label: Access code
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    OPENAI_API_KEY:
+      label: Openai api key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Use your own model provider API key and choose a strong site access code before sharing the
+    URL.
+  web:
+    port: 3000
+services:
+  nextchat:
+    image: docker.io/yidadaa/chatgpt-next-web:latest
+    deploy:
+      replicas: 1
+    environment:
+      CODE: ${ACCESS_CODE}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+    - ${PORT:-19544}:3000/tcp

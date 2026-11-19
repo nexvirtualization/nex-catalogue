@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Azimutt
+  summary: Visualize and document database schemas
+  description: Prepare PostgreSQL and an S3-compatible store. Use a private HTTPS endpoint and configure
+    sign-in before sharing schema diagrams.
+  category: development
+  website: https://github.com/azimuttapp/azimutt
+  source: https://github.com/azimuttapp/azimutt
+  docs: https://github.com/azimuttapp/azimutt
+  primary_service: azimutt
+  scalable: false
+  license: MIT
+  web:
+    port: 4000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    SECRET_KEY_BASE:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    PHX_HOST:
+      label: Public hostname
+      help: Hostname of the browser-facing HTTPS endpoint.
+    S3_BUCKET:
+      label: Object bucket
+      help: Prepared private S3 bucket.
+    S3_HOST:
+      label: Object store address
+      help: Reachable S3-compatible hostname.
+    S3_KEY_ID:
+      label: Object store key ID
+      help: Dedicated access key ID.
+    S3_KEY_SECRET:
+      label: Object store access secret
+      type: password
+      help: Secret for the configured S3 access key.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4000.
+services:
+  azimutt:
+    image: ghcr.io/azimuttapp/azimutt:main
+    environment:
+      PHX_SERVER: 'true'
+      PORT: '4000'
+      FILE_STORAGE_ADAPTER: s3
+      AUTH_PASSWORD: 'true'
+      PUBLIC_SITE: 'false'
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      PHX_HOST: ${PHX_HOST}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_HOST: ${S3_HOST}
+      S3_KEY_ID: ${S3_KEY_ID}
+      S3_KEY_SECRET: ${S3_KEY_SECRET}
+    ports:
+    - ${PORT:-4000}:4000/tcp
+    deploy:
+      replicas: 1

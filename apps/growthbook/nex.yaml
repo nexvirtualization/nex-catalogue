@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GrowthBook
+  summary: Manage feature flags and run experiments
+  description: Provision a MongoDB service first. Use mutually reachable public URLs for the dashboard
+    and API, and publish both through HTTPS. Create the first organizational account from a trusted network.
+  category: development
+  website: https://www.growthbook.io/
+  source: https://github.com/growthbook/growthbook
+  docs: https://docs.growthbook.io/self-host
+  scalable: false
+  primary_service: growthbook
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: growthbook
+    scheme: http
+    port: 3000
+  options:
+    MONGO_URL:
+      label: Database connection string
+      help: Provide a complete authenticated MongoDB URI with database name and a percent-encoded password.
+        The MongoDB instance must already be running.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    API_URL:
+      label: Api Url
+      help: Public URL the dashboard will use for API calls.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Provide a stable encryption key and retain it in your deployment settings and backups.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    API_PORT:
+      label: Api Port
+      help: HTTP endpoint for the GrowthBook API, used by HTTPS reverse proxies.
+    DATA:
+      label: GrowthBook uploads
+      help: Select This host. Stores image and attachment uploads outside MongoDB. Include this folder
+        in a stopped Nex backup.
+services:
+  growthbook:
+    image: growthbook/growthbook:latest
+    environment:
+      MONGODB_URI: ${MONGO_URL}
+      APP_ORIGIN: ${PUBLIC_URL}
+      API_HOST: ${API_URL}
+      JWT_SECRET: ${SESSION_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    ports:
+    - ${PORT:-8388}:3000/tcp
+    - ${API_PORT:-3100}:3100/tcp
+    volumes:
+    - ${DATA}:/usr/local/src/app/packages/back-end/uploads
+    deploy:
+      replicas: 1

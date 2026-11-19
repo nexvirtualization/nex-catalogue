@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Friendica
+  summary: Social Communication Server
+  description: Social Communication Server.
+  category: communication
+  source: https://github.com/friendica/friendica
+  website: https://friendi.ca/
+  docs: https://github.com/friendica/docker#base-version---apache
+  primary_service: friendica
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/www/html.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision a MySQL or MariaDB database and keep the site on a trusted network during installation.
+    Complete the web installer, then register the administrator address selected during setup.
+  web:
+    port: 80
+services:
+  friendica:
+    image: docker.io/library/friendica:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${DATA}:/var/www/html
+    ports:
+    - ${PORT:-19988}:80/tcp

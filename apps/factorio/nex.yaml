@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Factorio
+  summary: Build a factory together in a private Factorio world
+  description: >-
+    Run one copy on a selected host and keep game data on This host. In Network, choose a cluster
+    VLAN or routed private network reachable by players. In Factorio, use Multiplayer, Connect
+    to address, and enter the app's Primary address on UDP 34197. Restrict the authenticated
+    admin console on TCP 27015 to administrators. First startup creates a world.
+    Use a matching client version and make a stopped backup before updating.
+  category: games
+  website: https://www.factorio.com/download
+  source: https://github.com/factoriotools/factorio-docker
+  docs: https://github.com/factoriotools/factorio-docker#readme
+  license: Proprietary game server (MIT container)
+  architectures: [amd64, arm64]
+  tags: [automation, factory, multiplayer]
+  options:
+    GAME_PASSWORD:
+      label: Join password
+      type: password
+      help: Set a password for players. Edit this setting in Nex and restart to change it.
+    DATA:
+      label: Saves, mods and settings
+      help: Choose This host and include this folder in a stopped backup.
+services:
+  factorio:
+    image: docker.io/factoriotools/factorio:stable
+    environment:
+      GAME_PASSWORD: ${GAME_PASSWORD}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        config=/factorio/config/server-settings.json
+        mkdir -p /factorio/config
+        if [ ! -f "$$config" ]; then
+          jq '.visibility.public = false | .visibility.lan = false' /opt/factorio/data/server-settings.example.json > "$$config"
+        fi
+        jq '.game_password = env.GAME_PASSWORD' "$$config" > "$$config.tmp"
+        mv "$$config.tmp" "$$config"
+        # Keep the image's Bash trace from logging its generated RCON password.
+        export BASH_XTRACEFD=7
+        exec /docker-entrypoint.sh 7>/dev/null
+    expose:
+      - "34197/udp"
+    volumes:
+      - ${DATA}:/factorio
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

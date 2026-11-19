@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vvveb CMS
+  summary: Build and publish websites with a visual editor
+  description: Complete the web installer on a trusted network and select SQLite for a standalone site.
+    Set an administrator password before exposing the site through HTTPS.
+  category: productivity
+  website: https://www.vvveb.com
+  source: https://github.com/givanz/Vvveb
+  docs: https://github.com/givanz/Vvveb#docker
+  scalable: false
+  primary_service: vvveb-cms
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: vvveb-cms
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Website and database
+      help: Select This host. Stores site files, configuration and the local SQLite database. Include
+        this folder in a stopped Nex backup.
+services:
+  vvveb-cms:
+    image: vvveb/vvvebcms:latest
+    ports:
+    - ${PORT:-8114}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    deploy:
+      replicas: 1

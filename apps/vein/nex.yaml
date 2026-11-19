@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: VEIN
+  summary: Host a persistent survival sandbox
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Find the server in VEIN’s multiplayer browser or use the app’s Primary address on UDP 7777. UDP
+    27015 is the Steam query listener. Stop the app before changing the world settings under Vein/Saved/Config.
+    First start downloads the dedicated server from Steam. Make a stopped backup before applying game
+    updates.
+  category: games
+  website: https://store.steampowered.com/app/1857950/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/vein
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/vein#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - steam
+  options:
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  vein:
+    image: ghcr.io/ich777/steamcmd:vein
+    environment:
+      GAME_ID: '2131400'
+      GAME_PARAMS: -Port=7777 -QueryPort=27015 -log
+    expose:
+      - 7777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

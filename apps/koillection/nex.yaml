@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Koillection
+  summary: Service allowing users to manage any kind of collections
+  description: Service allowing users to manage any kind of collections.
+  category: management
+  source: https://github.com/benjaminjonard/koillection
+  website: https://koillection.github.io/
+  docs: https://github.com/koillection/koillection#installation
+  primary_service: koillection
+  options:
+    DB_NAME:
+      label: Db name
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_VERSION:
+      label: Db version
+    UPLOADS:
+      label: Uploads folder
+      help: Choose the Nex-managed folder mounted at /uploads.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision PostgreSQL before installation. Match the database major-version setting to that server
+    and create your user on first access.
+  web:
+    port: 80
+services:
+  koillection:
+    image: docker.io/koillection/koillection:latest
+    deploy:
+      replicas: 1
+    environment:
+      APP_ENV: prod
+      APP_DEBUG: '0'
+      DB_DRIVER: pdo_pgsql
+      DB_NAME: ${DB_NAME:-koillection}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_VERSION: ${DB_VERSION:-17}
+    volumes:
+    - ${UPLOADS}:/uploads
+    ports:
+    - ${PORT:-19551}:80/tcp

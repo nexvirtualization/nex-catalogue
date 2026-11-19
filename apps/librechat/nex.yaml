@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LibreChat
+  summary: Use multiple chat providers from one private workspace
+  description: Provision MongoDB and configure your own model API settings. Create your first account
+    privately before sharing the workspace.
+  category: ai
+  website: https://github.com/LibreChat-AI/LibreChat
+  source: https://github.com/LibreChat-AI/LibreChat
+  docs: https://www.librechat.ai/docs/local/docker
+  primary_service: librechat
+  scalable: false
+  web:
+    port: 3080
+  options:
+    MONGO_URI:
+      label: MongoDB connection URL
+      type: password
+      help: Supply a full URL for the prepared MongoDB database.
+    JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    JWT_REFRESH_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    CREDS_KEY:
+      label: Credential encryption key
+      type: password
+      help: Provide 64 hexadecimal characters as required by LibreChat.
+    CREDS_IV:
+      label: Credential encryption IV
+      type: password
+      help: Provide 32 hexadecimal characters as required by LibreChat.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    IMAGES:
+      label: Chat attachments and images
+      help: Keep chat attachments and images in this managed folder between restarts.
+    UPLOADS:
+      label: Workspace uploads
+      help: Keep workspace uploads in this managed folder between restarts.
+    LOGS:
+      label: Application logs
+      help: Keep application logs in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3080.
+services:
+  librechat:
+    image: ghcr.io/danny-avila/librechat:latest
+    environment:
+      HOST: 0.0.0.0
+      PORT: '3080'
+      SEARCH: 'false'
+      DOMAIN_SERVER: ${PUBLIC_URL}
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CREDS_KEY: ${CREDS_KEY}
+      CREDS_IV: ${CREDS_IV}
+      DOMAIN_CLIENT: ${PUBLIC_URL}
+    volumes:
+    - ${IMAGES}:/app/client/public/images
+    - ${UPLOADS}:/app/uploads
+    - ${LOGS}:/app/api/logs
+    ports:
+    - ${PORT:-3080}:3080/tcp
+    deploy:
+      replicas: 1

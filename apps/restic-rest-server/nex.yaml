@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Restic REST Server
+  summary: Host a Restic repository over the REST protocol
+  description: Select a prepared repository folder with a .htpasswd file. Keep the server on the trusted
+    application network or in front of an HTTPS proxy and test a restore.
+  category: management
+  website: https://github.com/restic/rest-server
+  source: https://github.com/restic/rest-server
+  docs: https://github.com/restic/rest-server
+  primary_service: restic-rest-server
+  scalable: false
+  license: BSD-2-Clause
+  options:
+    DATA:
+      label: Repositories and access configuration
+      help: Keep repositories and access configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  restic-rest-server:
+    image: docker.io/restic/rest-server:latest
+    environment:
+      OPTIONS: --private-repos --append-only
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

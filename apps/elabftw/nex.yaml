@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: eLabFTW
+  summary: Online lab notebook for research labs
+  description: Online lab notebook for research labs. Store experiments, use a database to find reagents or
+    protocols, use trusted timestamping to legally timestamp an experiment, export as pdf or zip archive, share
+    with collaborators….
+  category: management
+  source: https://github.com/elabftw/elabftw
+  website: https://www.elabftw.net
+  docs: https://doc.elabftw.net/docs/install/installation/start/
+  primary_service: elabftw
+  options:
+    DB_HOST:
+      label: Db host
+    DB_PORT:
+      label: Db port
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SECRET_KEY:
+      label: Secret key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    UPLOADS:
+      label: Uploads folder
+      help: Choose the Nex-managed folder mounted at /var/lib/elabftw/uploads.
+    EXPORTS:
+      label: Exports folder
+      help: Choose the Nex-managed folder mounted at /var/lib/elabftw/exports.
+    CACHE:
+      label: Cache folder
+      help: Choose the Nex-managed folder mounted at /var/cache/elabftw.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a MySQL database. In the application console run bin/init db:install once. Create
+    the initial operator through HTTPS at a trusted reverse proxy. Keep the database, uploads and encryption
+    secret together in backups.
+  web:
+    port: 8080
+services:
+  elabftw:
+    image: docker.io/elabftw/elabimg:stable
+    deploy:
+      replicas: 1
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-elabftw}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      SITE_URL: ${PUBLIC_URL}
+      DISABLE_HTTPS: 'true'
+    volumes:
+    - ${UPLOADS}:/var/lib/elabftw/uploads
+    - ${EXPORTS}:/var/lib/elabftw/exports
+    - ${CACHE}:/var/cache/elabftw
+    ports:
+    - ${PORT:-19997}:8080/tcp
+    user: 8998:8997

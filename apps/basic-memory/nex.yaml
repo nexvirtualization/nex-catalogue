@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Basic Memory
+  summary: Store and retrieve a private knowledge base through MCP
+  description: Connect trusted MCP clients to the SSE endpoint. Keep it on the private application network
+    or require authentication at your proxy.
+  category: productivity
+  website: https://github.com/basicmachines-co/basic-memory
+  source: https://github.com/basicmachines-co/basic-memory
+  docs: https://docs.basicmemory.com/
+  primary_service: basic-memory
+  scalable: false
+  license: AGPL-3.0
+  options:
+    DATA:
+      label: Knowledge base and database
+      help: Keep knowledge base and database in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  basic-memory:
+    image: ghcr.io/basicmachines-co/basic-memory:latest
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

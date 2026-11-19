@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Soldat
+  summary: Host a side-scrolling multiplayer shooter
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Steam downloads the dedicated server on first boot. Join the app’s Primary address on UDP 23073.
+    TCP 23083 serves custom maps and files to players. Make a stopped backup before applying game
+    updates.
+  category: games
+  website: https://store.steampowered.com/app/638490/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/soldat
+  docs: https://opensoldat.github.io/manual/manual.html
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - arena
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use letters, digits, or _ @ . + -.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  soldat:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+      - 23073/udp
+      - 23083/tcp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        # SPDX-License-Identifier: AGPL-3.0-only
+        # Embedded in catalogue manifests that install a server through SteamCMD.
+        # A package passes a dedicated-server app ID and either linux or windows.
+        nex_steamcmd_update() {
+          local app_id="$$1" platform="$$2"
+          local archive attempt architecture steamclient
+          local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+          cd "$$HOME"
+          mkdir -p steamcmd serverfiles
+          if [[ ! -x steamcmd/steamcmd.sh ]]; then
+            archive=$$(mktemp)
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+              || ! tar -xzf "$$archive" -C steamcmd; then
+              rm -f "$$archive"
+              return 1
+            fi
+            rm -f "$$archive"
+          fi
+
+          if [[ "$$platform" == windows ]]; then
+            update+=(+@sSteamCmdForcePlatformType windows)
+          fi
+          update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+          for attempt in 1 2 3; do
+            if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+              break
+            fi
+            if [[ "$$attempt" == 3 ]]; then
+              return 1
+            fi
+            sleep "$$((attempt * 5))"
+          done
+
+          for architecture in 32 64; do
+            steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+            if [[ -f "$$steamclient" ]]; then
+              mkdir -p ".steam/sdk$$architecture"
+              ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+            fi
+          done
+          cd serverfiles
+        }
+
+        nex_steamcmd_update 638500 linux
+        if [[ ! "$$ADMIN_PASSWORD" =~ ^[a-zA-Z0-9_@.+-]+$$ ||
+              ! "$$JOIN_PASSWORD" =~ ^[a-zA-Z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, digits, or _ @ . + - in both passwords." >&2
+          exit 1
+        fi
+        tmp=$$(mktemp ./soldat.ini.XXXXXX)
+        awk '
+          /^\[/ {network = (tolower($$0) ~ /^\[network\]/)}
+          network && /^[[:space:]]*Port[[:space:]]*=/ {print "Port=23073"; next}
+          network && /^[[:space:]]*Server_Name[[:space:]]*=/ {print "Server_Name=Nex Soldat"; next}
+          network && /^[[:space:]]*Lobby_Register[[:space:]]*=/ {print "Lobby_Register=0"; next}
+          network && /^[[:space:]]*Game_Password[[:space:]]*=/ {print "Game_Password=" ENVIRON["JOIN_PASSWORD"]; next}
+          network && /^[[:space:]]*Admin_Password[[:space:]]*=/ {print "Admin_Password=" ENVIRON["ADMIN_PASSWORD"]; next}
+          { print }
+        ' soldat.ini > "$$tmp"
+        mv "$$tmp" soldat.ini
+        chmod +x ./soldatserver
+        exec ./soldatserver
+    stop_signal: SIGINT

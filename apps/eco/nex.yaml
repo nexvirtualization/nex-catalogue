@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Eco
+  summary: Build a civilization together while managing a shared ecosystem
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep both folders on This host
+    with one eligible x86-64 host. First boot authenticates with Strange Loop Games and generates a world.
+    In Your Worlds, choose Add Server and enter the application's IPv4 address on UDP 3000. The map is
+    available on TCP 3001. The world is unlisted and requires the player password. Back up both folders
+    with the app stopped before updating the image.
+  category: games
+  website: https://play.eco/
+  source: https://hub.docker.com/r/strangeloopgames/eco-game-server
+  docs: https://wiki.play.eco/en/Server_on_Linux
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - simulation
+    - co-op
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+      help: Share this password with players. The account token is only for the server.
+    ECO_TOKEN:
+      label: Strange Loop Games account token
+      type: password
+      help: Copy a user token from the Account page at play.eco. Nex Generate does not create a valid Eco token.
+    DATA:
+      label: World saves
+      help: Include this folder and Configuration in stopped backups.
+    CONFIG:
+      label: Configuration
+      help: Nex applies the name, player password, and private networking settings on startup.
+services:
+  eco:
+    image: docker.io/strangeloopgames/eco-game-server:latest
+    expose:
+      - "3000/udp"
+      - "3001/tcp"
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        umask 077
+        config=/app/Configs/Network.eco
+        input="$$config"
+        if [ ! -f "$$input" ]; then
+          input="$$config.template"
+        fi
+        next="$$(mktemp /app/Configs/Network.eco.XXXXXX)"
+        trap 'rm -f "$$next"' EXIT
+        jq --arg name "$$ECO_NAME" --arg password "$$ECO_SERVER_PASSWORD" \
+          '.Name = $$name | .Password = $$password | .PublicServer = false | .UPnPEnabled = false | .RconIPAddress = "127.0.0.1"' \
+          "$$input" > "$$next"
+        mv "$$next" "$$config"
+        exec /app/EcoServer --nogui "--userToken=$$ECO_USER_TOKEN"
+    environment:
+      ECO_NAME: ${SERVER_NAME:-Eco}
+      ECO_SERVER_PASSWORD: ${SERVER_PASSWORD}
+      ECO_USER_TOKEN: ${ECO_TOKEN}
+    volumes:
+      - ${DATA}:/app/Storage
+      - ${CONFIG}:/app/Configs
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

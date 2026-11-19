@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Arma Reforger
+  summary: Host a private Arma Reforger scenario with persistent saves
+  description: >-
+    Use an x86-64 host and choose This host for both folders. Attach a registered primary
+    network that players can reach. In the server browser use Direct Connect with the application
+    address and port 2001. First start downloads the dedicated server from Steam, and a restart
+    checks for game updates. Take a stopped backup of the server profile before updating.
+  category: games
+  website: https://reforger.armaplatform.com/
+  source: https://github.com/acemod/docker-reforger
+  docs: https://community.bistudio.com/wiki/Arma_Reforger:Server_Config
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - multiplayer
+    - simulation
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use Generate and share this password with your players.
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use Generate and keep this password private.
+    PROFILE:
+      label: Server profile
+      help: Keeps player and scenario saves. Include this folder in stopped backups.
+    INSTALL:
+      label: Server files
+      help: Keeps the Steam installation between restarts. Steam can download these files again.
+services:
+  arma-reforger:
+    image: ghcr.io/acemod/arma-reforger:latest
+    environment:
+      GAME_NAME: ${SERVER_NAME:-Nex Arma Reforger}
+      GAME_PASSWORD: ${JOIN_PASSWORD}
+      GAME_PASSWORD_ADMIN: ${ADMIN_PASSWORD}
+      GAME_VISIBLE: "false"
+      PERSISTENCE_AUTO_SAVE_INTERVAL: "10"
+      ARMA_PARAMS: -loadSessionSave
+    expose:
+      - "2001/udp"
+      - "17777/udp"
+    volumes:
+      - ${PROFILE}:/home/profile
+      - ${INSTALL}:/reforger
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

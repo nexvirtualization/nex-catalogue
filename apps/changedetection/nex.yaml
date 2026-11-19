@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: changedetection.io
+  summary: Monitor web pages for changes and send notifications
+  description: Set an access password as soon as you open the dashboard on a trusted network. The built-in
+    HTTP fetcher works without another service. JavaScript rendering needs a separately configured browser
+    backend.
+  category: monitoring
+  website: https://github.com/dgtlmoon/changedetection.io
+  source: https://github.com/dgtlmoon/changedetection.io
+  docs: https://github.com/dgtlmoon/changedetection.io
+  primary_service: changedetection
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 5000
+  options:
+    DATA:
+      label: Watches and snapshots
+      help: Watch definitions, configuration and stored snapshots.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io:latest
+    volumes:
+    - ${DATA}:/datastore
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

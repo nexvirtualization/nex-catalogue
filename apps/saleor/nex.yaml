@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Saleor
+  summary: Serve an ecommerce GraphQL API and background queue
+  description: Provision PostgreSQL and Redis and migrate the Saleor schema before launching. Configure
+    an authorized dashboard and storefront against the public API.
+  category: management
+  website: https://github.com/saleor/saleor
+  source: https://github.com/saleor/saleor
+  docs: https://docs.saleor.io/setup/docker
+  primary_service: saleor
+  scalable: false
+  license: BSD-3-Clause
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    CELERY_BROKER_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    SECRET_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    ALLOWED_HOSTS:
+      label: Accepted hostnames
+      help: Set Saleor’s accepted browser-facing hostnames.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  saleor:
+    image: ghcr.io/saleor/saleor:latest
+    environment:
+      CACHE_URL: ${CELERY_BROKER_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/saleor/saleor:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      SECRET_KEY: ${SECRET_KEY}
+    command:
+    - celery
+    - --app
+    - saleor
+    - worker
+    - --loglevel=info
+    deploy:
+      replicas: 1

@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SonarQube
+  summary: Review code quality and maintainability
+  description: Use a dedicated host prepared for the embedded Elasticsearch process according to the upstream
+    requirements. Provision PostgreSQL and change the initial administrator password. Use the app address
+    to configure scanner clients.
+  category: development
+  website: https://github.com/SonarSource/sonarqube
+  source: https://github.com/SonarSource/sonarqube
+  docs: https://docs.sonarsource.com/sonarqube-server/server-installation/from-docker-image
+  scalable: false
+  primary_service: sonarqube
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: sonarqube
+    scheme: http
+    port: 9000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: PostgreSQL JDBC URL
+      help: Enter jdbc:postgresql://host:5432/database. Use the Nex database connection name if applicable.
+    DB_USER:
+      label: Db User
+      help: Dedicated PostgreSQL user.
+    DB_PASSWORD:
+      label: Database password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9000.
+    DATA:
+      label: Code analysis indexes
+      help: Select This host. Stores Elasticsearch indexes. Include this folder in a stopped Nex backup.
+    EXTENSIONS:
+      label: Extensions
+      help: Select This host. Stores installed plugins. Include this folder in a stopped Nex backup.
+    LOGS:
+      label: Logs
+      help: Select This host. Stores application logs. Include this folder in a stopped Nex backup.
+services:
+  sonarqube:
+    image: sonarqube:latest
+    environment:
+      SONAR_JDBC_URL: ${DATABASE_URL}
+      SONAR_JDBC_USERNAME: ${DB_USER}
+      SONAR_JDBC_PASSWORD: ${DB_PASSWORD}
+    ports:
+    - ${PORT:-8467}:9000/tcp
+    volumes:
+    - ${DATA}:/opt/sonarqube/data
+    - ${EXTENSIONS}:/opt/sonarqube/extensions
+    - ${LOGS}:/opt/sonarqube/logs
+    deploy:
+      replicas: 1

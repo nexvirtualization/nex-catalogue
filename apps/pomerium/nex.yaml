@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pomerium
+  summary: Apply identity-aware access rules to your own services
+  description: Prepare a Pomerium configuration folder with identity provider and route settings. Use
+    its internal HTTP listener behind your HTTPS proxy and restrict access to your intended routes.
+  category: security
+  website: https://github.com/pomerium/pomerium
+  source: https://github.com/pomerium/pomerium
+  docs: https://www.pomerium.com/docs/deploy/docker
+  primary_service: pomerium
+  scalable: false
+  license: Apache-2.0
+  options:
+    CONFIG:
+      label: Prepared Pomerium configuration
+      help: Keep prepared pomerium configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  pomerium:
+    image: docker.io/pomerium/pomerium:latest
+    command:
+    - --config=/pomerium/config.yaml
+    volumes:
+    - ${CONFIG}:/pomerium
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

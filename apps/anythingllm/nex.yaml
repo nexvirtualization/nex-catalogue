@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AnythingLLM
+  summary: Build private document spaces and chat with configured models
+  description: Open the assistant on a private network and finish initial account and model-provider setup.
+    This profile supports local storage and configured providers. Native browser-container integration
+    needs separate host capabilities.
+  category: ai
+  website: https://anythingllm.com/
+  source: https://github.com/Mintplex-Labs/anything-llm
+  docs: https://docs.anythingllm.com/installation-docker/local-docker
+  scalable: false
+  primary_service: anythingllm
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: anythingllm
+    scheme: http
+    port: 3001
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Workspaces and settings
+      help: Select This host. Stores uploaded documents, local data and model settings. Include this folder
+        in a stopped Nex backup.
+services:
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    environment:
+      STORAGE_DIR: /app/server/storage
+    ports:
+    - ${PORT:-8764}:3001/tcp
+    volumes:
+    - ${DATA}:/app/server/storage
+    deploy:
+      replicas: 1

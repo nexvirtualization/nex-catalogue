@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CouchDB
+  summary: Store and query documents over an HTTP API
+  description: Use the initial administrator credentials from Nex Settings. Open the Fauxton single-node
+    setup page and finish initialization. Reach the database internally by its Nex application name on
+    port 5984.
+  category: development
+  website: https://couchdb.apache.org/
+  source: https://github.com/apache/couchdb
+  docs: https://docs.couchdb.org/en/stable/install/docker.html
+  scalable: false
+  primary_service: couchdb
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: couchdb
+    scheme: http
+    port: 5984
+    path: /_utils/
+  options:
+    ADMIN_USERNAME:
+      label: Administrator login
+      help: Application administrator account name.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5984.
+    DATA:
+      label: Database data
+      help: Select This host. Stores persisted CouchDB data and indexes. Include this folder in a stopped
+        Nex backup.
+    CONFIG:
+      label: Database configuration
+      help: Select This host. Stores local configuration written by the startup commands and Fauxton.
+        Include this folder in a stopped Nex backup.
+services:
+  couchdb:
+    image: couchdb:latest
+    environment:
+      COUCHDB_USER: ${ADMIN_USERNAME:-admin}
+      COUCHDB_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-5984}:5984/tcp
+    volumes:
+    - ${DATA}:/opt/couchdb/data
+    - ${CONFIG}:/opt/couchdb/etc/local.d
+    deploy:
+      replicas: 1

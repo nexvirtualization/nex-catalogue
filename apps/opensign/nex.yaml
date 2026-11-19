@@ -1,0 +1,114 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenSign
+  summary: Sign and manage documents with OpenSign
+  description: Provision MongoDB, SMTP, and a document-signing certificate in PKCS#12 format. Use HTTPS,
+    fill in the signing certificate and passphrase, and set up the initial account.
+  category: documents
+  website: https://www.opensignlabs.com
+  source: https://github.com/opensignlabs/opensign
+  docs: https://github.com/opensignlabs/opensign/blob/main/docker-compose.yml
+  primary_service: opensign
+  post_install: Provision MongoDB, SMTP, and a document-signing certificate in PKCS#12 format. Use HTTPS,
+    fill in the signing certificate and passphrase, and set up the initial account.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8081
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    APP_ID:
+      label: App id
+      help: Enter the deployment value described in the upstream setup guide.
+    MASTER_KEY:
+      label: Master key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    MONGO_URI:
+      label: Mongo uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_CERT:
+      label: Signing certificate
+      help: Enter the base64-encoded PKCS#12 signing certificate.
+      type: password
+    CERT_PASSWORD:
+      label: Cert password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8081 inside Nex.
+    DATA:
+      label: Signed documents and files
+      help: Managed directory mounted at /usr/src/app/files. Choose storage writable by the application.
+services:
+  opensign:
+    image: docker.io/library/caddy:latest
+    ports:
+    - ${PORT:-23539}:8081/tcp
+    entrypoint:
+    - /bin/sh
+    command:
+    - -ec
+    - |-
+      printf '%s\n' '{
+        auto_https off
+      }
+      :8081 {
+        handle_path /api/* {
+          reverse_proxy server:8080
+        }
+        handle {
+          reverse_proxy client:3000
+        }
+      }' | exec caddy run --config - --adapter caddyfile
+    deploy:
+      replicas: 1
+  server:
+    image: docker.io/opensign/opensignserver:main
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL}
+      APP_ID: ${APP_ID}
+      MASTER_KEY: ${MASTER_KEY}
+      MONGODB_URI: ${MONGO_URI}
+      PARSE_MOUNT: /app
+      SERVER_URL: ${PUBLIC_URL}/api/app
+      NODE_ENV: production
+      USE_LOCAL: 'TRUE'
+      SMTP_ENABLE: 'true'
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER_EMAIL: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASSWORD}
+      PFX_BASE64: ${SIGNING_CERT}
+      PASS_PHRASE: ${CERT_PASSWORD}
+    volumes:
+    - ${DATA}:/usr/src/app/files
+    deploy:
+      replicas: 1
+  client:
+    image: docker.io/opensign/opensign:main
+    environment:
+      REACT_APP_SERVERURL: ${PUBLIC_URL}/api/app
+      REACT_APP_APPID: ${APP_ID}
+      PUBLIC_URL: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Go Ethereum (Geth)
+  summary: The Go execution client for an Ethereum node.
+  description: Pair Geth with a prepared consensus client using the same JWT secret. Place the 32-byte
+    hex secret in jwt.hex in the supplied JWT folder. Attach the app to a dedicated Primary network
+    and restrict TCP 8551 to the consensus client. Mainnet peers use TCP and UDP 30303.
+  category: networking
+  website: https://github.com/ethereum/go-ethereum
+  source: https://github.com/ethereum/go-ethereum
+  docs: https://geth.ethereum.org/docs/getting-started/consensus-clients
+  primary_service: geth
+  scalable: false
+  license: LGPL-3.0
+  options:
+    DATA:
+      label: Geth chain database
+      help: Keep geth chain database in this managed folder between restarts.
+    JWT:
+      label: Prepared Engine API JWT folder
+      help: Keep prepared engine api jwt folder in this managed folder between restarts.
+services:
+  geth:
+    image: docker.io/ethereum/client-go:latest
+    expose:
+    - 8551/tcp
+    - 30303/tcp
+    - 30303/udp
+    command:
+    - --datadir=/data
+    - --authrpc.addr=0.0.0.0
+    - --authrpc.port=8551
+    - --authrpc.vhosts=*
+    - --authrpc.jwtsecret=/jwt/jwt.hex
+    - --port=30303
+    volumes:
+    - ${DATA}:/data
+    - ${JWT}:/jwt
+    deploy:
+      replicas: 1

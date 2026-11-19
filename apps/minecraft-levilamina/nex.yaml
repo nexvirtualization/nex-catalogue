@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft LeviLamina
+  summary: Host a Minecraft Bedrock world with LeviLamina mods
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on port 19132 with a Bedrock client supported by the
+    installed loader. First startup downloads Bedrock, LeviLamina and Wine. Make a stopped backup
+    before applying updates.
+  category: games
+  website: https://levimc.org/
+  source: https://github.com/LiteLDev/docker-levilamina-server
+  docs: https://levimc.org/tutorials/server/docker/
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    LOADER_VERSION:
+      label: LeviLamina version
+      help: >-
+        The loader selects the matching Bedrock server version on first startup. Enter a LeviLamina
+        release or keep LATEST.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-levilamina:
+    image: ghcr.io/liteldev/levilamina-server:latest-wine
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        case "$$ACCEPT_EULA" in
+          true|TRUE) export EULA=TRUE ;;
+          *) echo 'Accept the Minecraft EULA before starting LeviLamina.' >&2; exit 1 ;;
+        esac
+        exec /usr/local/bin/entrypoint.sh
+    environment:
+      ACCEPT_EULA: ${EULA}
+      VERSION: ${LOADER_VERSION:-LATEST}
+    expose:
+      - 19132/tcp
+      - 19132/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Space Engineers
+  summary: Host a shared Space Engineers survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads the server from Steam and prepares Wine, then creates a default world. Use
+    Direct Connect with the app’s Primary address on UDP 27016. UDP 8766 is used by Steam. Make a
+    stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/244850/
+  source: https://github.com/Sudo-Ivan/poderized-game-servers/tree/main/poderized/space-engineers
+  docs: https://github.com/Sudo-Ivan/poderized-game-servers/tree/main/poderized/space-engineers#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players in the multiplayer browser.
+    DATA:
+      label: Worlds and instance settings
+      help: Choose This host and include this folder in stopped backups.
+    GAME_FILES:
+      label: Downloaded server files
+      help: Choose This host and include this folder in stopped backups.
+    PLUGINS:
+      label: Server plugins
+      help: Choose This host and include this folder in stopped backups.
+services:
+  space-engineers:
+    image: ghcr.io/sudo-ivan/poderized-game-servers/space-engineers:latest
+    environment:
+      SE_INSTANCE_NAME: Default
+      SE_SERVER_NAME: ${SERVER_NAME:-Nex Space Engineers}
+      SE_PORT: '27016'
+      SE_STEAM_PORT: '8766'
+    expose:
+      - 27016/udp
+      - 8766/udp
+    volumes:
+      - ${DATA}:/opt/spaceengineers/instances
+      - ${GAME_FILES}:/opt/spaceengineers/dedicated
+      - ${PLUGINS}:/opt/spaceengineers/plugins
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 45m

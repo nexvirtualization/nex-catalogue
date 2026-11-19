@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Immich Kiosk
+  summary: Show slideshows from an existing Immich library
+  description: Set the address of your Immich server and an Immich API key limited to the required photo
+    access. Use the kiosk password to protect the slideshow from other network users.
+  category: media
+  website: https://github.com/damongolding/immich-kiosk
+  source: https://github.com/damongolding/immich-kiosk
+  docs: https://docs.immichkiosk.app/installation/
+  scalable: false
+  primary_service: immich-kiosk
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: immich-kiosk
+    scheme: http
+    port: 3000
+  options:
+    IMMICH_URL:
+      label: Immich URL
+      help: Internal or public address and port of an existing Immich server.
+    IMMICH_API_KEY:
+      label: Immich API key
+      help: Provide a scoped API key from the Immich server. Do not generate a placeholder in Nex.
+      type: password
+    KIOSK_PASSWORD:
+      label: Slideshow password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  immich-kiosk:
+    image: ghcr.io/damongolding/immich-kiosk:latest
+    environment:
+      KIOSK_IMMICH_URL: ${IMMICH_URL}
+      KIOSK_IMMICH_API_KEY: ${IMMICH_API_KEY}
+      KIOSK_PASSWORD: ${KIOSK_PASSWORD}
+    ports:
+    - ${PORT:-8130}:3000/tcp
+    deploy:
+      replicas: 1

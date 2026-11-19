@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SWAG (Secure Web Application Gateway)
+  summary: Nginx webserver and reverse proxy with PHP support, built-in Certbot (Let's Encrypt) client and fail2ban
+  description: Nginx webserver and reverse proxy with PHP support, built-in Certbot (Let's Encrypt) client and
+    fail2ban integration.
+  category: networking
+  source: https://github.com/linuxserver/docker-swag
+  website: https://github.com/linuxserver/docker-swag
+  docs: https://docs.linuxserver.io/general/swag/
+  primary_service: swag
+  options:
+    PUBLIC_DOMAIN:
+      label: Public domain
+    VALIDATION:
+      label: Validation
+    ACME_EMAIL:
+      label: Acme email
+    SUBDOMAINS:
+      label: Subdomains
+    PUID:
+      label: Puid
+    PGID:
+      label: Pgid
+    TZ:
+      label: Tz
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    PORT:
+      label: Published 443/tcp port
+      help: Host port for application listener 443/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_2:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Point DNS at the app address and make the selected ACME validation reachable. Configure proxy
+    destinations with Nex application DNS names.
+services:
+  swag:
+    image: lscr.io/linuxserver/swag:latest
+    deploy:
+      replicas: 1
+    environment:
+      URL: ${PUBLIC_DOMAIN}
+      VALIDATION: ${VALIDATION:-http}
+      EMAIL: ${ACME_EMAIL}
+      SUBDOMAINS: ${SUBDOMAINS:-www}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-19923}:443/tcp
+    - ${PORT_2:-20923}:80/tcp

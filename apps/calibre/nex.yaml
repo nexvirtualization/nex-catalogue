@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Calibre
+  summary: Manage an ebook collection through a hosted Calibre desktop
+  description: The LinuxServer image serves the Calibre desktop over HTTP. Keep the desktop and library on
+    a trusted network or HTTPS proxy.
+  category: reading
+  website: https://calibre-ebook.com/
+  source: https://github.com/kovidgoyal/calibre
+  docs: https://docs.linuxserver.io/images/docker-calibre/
+  primary_service: calibre
+  post_install: Sign in to the browser desktop and initialize or open the Calibre library under /config.
+    Use the built-in content server only on your trusted Nex network.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    WEB_USER:
+      label: Email or login name
+      help: Account identifier supplied to the application.
+    WEB_PASSWORD:
+      label: Account password
+      help: Choose a strong password for this deployment.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Calibre application and library
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+services:
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    ports:
+    - ${PORT:-20200}:8080/tcp
+    volumes:
+    - ${DATA}:/config
+    environment:
+      CUSTOM_USER: ${WEB_USER:-reader}
+      PASSWORD: ${WEB_PASSWORD}
+    deploy:
+      replicas: 1

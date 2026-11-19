@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/Dokploy/templates/blob/HEAD/blueprints/yuvomi/docker-compose.yml
+x-nex:
+  name: Yuvomi
+  summary: Family planner for shared calendars, household tasks, notes, lists, and small-home organization
+  category: productivity
+  description: Family planner for shared calendars, household tasks, notes, lists, and small-home organization.
+    Back up the application folders together and keep them writable by the container.
+  source: https://github.com/ulsklyc/yuvomi
+  website: https://yuvomi.cloud/
+  docs: https://yuvomi.cloud/
+  primary_service: yuvomi
+  options:
+    DOCUMENT_STORAGE_LOCAL_ENABLED:
+      label: Document storage local enabled
+    SESSION_SECRET:
+      label: Session secret
+      type: password
+      help: Use a unique secret and preserve it with your backups.
+    DB_ENCRYPTION_KEY:
+      label: Db encryption key
+    FOLDER_1:
+      label: Data folder
+      help: Nex-managed folder mounted at /data. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Backups folder
+      help: Nex-managed folder mounted at /backups. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Modules folder
+      help: Nex-managed folder mounted at /app/modules. Select storage with suitable access permissions.
+    FOLDER_4:
+      label: Documents folder
+      help: Nex-managed folder mounted at /documents. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 3000/tcp.
+  web:
+    port: 3000
+  post_install: Set up the first user and keep your encryption secrets with a stopped backup of application
+    data.
+services:
+  yuvomi:
+    image: ghcr.io/ulsklyc/yuvomi:2.80.0
+    environment:
+      NODE_ENV: production
+      DB_PATH: /data/yuvomi.db
+      BACKUP_DIR: /backups
+      DOCUMENT_STORAGE_LOCAL_ENABLED: ${DOCUMENT_STORAGE_LOCAL_ENABLED}
+      DOCUMENT_STORAGE_LOCAL_PATH: /documents
+      SESSION_SECURE: 'true'
+      TRUST_PROXY: '1'
+      SESSION_SECRET: ${SESSION_SECRET}
+      DB_ENCRYPTION_KEY: ${DB_ENCRYPTION_KEY}
+    volumes:
+    - ${FOLDER_1}:/data
+    - ${FOLDER_2}:/backups
+    - ${FOLDER_3}:/app/modules
+    - ${FOLDER_4}:/documents
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-3000}:3000/tcp

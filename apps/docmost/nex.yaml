@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: docmost Community Edition
+  summary: Collaborative wiki and documentation software (alternative to Confluence, Notion)
+  description: Collaborative wiki and documentation software (alternative to Confluence, Notion).
+  category: productivity
+  source: https://github.com/docmost/docmost
+  website: https://docmost.com/
+  docs: https://docmost.com/docs/installation/
+  primary_service: docmost
+  options:
+    PUBLIC_URL:
+      label: Public url
+    APP_SECRET:
+      label: App secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_URL:
+      label: Redis url
+    STORAGE:
+      label: Storage folder
+      help: Choose the Nex-managed folder mounted at /app/data/storage.
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL and Redis before installing. Use their Nex application names in the connection
+    URLs. Create the workspace and administrator on first open.
+  web:
+    port: 3000
+services:
+  docmost:
+    image: docker.io/docmost/docmost:latest
+    deploy:
+      replicas: 1
+    environment:
+      APP_URL: ${PUBLIC_URL}
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    volumes:
+    - ${STORAGE}:/app/data/storage
+    ports:
+    - ${PORT:-19475}:3000/tcp

@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Loomio
+  summary: Discuss proposals and make decisions with your group
+  description: Prepare PostgreSQL, Redis and SMTP before setup. Set your public hostname and arrange
+    scheduled background processing through Loomio’s supported worker profile.
+  category: communication
+  website: https://github.com/loomio/loomio
+  source: https://github.com/loomio/loomio
+  docs: https://github.com/loomio/loomio-deploy
+  primary_service: loomio
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    REDIS_URL:
+      label: Redis connection URL
+      type: password
+      help: Supply the full connection URL for the prepared Redis-compatible service.
+    SECRET_KEY_BASE:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    CANONICAL_HOST:
+      label: Public hostname
+      help: Browser-facing hostname without scheme.
+    SMTP_DOMAIN:
+      label: SMTP hostname
+      help: Reachable addressed mail relay.
+    SMTP_USERNAME:
+      label: SMTP username
+      help: Authorized mail server account.
+    SMTP_PASSWORD:
+      label: SMTP password
+      type: password
+      help: Password of the selected mail relay account.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  loomio:
+    image: docker.io/loomio/loomio:latest
+    environment:
+      RAILS_ENV: production
+      FORCE_SSL: '1'
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      CANONICAL_HOST: ${CANONICAL_HOST}
+      SMTP_DOMAIN: ${SMTP_DOMAIN}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

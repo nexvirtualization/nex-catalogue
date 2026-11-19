@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mumble Server
+  summary: Run a low-latency voice chat server
+  description: Choose a client-reachable dedicated Primary network. Connect from a Mumble client to the
+    app address on port 64738. TCP and UDP share this port. Use the SuperUser password to administer the
+    server.
+  category: communication
+  website: https://wiki.mumble.info/wiki/Main_Page
+  source: https://github.com/mumble-voip/mumble
+  docs: https://github.com/mumble-voip/mumble-docker
+  scalable: false
+  primary_service: mumble
+  architectures:
+  - amd64
+  - arm64
+  options:
+    ADMIN_PASSWORD:
+      label: SuperUser password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    JOIN_PASSWORD:
+      label: Client join password
+      help: Use Generate or set a password to share with invited clients.
+      type: password
+    DATA:
+      label: Voice server data
+      help: Select This host. Stores channels, users, access rules and server settings. Include this folder
+        in a stopped Nex backup.
+services:
+  mumble:
+    image: mumblevoip/mumble-server:latest
+    environment:
+      MUMBLE_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      MUMBLE_CONFIG_SERVERPASSWORD: ${JOIN_PASSWORD}
+    expose:
+    - 64738/tcp
+    - 64738/udp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

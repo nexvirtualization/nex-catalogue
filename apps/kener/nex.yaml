@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kener
+  summary: Publish checks and incidents on a status page
+  description: Prepare a Redis-compatible service and create an administrator using the setup UI. Set
+    the public origin to the exact externally reachable status page URL.
+  category: monitoring
+  website: https://kener.ing/
+  source: https://github.com/rajnandan1/kener
+  docs: https://kener.ing/docs/v4/getting-started/quick-start
+  scalable: false
+  primary_service: kener
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: kener
+    scheme: http
+    port: 3000
+  works_with:
+  - valkey
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    APP_SECRET:
+      label: Application secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    CACHE_URL:
+      label: Redis connection string
+      help: Enter the complete private Redis URL.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Checks and status history
+      help: Select This host. Stores the local database. Include this folder in a stopped Nex backup.
+    UPLOADS:
+      label: Site uploads
+      help: Select This host. Stores icons and other status page uploads. Include this folder in a stopped
+        Nex backup.
+services:
+  kener:
+    image: ghcr.io/rajnandan1/kener:latest
+    environment:
+      KENER_SECRET_KEY: ${APP_SECRET}
+      ORIGIN: ${PUBLIC_URL}
+      REDIS_URL: ${CACHE_URL}
+    ports:
+    - ${PORT:-8454}:3000/tcp
+    volumes:
+    - ${DATA}:/app/database
+    - ${UPLOADS}:/app/uploads
+    deploy:
+      replicas: 1

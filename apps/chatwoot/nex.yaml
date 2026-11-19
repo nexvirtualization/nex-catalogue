@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chatwoot
+  summary: Manage helpdesk and live chat conversations
+  description: Provision PostgreSQL with pgvector and Redis. Run the upstream database bootstrap before starting.
+    Keep web and worker on one host or on shared storage.
+  category: communication
+  website: https://www.chatwoot.com
+  source: https://github.com/chatwoot/chatwoot
+  docs: https://developers.chatwoot.com/self-hosted/deployment/docker
+  primary_service: chatwoot
+  post_install: Provision PostgreSQL with pgvector and Redis. Run the upstream database bootstrap before
+    starting. Keep web and worker on one host or on shared storage.
+  license: MIT Expat core; enterprise features separately licensed
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    STORAGE:
+      label: Conversation attachments
+      help: Managed directory mounted at /app/storage. Choose storage writable by the application.
+services:
+  chatwoot:
+    image: docker.io/chatwoot/chatwoot:latest
+    ports:
+    - ${PORT:-23599}:3000/tcp
+    volumes:
+    - ${STORAGE}:/app/storage
+    environment:
+      FRONTEND_URL: ${PUBLIC_URL}
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      RAILS_ENV: production
+      NODE_ENV: production
+      INSTALLATION_ENV: docker
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DATABASE: ${DB_NAME:-chatwoot}
+      POSTGRES_USERNAME: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: ${REDIS_URL}
+      ACTIVE_STORAGE_SERVICE: local
+    entrypoint:
+    - docker/entrypoints/rails.sh
+    command:
+    - bundle
+    - exec
+    - rails
+    - s
+    - -p
+    - '3000'
+    - -b
+    - 0.0.0.0
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/chatwoot/chatwoot:latest
+    environment:
+      FRONTEND_URL: ${PUBLIC_URL}
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      RAILS_ENV: production
+      NODE_ENV: production
+      INSTALLATION_ENV: docker
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DATABASE: ${DB_NAME:-chatwoot}
+      POSTGRES_USERNAME: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: ${REDIS_URL}
+      ACTIVE_STORAGE_SERVICE: local
+    deploy:
+      replicas: 1
+    command:
+    - bundle
+    - exec
+    - sidekiq
+    - -C
+    - config/sidekiq.yml
+    volumes:
+    - ${STORAGE}:/app/storage

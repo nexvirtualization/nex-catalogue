@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Node-RED
+  summary: Connect devices and APIs with visual flows
+  description: >-
+    Visual automation editor with a library of integrations. The editor has no authentication by
+    default and can execute code: deploy on a trusted network, then configure adminAuth and
+    credentialSecret through Nex File Browser > Flows and settings > settings.js, then ACTIONS > Restart,
+    before granting wider access. USB devices are not mapped.
+  category: home-automation
+  website: https://nodered.org
+  source: https://github.com/node-red/node-red
+  license: Apache-2.0
+  scalable: false
+  primary_service: node-red
+  tags: [automation, flows, iot]
+  options:
+    TZ:
+      label: Time zone
+      help: IANA time zone used by flows and schedules, such as Etc/UTC.
+    PORT:
+      label: Editor port
+      help: Host-published HTTP port. With a dedicated Primary network and host publishing off, use the app address on port 1880. The editor starts without a login; set adminAuth using Nex File Browser or use an authenticating proxy.
+    DATA:
+      label: Flows and settings
+      help: Flows, credentials, settings.js and installed nodes at /data. New This host storage inherits writable UID 1000 ownership from the image; existing share folders must already permit that user to write. Pin one host in Basics for File Browser. Back up this folder including the credentials key.
+services:
+  node-red:
+    image: docker.io/nodered/node-red:latest
+    environment:
+      TZ: "${TZ:-Etc/UTC}"
+    ports:
+      - "${PORT:-1880}:1880/tcp"
+    volumes:
+      - "${DATA}:/data"
+    deploy:
+      replicas: 1

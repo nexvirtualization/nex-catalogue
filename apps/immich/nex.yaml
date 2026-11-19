@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Immich
+  summary: Back up and organize photos and videos
+  description: Choose one host with enough memory for the server and machine learning service. Create
+    the first administrator through a trusted connection and then configure the mobile app. Back up the
+    uploads and the database together before updating.
+  category: media
+  website: https://immich.app/
+  source: https://github.com/immich-app/immich
+  docs: https://github.com/immich-app/immich/releases/latest/download/docker-compose.yml
+  scalable: false
+  primary_service: immich
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: immich
+    scheme: http
+    port: 2283
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for logs and background jobs.
+    DATABASE_PASSWORD:
+      label: Database password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    MODEL_CACHE:
+      label: Machine learning model cache
+      help: Select This host. Stores downloaded model files. Include this folder in a stopped Nex backup.
+    DB_DATA:
+      label: Immich database
+      help: Select This host. Stores PostgreSQL metadata for the photo library. Include this folder in
+        a stopped Nex backup.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 2283.
+    DATA:
+      label: Photos, videos and generated media
+      help: Select This host. Stores the upload library, thumbnails and transcoded assets. Include this
+        folder in a stopped Nex backup.
+services:
+  immich:
+    image: ghcr.io/immich-app/immich-server:release
+    environment:
+      DB_HOSTNAME: database
+      DB_USERNAME: immich
+      DB_DATABASE_NAME: immich
+      DB_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOSTNAME: redis
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-2283}:2283/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:release
+    environment:
+      MACHINE_LEARNING_MODEL_REVISION: v2
+    volumes:
+    - ${MODEL_CACHE}:/cache
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/valkey/valkey:9
+    deploy:
+      replicas: 1
+  database:
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+    environment:
+      POSTGRES_USER: immich
+      POSTGRES_DB: immich
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    tmpfs:
+    - /dev/shm:size=134217728
+    deploy:
+      replicas: 1

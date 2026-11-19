@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Just Cause 3 Multiplayer
+  summary: Host a multiplayer sandbox for JC3-MP
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join from the Just Cause 3 Multiplayer Mod. Use the app’s Primary address on port 4400. The additional
+    UDP ports handle discovery and Steam traffic. First boot downloads the server through SteamCMD.
+    Restarts check for updates. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/619910/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/jc3server/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  just-cause-3-multiplayer:
+    image: ghcr.io/gameservermanagers/gameserver:jc3
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 4400/tcp
+      - 4400/udp
+      - 4401/udp
+      - 4402/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

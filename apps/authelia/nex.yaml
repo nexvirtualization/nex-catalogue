@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Authelia
+  summary: Reverse-proxy login and multifactor authentication with shared sessions
+  description: >-
+    An authentication portal for self-hosted web apps. Prepare configuration.yml on a registered
+    share before installing. Configure your HTTPS reverse proxy for Authelia and verify a login
+    with one copy before increasing Copies on the Docker network. Every copy reads the same
+    configuration and uses external LDAP, Redis and PostgreSQL. If your proxy is on the shared
+    application network, leave host publishing off. Back up the configuration and external database
+    independently.
+  category: security
+  website: https://www.authelia.com/
+  source: https://github.com/authelia/authelia
+  docs: https://www.authelia.com/integration/prologue/get-started/
+  license: Apache-2.0
+  scalable: true
+  scale: [authelia]
+  primary_service: authelia
+  web: {port: 9091}
+  tags: [identity, single-sign-on, multifactor]
+  options:
+    CONFIG:
+      label: Prepared Authelia configuration
+      help: >-
+        Select a protected shared folder reachable from every selected host. Include configuration.yml
+        with your HTTPS portal URL and session cookie domain, access rules, LDAP authentication, Redis
+        sessions, PostgreSQL storage, SMTP notifications and identical persistent secrets for all copies.
+        Leave the listener at port 9091. Make the configuration readable by the container's user and group.
+    USER_UID:
+      label: Configuration reader user ID
+      help: Non-root numeric UID that can read the prepared files.
+    USER_GID:
+      label: Configuration reader group ID
+      help: Non-root numeric GID that can read the prepared files.
+    PORT:
+      label: HTTP backend port
+      help: >-
+        Keep this published port private. A reverse proxy on Nex's shared application network uses
+        the app connection name and internal port 9091. Configure the proxy to send the forwarded headers
+        required by the Authelia integration.
+services:
+  authelia:
+    image: authelia/authelia:latest
+    user: "${USER_UID:-1000}:${USER_GID:-1000}"
+    entrypoint: [/app/authelia]
+    command: [--config, /config/configuration.yml]
+    ports:
+      - "${PORT:-9091}:9091/tcp"
+    volumes:
+      - "${CONFIG}:/config:ro"
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:9091/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 1m
+    deploy:
+      replicas: 1

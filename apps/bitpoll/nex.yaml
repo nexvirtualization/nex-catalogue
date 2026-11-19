@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bitpoll
+  summary: Schedule meetings using participant availability polls
+  description: Select a folder containing the upstream settings.py. Set the database connection, allowed
+    hosts and application secret, and keep these settings on a trusted network.
+  category: productivity
+  website: https://github.com/fsinfuhh/Bitpoll
+  source: https://github.com/fsinfuhh/Bitpoll
+  docs: https://github.com/fsinfuhh/Bitpoll#using-docker
+  primary_service: bitpoll
+  scalable: false
+  license: GPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 3009
+  options:
+    CONFIG:
+      label: Prepared Bitpoll settings
+      help: Keep prepared bitpoll settings in this managed folder between restarts.
+    STATIC:
+      label: Published static assets
+      help: Keep published static assets in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3009.
+services:
+  bitpoll:
+    image: ghcr.io/fsinfuhh/bitpoll:latest
+    volumes:
+    - ${CONFIG}:/opt/config
+    - ${STATIC}:/opt/static
+    ports:
+    - ${PORT:-3009}:3009/tcp
+    deploy:
+      replicas: 1

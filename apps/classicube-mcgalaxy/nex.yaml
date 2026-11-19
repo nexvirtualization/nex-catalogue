@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ClassiCube MCGalaxy
+  summary: Host a persistent ClassiCube building world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use Direct connect in the ClassiCube client and enter the app’s Primary address on TCP 25565. First
+    boot downloads the official MCGalaxy Linux-compatible release. The server starts unlisted. Stop
+    the app to edit properties/server.properties and manage world files or player ranks.
+  category: games
+  website: https://www.classicube.net/
+  source: https://github.com/ClassiCube/MCGalaxy
+  docs: https://github.com/ClassiCube/MCGalaxy#readme
+  license: ClassiCube MCGalaxy server
+  architectures:
+  - amd64
+  tags:
+  - sandbox
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  classicube-mcgalaxy:
+    image: ghcr.io/ptero-eggs/yolks:mono_latest
+    expose:
+    - 25565/tcp
+    volumes:
+    - ${DATA}:/home/container
+    user: 1000:1000
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      download() {
+        local url="$$1" sha256="$$2" target="$$3"
+        curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
+        printf '%s  %s\n' "$$sha256" "$$target" | sha256sum --check --status || {
+          echo "The server download did not match the release checksum." >&2
+          return 1
+        }
+      }
+
+
+      cd "$$HOME"
+      if [ ! -f ./mcgalaxy/MCGalaxyCLI.exe ]; then
+        staging=$$(mktemp -d ./.mcgalaxy-install.XXXXXX)
+        trap 'rm -rf "$$staging"' EXIT
+        download https://cdn.classicube.net/client/mcg/release/MCGalaxy.zip \
+          d65f48af9875fabce15568d836860239e2ee3b041f829759e24b78491b2dfb9d "$$staging/release.zip"
+        unzip -oq "$$staging/release.zip" -d "$$staging"
+        mv "$$staging/MCGalaxy" ./mcgalaxy
+        rm -rf "$$staging"
+        trap - EXIT
+      fi
+      mkdir -p properties
+      if [ ! -f properties/server.properties ]; then
+        printf 'server-name = Nex ClassiCube\npublic = false\nport = 25565\n' > properties/server.properties
+      fi
+      exec mono ./mcgalaxy/MCGalaxyCLI.exe
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

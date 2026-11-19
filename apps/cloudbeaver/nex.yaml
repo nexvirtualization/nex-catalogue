@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CloudBeaver
+  summary: Explore and query databases through a browser
+  description: Finish onboarding and create the administrator on a trusted network. Connect databases
+    at addresses reachable from this app and use least-privilege accounts.
+  category: development
+  website: https://github.com/dbeaver/cloudbeaver
+  source: https://github.com/dbeaver/cloudbeaver
+  docs: https://dbeaver.com/docs/cloudbeaver/Run-Docker-Container/
+  primary_service: cloudbeaver
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8978
+  options:
+    WORKSPACE:
+      label: CloudBeaver workspace
+      help: Users, database connections and preferences.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8978.
+services:
+  cloudbeaver:
+    image: docker.io/dbeaver/cloudbeaver:latest
+    volumes:
+    - ${WORKSPACE}:/opt/cloudbeaver/workspace
+    ports:
+    - ${PORT:-8978}:8978/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NZBGet
+  summary: Queue and manage Usenet downloads
+  description: NZBGet uses a managed configuration folder and writes completed downloads to selected storage.
+  category: downloads
+  website: https://nzbget.com/
+  source: https://github.com/nzbgetcom/nzbget
+  docs: https://docs.linuxserver.io/images/docker-nzbget/
+  primary_service: nzbget
+  post_install: Enter Usenet server details in Settings and use the configured control credentials for access.
+    Protect the web interface behind HTTPS.
+  license: GPL-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 6789
+  options:
+    USER:
+      label: Email or login name
+      help: Account identifier supplied to the application.
+    PASSWORD:
+      label: Account password
+      help: Choose a strong password for this deployment.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 6789 inside Nex.
+    CONFIG:
+      label: NZBGet settings
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    DOWNLOADS:
+      label: Download storage
+      help: Managed directory mounted at /downloads. Choose storage writable by the application.
+services:
+  nzbget:
+    image: lscr.io/linuxserver/nzbget:latest
+    ports:
+    - ${PORT:-20258}:6789/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${DOWNLOADS}:/downloads
+    environment:
+      NZBGET_USER: ${USER:-nzbget}
+      NZBGET_PASS: ${PASSWORD}
+    deploy:
+      replicas: 1

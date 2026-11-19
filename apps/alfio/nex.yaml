@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Alf.io
+  summary: Manage event ticket reservations and attendee check-in
+  description: Prepare an empty PostgreSQL 16 database owned by a dedicated login without superuser privileges.
+    Alf.io creates its schema on startup. Retrieve the generated administrator password from the initial
+    logs and sign in as admin at /admin. Terminate HTTPS at your reverse proxy before exposing the application.
+  category: productivity
+  website: https://alf.io/
+  source: https://github.com/alfio-event/alf.io
+  docs: https://github.com/alfio-event/alf.io#test-alfio-application
+  scalable: false
+  primary_service: alfio
+  license: GPL-3.0-or-later
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: alfio
+    scheme: http
+    port: 8080
+  options:
+    DB_HOST:
+      label: Database host
+      help: Hostname of the prepared PostgreSQL 16 server.
+    DB_PORT:
+      label: Database port
+      help: TCP port of the prepared PostgreSQL server.
+    DB_NAME:
+      label: Database name
+      help: Create this database and make the dedicated application login its owner.
+    DB_USER:
+      label: Database user
+      help: Use the database owner role without PostgreSQL superuser privileges.
+    DB_PASSWORD:
+      label: Database password
+      help: Enter the password for the database owner role.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+services:
+  alfio:
+    image: alfio/alf.io:latest
+    environment:
+      POSTGRES_PORT_5432_TCP_ADDR: ${DB_HOST}
+      POSTGRES_PORT_5432_TCP_PORT: ${DB_PORT:-5432}
+      POSTGRES_ENV_POSTGRES_DB: ${DB_NAME:-alfio}
+      POSTGRES_ENV_POSTGRES_USERNAME: ${DB_USER}
+      POSTGRES_ENV_POSTGRES_PASSWORD: ${DB_PASSWORD}
+      SPRING_PROFILES_ACTIVE: jdbc-session
+    ports:
+    - ${PORT:-8110}:8080/tcp
+    deploy:
+      replicas: 1

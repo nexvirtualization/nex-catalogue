@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Weblate
+  summary: Coordinate software translations online
+  description: Provision PostgreSQL and Redis, set the browser-facing domain, and configure mail routing
+    before inviting users.
+  category: development
+  website: https://weblate.org
+  source: https://github.com/WeblateOrg/weblate
+  docs: https://docs.weblate.org/en/latest/admin/install/docker.html
+  primary_service: weblate
+  post_install: Provision PostgreSQL and Redis, set the browser-facing domain, and configure mail routing
+    before inviting users.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Translation repositories and uploads
+      help: Managed directory mounted at /app/data. Choose storage writable by the application.
+    CACHE:
+      label: Working cache
+      help: Managed directory mounted at /app/cache. Choose storage writable by the application.
+services:
+  weblate:
+    image: docker.io/weblate/weblate:latest
+    ports:
+    - ${PORT:-23581}:8080/tcp
+    volumes:
+    - ${DATA}:/app/data
+    - ${CACHE}:/app/cache
+    environment:
+      WEBLATE_SITE_DOMAIN: ${PUBLIC_HOST}
+      WEBLATE_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      WEBLATE_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_PORT: ${DB_PORT:-5432}
+      POSTGRES_DATABASE: ${DB_NAME:-weblate}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    deploy:
+      replicas: 1

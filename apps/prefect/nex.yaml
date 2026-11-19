@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Prefect
+  summary: Schedule and observe Prefect workflows
+  description: Provision PostgreSQL and deploy workers connected to this API. Configure basic authentication
+    and HTTPS for access.
+  category: development
+  website: https://www.prefect.io/
+  source: https://github.com/PrefectHQ/prefect
+  docs: https://docs.prefect.io/v3/how-to-guides/self-hosted/server-cli
+  primary_service: prefect
+  post_install: Provision PostgreSQL and deploy workers connected to this API. Configure basic authentication
+    and HTTPS for access.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 4200
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 4200 inside Nex.
+services:
+  prefect:
+    image: docker.io/prefecthq/prefect:3-latest
+    ports:
+    - ${PORT:-23555}:4200/tcp
+    environment:
+      PREFECT_SERVER_API_HOST: 0.0.0.0
+      PREFECT_API_DATABASE_CONNECTION_URL: ${DATABASE_URL}
+      PREFECT_SERVER_API_AUTH_STRING: ${AUTH_SECRET}
+    command:
+    - prefect
+    - server
+    - start
+    - --host
+    - 0.0.0.0
+    deploy:
+      replicas: 1

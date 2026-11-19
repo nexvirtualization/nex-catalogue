@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: vLLM CPU
+  summary: Serve a language model through an OpenAI-compatible API
+  description: Select an x86-64 host with the CPU instruction support and memory described upstream. Use
+    a public or already downloaded model and keep the API on an authenticated private endpoint.
+  category: ai
+  website: https://vllm.ai/
+  source: https://github.com/vllm-project/vllm
+  docs: https://docs.vllm.ai/en/latest/getting_started/installation/cpu/
+  scalable: false
+  primary_service: vllm
+  architectures:
+  - amd64
+  web:
+    service: vllm
+    scheme: http
+    port: 8000
+  options:
+    MODEL:
+      label: Model
+      help: Public model identifier or a local model path available inside the container.
+    API_KEY:
+      label: Inference API key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Model cache
+      help: Select This host. Stores model weights downloaded from the configured repository. Include
+        this folder in a stopped Nex backup.
+services:
+  vllm:
+    image: vllm/vllm-openai-cpu:latest-x86_64
+    command:
+    - --model
+    - ${MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8000'
+    - --api-key
+    - ${API_KEY}
+    ports:
+    - ${PORT:-8880}:8000/tcp
+    volumes:
+    - ${DATA}:/root/.cache/huggingface
+    tmpfs:
+    - /dev/shm:size=4294967296
+    deploy:
+      replicas: 1

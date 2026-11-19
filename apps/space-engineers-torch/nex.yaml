@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Space Engineers Torch
+  summary: Host Space Engineers with the Torch plugin framework
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads Space Engineers and the Torch server framework. Direct connect to the Primary
+    address on UDP 27016. Stop the app before editing the world settings in spaceengineers/instance
+    or adding Torch plugins. Make a stopped backup before applying game updates.
+  category: games
+  website: https://torchapi.com/
+  source: https://github.com/krobertson/space-engineers-torch
+  docs: https://github.com/krobertson/space-engineers-torch#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - mods
+    - steam
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  space-engineers-torch:
+    image: ghcr.io/krobertson/space-engineers-torch:latest
+    expose:
+      - 27016/udp
+    volumes:
+      - ${DATA}:/games
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

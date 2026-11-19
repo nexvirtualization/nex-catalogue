@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Don't Starve Together
+  summary: Host a password-protected co-op wilderness world
+  description: >-
+    This package runs one surface world for the desktop game. Choose one x86-64 host and a registered
+    client-reachable primary network. SteamCMD checks for updates on startup. In the game, browse for
+    the server name or use c_connect("APP-IP", 10999, "PASSWORD") in the client console.
+    Use a stopped Nex backup before an update or world change.
+  category: games
+  website: https://www.klei.com/games/dont-starve-together
+  source: https://github.com/dockhippie/dst
+  docs: https://accounts.klei.com/account/game/servers?game=DontStarveTogether
+  license: Proprietary
+  architectures: [amd64]
+  tags: [survival, co-op, dedicated-server]
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: This name appears in the game browser.
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+      help: Give this password to the players you invite.
+    KLEI_TOKEN:
+      label: Klei cluster token
+      type: password
+      help: Create a cluster token in your Klei account before installation. The image stores the token on first start.
+    WORLD_DATA:
+      label: World and settings
+      help: Select This host on the same host as the app. Back up this folder to preserve the world, settings and token.
+services:
+  dont-starve-together:
+    image: ghcr.io/dockhippie/dst:latest
+    environment:
+      DST_NETWORK_CLUSTER_NAME: ${SERVER_NAME:-Nex Dont Starve Together}
+      DST_NETWORK_CLUSTER_PASSWORD: ${SERVER_PASSWORD}
+      DST_CLUSTER_TOKEN: ${KLEI_TOKEN}
+      DST_SHARD_ENABLED: 'false'
+    expose: ['10999/udp', '27017/udp', '8767/udp']
+    volumes:
+      - ${WORLD_DATA}:/var/lib/game
+    stop_grace_period: 5m
+    deploy:
+      replicas: 1

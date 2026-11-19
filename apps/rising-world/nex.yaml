@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rising World
+  summary: Host a persistent world on the Unity edition
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the Unity client and add the app’s Primary address on port 4255. The server browser queries
+    TCP 4254. Restrict optional RCON access to administrators. First boot downloads the server through
+    SteamCMD. Restarts check for updates. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/324080/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/rwserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  rising-world:
+    image: ghcr.io/gameservermanagers/gameserver:rw
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 4255/tcp
+      - 4255/udp
+      - 4254/tcp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

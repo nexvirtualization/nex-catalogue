@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gladys Assistant
+  summary: Run a dashboard for network-connected home automation
+  description: Configure the initial user and network-controlled devices from the web page. This installation
+    can connect to existing external services over the app network. Hardware and add-ons that depend on
+    host device access use separate integrations.
+  category: home-automation
+  website: https://gladysassistant.com/
+  source: https://github.com/GladysAssistant/Gladys
+  docs: https://github.com/GladysAssistant/Gladys#readme
+  scalable: false
+  primary_service: gladys
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: gladys
+    scheme: http
+    port: 80
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for schedules in Gladys.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Home automation database
+      help: Select This host. Stores settings, devices and automations. Include this folder in a stopped
+        Nex backup.
+services:
+  gladys:
+    image: gladysassistant/gladys:latest
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: '80'
+      SQLITE_FILE_PATH: /var/lib/gladysassistant/gladys-production.db
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8828}:80/tcp
+    volumes:
+    - ${DATA}:/var/lib/gladysassistant
+    deploy:
+      replicas: 1

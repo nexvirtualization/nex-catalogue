@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Traggo
+  summary: Tag-based time tracking tool
+  description: Tag-based time tracking tool. In Traggo there are no tasks, only tagged time spans.
+  category: productivity
+  source: https://github.com/traggo/server
+  website: https://traggo.net/
+  docs: https://traggo.net/install/
+  primary_service: traggo
+  options:
+    ADMIN_USER:
+      label: Admin user
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /opt/traggo/data.
+    PORT:
+      label: Published 3030/tcp port
+      help: Host port for application listener 3030/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Sign in with the initial account and configure your tracking tags. Back up the Data folder while
+    stopped.
+  web:
+    port: 3030
+services:
+  traggo:
+    image: docker.io/traggo/server:latest
+    deploy:
+      replicas: 1
+    environment:
+      TRAGGO_DEFAULT_USER_NAME: ${ADMIN_USER:-admin}
+      TRAGGO_DEFAULT_USER_PASS: ${ADMIN_PASSWORD}
+    volumes:
+    - ${DATA}:/opt/traggo/data
+    ports:
+    - ${PORT:-19580}:3030/tcp

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Terraria
+  summary: Explore a private vanilla Terraria world with friends
+  description: >-
+    Run one copy on a selected host with game data on This host. In Network, choose a cluster
+    VLAN or routed private network reachable by players. The server generates a new world on
+    first start. On a matching Terraria PC client, choose Multiplayer, Join via IP and enter the
+    app's Primary address and TCP 7777. Back up the world before updating.
+  category: games
+  website: https://terraria.org/
+  source: https://github.com/PassiveLemon/terraria-docker
+  docs: https://github.com/PassiveLemon/terraria-docker#quick-setup-summary-vanilla
+  license: Proprietary game server (GPL-3.0 container)
+  architectures: [amd64]
+  tags: [sandbox, adventure, multiplayer]
+  options:
+    WORLD_NAME:
+      label: World name
+      help: Sets the filename of the world the server creates or loads.
+    WORLD_SIZE:
+      label: World size
+      help: Enter 1 for small, 2 for medium or 3 for large. Match the original size when restoring a world.
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+    DATA:
+      label: Worlds and settings
+      help: Choose This host and include this folder in a stopped backup.
+services:
+  terraria:
+    image: docker.io/passivelemon/terraria-docker:latest
+    environment:
+      WORLD: ${WORLD_NAME:-World}
+      AUTOCREATE: ${WORLD_SIZE:-2}
+      PASSWORD: ${SERVER_PASSWORD}
+    expose:
+      - "7777/tcp"
+    volumes:
+      - ${DATA}:/opt/terraria/config
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

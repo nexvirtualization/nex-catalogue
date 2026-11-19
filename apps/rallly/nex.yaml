@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rallly
+  summary: Create polls to find a meeting time
+  description: Provision PostgreSQL and an SMTP relay for sign-in codes. Use the configured HTTPS origin
+    and create your first poll.
+  category: productivity
+  website: https://rallly.co
+  source: https://github.com/lukevella/rallly
+  docs: https://support.rallly.co/self-hosting/docker
+  primary_service: rallly
+  post_install: Provision PostgreSQL and an SMTP relay for sign-in codes. Use the configured HTTPS origin
+    and create your first poll.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    FROM_EMAIL:
+      label: From email
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_HOST:
+      label: Smtp host
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PORT:
+      label: Smtp port
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_USER:
+      label: Smtp user
+      help: Enter the deployment value described in the upstream setup guide.
+    SMTP_PASSWORD:
+      label: Smtp password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SUPPORT_EMAIL:
+      label: Support email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  rallly:
+    image: docker.io/lukevella/rallly:latest
+    ports:
+    - ${PORT:-23483}:3000/tcp
+    environment:
+      NEXT_PUBLIC_BASE_URL: ${PUBLIC_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_PASSWORD: ${SIGNING_SECRET}
+      NOREPLY_EMAIL: ${FROM_EMAIL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PWD: ${SMTP_PASSWORD}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+      INITIAL_ADMIN_EMAIL: ${ADMIN_EMAIL}
+    deploy:
+      replicas: 1

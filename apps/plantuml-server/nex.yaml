@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PlantUML Server
+  summary: Render UML diagrams from text
+  description: Convert PlantUML diagrams into images using the browser editor or HTTP endpoints. Sandboxed rendering
+    blocks access to external URLs and the server filesystem.
+  category: development
+  website: https://plantuml.com/
+  source: https://github.com/plantuml/plantuml-server
+  docs: https://github.com/plantuml/plantuml-server#run-with-docker
+  license: GPL-3.0
+  primary_service: plantuml-server
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the browser editor or point a PlantUML-compatible client to the application endpoint. Keep
+    private diagrams on a trusted network.
+  web:
+    port: 8080
+  scale:
+  - plantuml-server
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+services:
+  plantuml-server:
+    image: docker.io/plantuml/plantuml-server:latest
+    ports:
+    - ${PORT:-18131}:8080/tcp
+    environment:
+      PLANTUML_SECURITY_PROFILE: SANDBOX
+    deploy:
+      replicas: 1

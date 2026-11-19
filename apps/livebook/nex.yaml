@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Livebook
+  summary: Run interactive Elixir notebooks and collaborative sessions
+  description: Sign in with the configured password from a private network. Notebook code executes in
+    this container. Use the managed folder for notebooks that should persist.
+  category: development
+  website: https://github.com/livebook-dev/livebook
+  source: https://github.com/livebook-dev/livebook
+  docs: https://github.com/livebook-dev/livebook
+  primary_service: livebook
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    LIVEBOOK_PASSWORD:
+      label: Livebook access password
+      type: password
+      help: Use Nex Generate.
+    DATA:
+      label: Notebooks
+      help: Keep notebooks in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    IFRAME_PORT:
+      label: Notebook assets and iframe port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8081.
+services:
+  livebook:
+    image: ghcr.io/livebook-dev/livebook:latest
+    environment:
+      LIVEBOOK_PASSWORD: ${LIVEBOOK_PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${IFRAME_PORT:-8081}:8081/tcp
+    deploy:
+      replicas: 1

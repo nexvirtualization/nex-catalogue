@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ToolJet
+  summary: Build internal business apps from your connected data
+  description: Provision PostgreSQL, set the full web URL, and configure initial workspace access from
+    a trusted network.
+  category: development
+  website: https://github.com/ToolJet/ToolJet
+  source: https://github.com/ToolJet/ToolJet
+  docs: https://docs.tooljet.ai/docs/setup/docker/
+  primary_service: tooljet
+  scalable: false
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 80
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL including scheme.
+    DB_HOST:
+      label: PostgreSQL hostname
+      help: Reachable app connection name or hostname.
+    DB_NAME:
+      label: Database name
+      help: Prepared ToolJet database.
+    DB_USER:
+      label: Database user
+      help: Prepared PostgreSQL application user.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for that PostgreSQL application user.
+    LOCKBOX_KEY:
+      label: Encryption key
+      type: password
+      help: Supply the upstream-required hexadecimal encryption key and retain it for restore.
+    SESSION_KEY:
+      label: Session signing key
+      type: password
+      help: Supply the upstream-required random signing secret and retain it for restore.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  tooljet:
+    image: docker.io/tooljet/tooljet-ce:ce-lts-latest
+    environment:
+      SERVE_CLIENT: 'true'
+      PORT: '80'
+      TOOLJET_HOST: ${BASE_URL}
+      PG_HOST: ${DB_HOST}
+      PG_DB: ${DB_NAME:-tooljet}
+      PG_USER: ${DB_USER:-tooljet}
+      PG_PASS: ${DB_PASSWORD}
+      LOCKBOX_MASTER_KEY: ${LOCKBOX_KEY}
+      SECRET_KEY_BASE: ${SESSION_KEY}
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

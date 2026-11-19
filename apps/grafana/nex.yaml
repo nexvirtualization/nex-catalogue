@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Grafana
+  summary: Visualize metrics and logs in custom dashboards
+  description: Grafana OSS dashboards and alerts with SQLite. Keep the shared application network for the default
+    host endpoint, open Summary, Network, Host-published endpoints after installation and sign in with the initial
+    administrator credentials. For HTTPS in Nginx Proxy Manager use this installation's Name inside applications
+    and internal port 3000; the selected host port is not the upstream port. Add your own Prometheus, Loki or other
+    data sources; no host metrics collector is included. Initial credentials apply only to a fresh database. On
+    Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one copy on
+    that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all state
+    folders before updates.
+  category: monitoring
+  website: https://grafana.com/oss/grafana/
+  source: https://github.com/grafana/grafana
+  license: AGPL-3.0
+  scalable: false
+  tags:
+  - dashboards
+  - metrics
+  - alerts
+  options:
+    ADMIN_USER:
+      label: Initial administrator username
+      help: Administrator name used when the database is first created. Changing this later does not rename an existing
+        account.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate for a unique initial password. It is applied only on first database creation; later password
+        changes belong in Grafana. Nex backup manifests include password answers, so protect the repository.
+      type: password
+    PORT:
+      label: Web port
+      help: Default host HTTP endpoint is port 3002. Nginx Proxy Manager uses this installation's Nex Name inside
+        applications and internal port 3000. With an own primary address and publishing off, use APP-IP:3000.
+    DATA:
+      label: Dashboards and database
+      help: Keep Dashboards and database on This host. Nex creates a named volume initialized from the image; its
+        directory already belongs to Grafana UID 472, so no host chown is needed. A selected NFS/SMB folder must
+        grant UID 472 write access first. Include this folder in a stopped Nex backup.
+services:
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: ${ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+    ports:
+    - ${PORT:-3002}:3000/tcp
+    volumes:
+    - ${DATA}:/var/lib/grafana
+    deploy:
+      replicas: 1

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Synapse
+  summary: Run a Matrix homeserver for private conversations
+  description: Set the public Matrix server name before first start. This single-node SQLite profile
+    creates an initial config when absent. Configure TLS, user creation, and federation according to
+    upstream documentation.
+  category: communication
+  website: https://github.com/element-hq/synapse
+  source: https://github.com/element-hq/synapse
+  docs: https://element-hq.github.io/synapse/latest/setup/installation.html
+  primary_service: synapse
+  scalable: false
+  license: AGPL-3.0
+  options:
+    SERVER_NAME:
+      label: Matrix server name
+      help: Public Matrix host identity without scheme. Keep it unchanged after setup.
+    DATA:
+      label: Homeserver database and configuration
+      help: Keep homeserver database and configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8008.
+services:
+  synapse:
+    image: docker.io/matrixdotorg/synapse:latest
+    command:
+    - "if [ ! -s /data/homeserver.yaml ]; then\n  /start.py generate\nfi\nexec /start.py run"
+    entrypoint:
+    - /bin/sh
+    - -ec
+    environment:
+      SYNAPSE_SERVER_NAME: ${SERVER_NAME}
+      SYNAPSE_REPORT_STATS: 'no'
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8008}:8008/tcp
+    deploy:
+      replicas: 1

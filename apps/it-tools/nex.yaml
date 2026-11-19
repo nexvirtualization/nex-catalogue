@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: IT Tools
+  summary: Run browser-based developer and homelab utilities
+  description: >-
+    Provides converters, formatters, generators and network calculators in the browser. Copies serve the same
+    static site through the Docker ingress mesh. No persistent folders are required.
+  category: tools
+  website: https://github.com/CorentinTh/it-tools
+  source: https://github.com/CorentinTh/it-tools
+  docs: https://github.com/CorentinTh/it-tools
+  license: GPL-3.0-only
+  primary_service: it-tools
+  scale:
+    - it-tools
+  web:
+    port: 80
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+  post_install: Use the Docker network and set Copies in Basics. Use host publishing or a proxy on the Nex
+    application network to reach the shared endpoint.
+services:
+  it-tools:
+    image: docker.io/corentinth/it-tools:latest
+    ports:
+      - ${PORT:-8092}:80/tcp
+    deploy:
+      replicas: 1

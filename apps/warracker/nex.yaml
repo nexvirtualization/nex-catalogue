@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Warracker
+  summary: Warranty tracker that lets you monitor expiry dates, upload receipts/files, and get alerts before
+    warranties
+  description: Warranty tracker that lets you monitor expiry dates, upload receipts/files, and get alerts before
+    warranties expire.
+  category: management
+  source: https://github.com/sassanix/Warracker
+  website: https://warracker.com
+  docs: https://github.com/sassanix/Warracker/wiki/Configuration
+  primary_service: warracker
+  options:
+    DB_HOST:
+      label: Db host
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_ADMIN_USER:
+      label: Db admin user
+    DB_ADMIN_PASSWORD:
+      label: Db admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SECRET_KEY:
+      label: Secret key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    UPLOADS:
+      label: Uploads folder
+      help: Choose the Nex-managed folder mounted at /data/uploads.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Provision PostgreSQL and a role authorized for the initial schema setup. Keep the app on a trusted
+    network until you have registered the first administrator.
+  web:
+    port: 80
+services:
+  warracker:
+    image: ghcr.io/sassanix/warracker/main:latest
+    deploy:
+      replicas: 1
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME:-warranty_db}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_ADMIN_USER: ${DB_ADMIN_USER}
+      DB_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      FRONTEND_URL: ${PUBLIC_URL}
+      APP_BASE_URL: ${PUBLIC_URL}
+    volumes:
+    - ${UPLOADS}:/data/uploads
+    ports:
+    - ${PORT:-19990}:80/tcp

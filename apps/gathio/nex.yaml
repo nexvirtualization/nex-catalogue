@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: gathio
+  summary: Publish event pages and coordinate attendance
+  description: Prepare the Gathio configuration with a reachable MongoDB instance and your public address.
+    Protect the administrative configuration and use HTTPS for shared events.
+  category: productivity
+  website: https://github.com/lowercasename/gathio
+  source: https://github.com/lowercasename/gathio
+  docs: https://github.com/lowercasename/gathio
+  primary_service: gathio
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 3000
+  options:
+    CONFIG:
+      label: Prepared event configuration
+      help: Keep prepared event configuration in this managed folder between restarts.
+    IMAGES:
+      label: Event images
+      help: Keep event images in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  gathio:
+    image: ghcr.io/lowercasename/gathio:latest
+    volumes:
+    - ${CONFIG}:/app/config
+    - ${IMAGES}:/app/public/events
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

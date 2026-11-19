@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open DroneLog
+  summary: Review and archive flight logs from your own drones
+  description: Connect from a trusted network and sign in to the default profile with the configured
+    password. Use the profile management password when creating additional profiles. Keep the uploaded
+    logs private.
+  category: tools
+  website: https://github.com/arpanghosh8453/open-dronelog
+  source: https://github.com/arpanghosh8453/open-dronelog
+  docs: https://github.com/arpanghosh8453/open-dronelog
+  primary_service: open-dronelog
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    PROFILE_SECRET:
+      label: Profile management password
+      type: password
+      help: Use Nex Generate.
+    PROFILE_PASSWORD:
+      label: Default profile password
+      type: password
+      help: Use Nex Generate. Used on first deployment only.
+    DATA:
+      label: Flight records and raw uploads
+      help: Keep flight records and raw uploads in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  open-dronelog:
+    image: ghcr.io/arpanghosh8453/open-dronelog:latest
+    environment:
+      DATA_DIR: /data/drone-logbook
+      PROFILE_CREATION_PASS: ${PROFILE_SECRET}
+      DEFAULT_PROFILE_PASSWORD: ${PROFILE_PASSWORD}
+    volumes:
+    - ${DATA}:/data/drone-logbook
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tolgee
+  summary: Translate software strings with a shared localization workspace
+  description: Use the bundled database for single-node Tolgee. Create the initial account on a trusted
+    network. Use the public address for browser access and app-generated links.
+  category: development
+  website: https://tolgee.io
+  source: https://github.com/tolgee/tolgee-platform
+  docs: https://docs.tolgee.io/platform/self_hosting/running_with_docker
+  scalable: false
+  primary_service: tolgee
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: tolgee
+    scheme: http
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Tolgee application data
+      help: Select This host. Stores application files and the embedded database. Include this folder
+        in a stopped Nex backup.
+services:
+  tolgee:
+    image: tolgee/tolgee:latest
+    environment:
+      TOLGEE_FRONT_END_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8423}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

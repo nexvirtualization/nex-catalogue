@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bytebase
+  summary: Review and automate database schema changes
+  description: Complete initial administrator setup on a trusted network. This single-node configuration
+    stores its embedded database in its application folder. Configure the client-facing HTTPS address
+    before connecting external users.
+  category: development
+  website: https://www.bytebase.com/
+  source: https://github.com/bytebase/bytebase
+  docs: https://docs.bytebase.com/get-started/install/deploy-with-docker
+  scalable: false
+  primary_service: bytebase
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: bytebase
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Bytebase state
+      help: Select This host. Holds the embedded database, settings and migration history. Include this
+        folder in a stopped Nex backup.
+services:
+  bytebase:
+    image: bytebase/bytebase:latest
+    ports:
+    - ${PORT:-8372}:8080/tcp
+    volumes:
+    - ${DATA}:/var/opt/bytebase
+    deploy:
+      replicas: 1

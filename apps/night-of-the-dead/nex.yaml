@@ -1,0 +1,161 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Night of the Dead
+  summary: Host a private zombie survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot installs the Steam dedicated server and starts a PvE world. From Multiplayer, open
+    the Dedicated server list and look for Nex Night of the Dead. The game uses UDP 7777 and queries
+    use UDP 27015 on the app’s Primary address. To change initial passwords later, stop the app and
+    edit serverfiles/LF/Saved/Config/ServerSettings.ini. Make a stopped backup before applying game
+    updates.
+  category: games
+  website: https://store.steampowered.com/app/1377380/
+  source: https://github.com/nexvirtualization/nex-catalogue/tree/main/apps/night-of-the-dead
+  docs: https://steamcommunity.com/sharedfiles/filedetails/?id=2252239447
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - steam
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use letters, digits, or _ @ . + -. Applies on first boot.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use letters, digits, or _ @ . + -. Applies on first boot.
+    DATA:
+      label: Game files, compatibility prefix, and settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  night-of-the-dead:
+    image: ghcr.io/ptero-eggs/steamcmd:proton
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+      WINEDEBUG: -all
+      PROTON_USE_XALIA: '0'
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    expose:
+      - 7777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        if [[ ! "$$JOIN_PASSWORD" =~ ^[A-Za-z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, digits, or _ @ . + - in the join password." >&2
+          exit 1
+        fi
+
+        if [[ ! "$$ADMIN_PASSWORD" =~ ^[A-Za-z0-9_@.+-]+$$ ]]; then
+          echo "Use letters, digits, or _ @ . + - in the administrator password." >&2
+          exit 1
+        fi
+
+        # SPDX-License-Identifier: AGPL-3.0-only
+        # Embedded in catalogue manifests that install a server through SteamCMD.
+        # A package passes a dedicated-server app ID and either linux or windows.
+        nex_steamcmd_update() {
+          local app_id="$$1" platform="$$2"
+          local archive attempt architecture steamclient
+          local -a update=(+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1)
+
+          cd "$$HOME"
+          mkdir -p steamcmd serverfiles
+          if [[ ! -x steamcmd/steamcmd.sh ]]; then
+            archive=$$(mktemp)
+            if ! curl --fail --silent --show-error --location --retry 3 \
+              https://media.steampowered.com/client/steamcmd_linux.tar.gz -o "$$archive" \
+              || ! tar -xzf "$$archive" -C steamcmd; then
+              rm -f "$$archive"
+              return 1
+            fi
+            rm -f "$$archive"
+          fi
+
+          if [[ "$$platform" == windows ]]; then
+            update+=(+@sSteamCmdForcePlatformType windows)
+          fi
+          update+=(+force_install_dir "$$HOME/serverfiles" +login anonymous +app_update "$$app_id" +quit)
+
+          for attempt in 1 2 3; do
+            if ./steamcmd/steamcmd.sh "$${update[@]}"; then
+              break
+            fi
+            if [[ "$$attempt" == 3 ]]; then
+              return 1
+            fi
+            sleep "$$((attempt * 5))"
+          done
+
+          for architecture in 32 64; do
+            steamclient="$$HOME/steamcmd/linux$$architecture/steamclient.so"
+            if [[ -f "$$steamclient" ]]; then
+              mkdir -p ".steam/sdk$$architecture"
+              ln -sfn "$$steamclient" ".steam/sdk$$architecture/steamclient.so"
+            fi
+          done
+          cd serverfiles
+        }
+
+
+        nex_steamcmd_update 1420710 windows
+
+        export STEAM_COMPAT_CLIENT_INSTALL_PATH="$$HOME/.steam/steam"
+
+        export STEAM_COMPAT_DATA_PATH="$$STEAM_COMPAT_CLIENT_INSTALL_PATH/steamapps/compatdata/1420710"
+
+        mkdir -p "$$STEAM_COMPAT_DATA_PATH"
+
+        install_redistributable() (
+          local stamp="$$STEAM_COMPAT_DATA_PATH/$$1" url="$$2" stage status=0
+          [[ ! -f "$$stamp" ]] || exit 0
+          stage=$$(mktemp -d)
+          trap 'rm -rf "$$stage"' EXIT
+          curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$stage/runtime.exe"
+          timeout 10m xvfb-run -a -s "-nolisten tcp" proton run "$$stage/runtime.exe" /install /quiet /norestart || status=$$?
+          # Windows exit code 3010 (restart requested) is truncated to 194 on Linux.
+          if [[ "$$status" -ne 0 && "$$status" -ne 194 ]]; then
+            echo "The Windows runtime installer exited with status $$status." >&2
+            exit "$$status"
+          fi
+          touch "$$stamp"
+        )
+        install_redistributable .vcredist-x64-installed https://aka.ms/vs/17/release/vc_redist.x64.exe
+
+        config=LF/Saved/Config/ServerSettings.ini
+        if [[ ! -f "$$config" ]]; then
+          mkdir -p "$${config%/*}"
+          umask 077
+          cat > "$$config" <<EOF
+        [ServerSettings]
+        ServerName=Nex Night of the Dead
+        Password=$$JOIN_PASSWORD
+        MaxPlayers=16
+
+        [SystemSettings]
+        IngameAdminPassword=$$ADMIN_PASSWORD
+        SaveName=NexWorld
+        SaveIntervalHour=2
+
+        [GameSettings]
+        Difficulty=Normal
+
+        [GameSettings/General]
+        MODSelect=1
+        EOF
+        fi
+        server=LF/Binaries/Win64/LFServer-Win64-Shipping.exe
+        test -f "$$server"
+        exec xvfb-run -a -s "-nolisten tcp" proton run "$$server" '?listen' \
+          -Port=7777 -QueryPort=27015 -Unattended -stdout -FullStdOutLogOutput -log
+    stop_signal: SIGINT

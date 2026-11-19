@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenRA Tiberian Dawn
+  summary: Host private Tiberian Dawn multiplayer matches
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the matching OpenRA mod and engine release. In Multiplayer, choose Direct IP and enter the
+    app’s Primary address on TCP 1234. First boot installs the checksum-verified publisher release
+    20250330. Use the matching client release. Make a stopped backup before applying game updates.
+  category: games
+  website: https://www.openra.net/
+  source: https://github.com/OpenRA/OpenRA
+  docs: https://github.com/OpenRA/OpenRA/wiki/Dedicated-Server
+  license: GPL-3.0-or-later (engine)
+  architectures:
+    - amd64
+  tags:
+    - strategy
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      required: false
+      help: Leave blank for password-free play on a trusted network.
+services:
+  openra-tiberian-dawn:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      JOIN_PASSWORD: ${JOIN_PASSWORD:-}
+    expose:
+      - 1234/tcp
+    volumes:
+      - ${DATA}:/home/container
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        cd "$$HOME"
+        if [[ ! -x openra-20250330/AppRun ]]; then
+          temporary=$$(mktemp -d "$$HOME/.openra-install.XXXXXX")
+          trap 'rm -rf "$$temporary"' EXIT
+          cd "$$temporary"
+          curl --fail --silent --show-error --location --retry 3 'https://github.com/OpenRA/OpenRA/releases/download/release-20250330/OpenRA-Tiberian-Dawn-x86_64.AppImage' -o OpenRA.AppImage
+          printf '%s  %s\n' 'b3d202d1bf701be5989c41c256d19bd2b1788694df01e343ade865cf1190706b' OpenRA.AppImage | sha256sum -c -
+          chmod +x OpenRA.AppImage
+          ./OpenRA.AppImage --appimage-extract >/dev/null
+          test -x squashfs-root/AppRun
+          cd "$$HOME"
+          mv "$$temporary/squashfs-root" openra-20250330
+          rm -rf "$$temporary"
+          trap - EXIT
+        fi
+        exec ./openra-20250330/AppRun --server 'Server.Name=Nex Tiberian Dawn' Server.ListenPort=1234 Server.AdvertiseOnline=False Server.ShareAnonymizedIPs=False "Server.Password=$$JOIN_PASSWORD"

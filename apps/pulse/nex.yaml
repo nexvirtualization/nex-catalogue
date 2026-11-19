@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pulse
+  summary: Monitor Proxmox nodes and virtual machines
+  description: Create the initial Pulse administrator on a trusted network. Add Proxmox hosts using scoped
+    credentials through the web interface. This profile uses network integrations.
+  category: monitoring
+  website: https://pulserelay.pro/
+  source: https://github.com/rcourtman/Pulse
+  docs: https://pulserelay.pro/
+  scalable: false
+  primary_service: pulse
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: pulse
+    scheme: http
+    port: 7655
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7655.
+    DATA:
+      label: Monitoring configuration
+      help: Select This host. Stores remote credentials, tracked systems and monitoring state. Include
+        this folder in a stopped Nex backup.
+services:
+  pulse:
+    image: rcourtman/pulse:v6.8.0
+    environment:
+      PULSE_DEPLOYMENT_METHOD: docker_run
+    ports:
+    - ${PORT:-7655}:7655/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

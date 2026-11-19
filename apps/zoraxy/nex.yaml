@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zoraxy
+  summary: General purpose HTTP reverse proxy and forwarding tool
+  description: General purpose HTTP reverse proxy and forwarding tool.
+  category: networking
+  source: https://github.com/tobychui/zoraxy
+  website: https://zoraxy.aroz.org/
+  docs: https://github.com/tobychui/zoraxy#docker
+  primary_service: zoraxy
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /opt/zoraxy/config.
+    PLUGINS:
+      label: Plugins folder
+      help: Choose the Nex-managed folder mounted at /opt/zoraxy/plugin.
+    PORT:
+      label: Published 8000/tcp port
+      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_3:
+      label: Published 443/tcp port
+      help: Host port for application listener 443/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_4:
+      label: Published 443/udp port
+      help: Host port for application listener 443/udp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Complete setup on the 8000 management listener. Use the private Nex DNS name of your target
+    service and keep the management listener trusted.
+  web:
+    port: 8000
+services:
+  zoraxy:
+    image: docker.io/zoraxydocker/zoraxy:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/opt/zoraxy/config
+    - ${PLUGINS}:/opt/zoraxy/plugin
+    ports:
+    - ${PORT:-19811}:8000/tcp
+    - ${PORT_2:-20811}:80/tcp
+    - ${PORT_3:-21811}:443/tcp
+    - ${PORT_4:-22811}:443/udp

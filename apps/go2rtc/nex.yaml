@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: go2rtc
+  summary: Relay camera streams between RTSP and WebRTC clients
+  description: Keep the default interfaces on a trusted network. Configure camera streams and access settings
+    in go2rtc.yaml. RTSP uses internal TCP 8554. For WebRTC use a dedicated Primary network reachable
+    by clients and set ICE candidates for port 8555 TCP and UDP.
+  category: home-automation
+  website: https://github.com/AlexxIT/go2rtc
+  source: https://github.com/alexxit/go2rtc
+  docs: https://github.com/alexxit/go2rtc#readme
+  scalable: false
+  primary_service: go2rtc
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: go2rtc
+    scheme: http
+    port: 1984
+  works_with:
+  - home-assistant
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for logs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1984.
+    DATA:
+      label: Camera relay settings
+      help: Select This host. Stores go2rtc.yaml and any stream credentials. Create or edit the file in
+        Nex File Browser. Include this folder in a stopped Nex backup.
+services:
+  go2rtc:
+    image: ghcr.io/alexxit/go2rtc:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-1984}:1984/tcp
+    expose:
+    - 8554/tcp
+    - 8555/tcp
+    - 8555/udp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

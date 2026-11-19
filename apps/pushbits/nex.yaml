@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PushBits
+  summary: Send application notifications through Matrix
+  description: Place the upstream config.yml in the managed Data folder. Connect an authenticated Matrix
+    user and verify notification delivery.
+  category: communication
+  website: https://github.com/pushbits/server
+  source: https://github.com/pushbits/server
+  docs: https://github.com/pushbits/server
+  primary_service: pushbits
+  post_install: Place the upstream config.yml in the managed Data folder. Connect an authenticated Matrix
+    user and verify notification delivery.
+  license: ISC
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Prepared configuration and application state
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  pushbits:
+    image: ghcr.io/pushbits/server:latest
+    ports:
+    - ${PORT:-23590}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

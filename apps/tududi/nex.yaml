@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: tududi
+  summary: Organize tasks, projects and notes in one workspace
+  description: Provision a PostgreSQL database before installing. The initial account uses the credentials
+    in Nex Settings. Set the public URL before configuring email links or the reverse proxy.
+  category: productivity
+  website: https://tududi.com/
+  source: https://github.com/chrisvel/tududi
+  docs: https://github.com/chrisvel/tududi#readme
+  scalable: false
+  primary_service: tududi
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: tududi
+    scheme: http
+    port: 3002
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for initial application sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3002.
+    DATA:
+      label: Uploaded attachments
+      help: Select This host. Retains user uploads outside the database. Include this folder in a stopped
+        Nex backup.
+    BACKUPS:
+      label: App-generated backups
+      help: Select This host. Keeps exported backups after container replacement. Include this folder
+        in a stopped Nex backup.
+services:
+  tududi:
+    image: chrisvel/tududi:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      TUDUDI_USER_EMAIL: ${ADMIN_EMAIL}
+      TUDUDI_USER_PASSWORD: ${ADMIN_PASSWORD}
+      TUDUDI_SESSION_SECRET: ${SESSION_SECRET}
+      BASE_URL: ${PUBLIC_URL}
+      TUDUDI_TRUST_PROXY: 'true'
+    ports:
+    - ${PORT:-8374}:3002/tcp
+    volumes:
+    - ${DATA}:/app/uploads
+    - ${BACKUPS}:/app/backups
+    deploy:
+      replicas: 1

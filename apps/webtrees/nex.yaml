@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: webtrees
+  summary: Manage genealogy records and family trees in a browser
+  description: Provision a MariaDB or MySQL database and complete setup on a trusted network. Keep account
+    and family records private.
+  category: productivity
+  website: https://github.com/fisharebest/webtrees
+  source: https://github.com/fisharebest/webtrees
+  docs: https://github.com/NathanVaughn/webtrees-docker
+  primary_service: webtrees
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Family records, settings and uploads
+      help: Keep family records, settings and uploads in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  webtrees:
+    image: docker.io/nathanvaughn/webtrees:latest
+    volumes:
+    - ${DATA}:/var/www/webtrees/data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

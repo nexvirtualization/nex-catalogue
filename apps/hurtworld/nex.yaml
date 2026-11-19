@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hurtworld
+  summary: Host a persistent multiplayer survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Connect to the app’s Primary address on UDP 12871. Steam queries use UDP 12881. First boot downloads
+    the server through SteamCMD. Restarts check for updates. Make a stopped backup before applying
+    game updates.
+  category: games
+  website: https://store.steampowered.com/app/393420/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/hwserver/
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - steam
+  - survival
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  hurtworld:
+    image: ghcr.io/gameservermanagers/gameserver:hw
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+    - 12871/udp
+    - 12881/udp
+    volumes:
+    - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ontime
+  summary: Coordinate event rundowns, timers and cues
+  description: Open the rundown editor on a trusted network. To use external OSC controllers, connect
+    to UDP 8888 on the application network or use the host-published OSC port. Configure output destinations
+    through Ontime.
+  category: productivity
+  website: https://www.getontime.no/
+  source: https://github.com/cpvalente/ontime
+  docs: https://docs.getontime.no/quick-tips/headless-ontime/
+  scalable: false
+  primary_service: ontime
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: ontime
+    scheme: http
+    port: 4001
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for local rundown and event times.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4001.
+    OSC_PORT:
+      label: Osc Port
+      help: OSC input port for controllers when host publication is enabled.
+    DATA:
+      label: Project and event state
+      help: Select This host. Stores event rundowns, settings and backups. Include this folder in a stopped
+        Nex backup.
+services:
+  ontime:
+    image: getontime/ontime:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-4001}:4001/tcp
+    - ${OSC_PORT:-8888}:8888/udp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

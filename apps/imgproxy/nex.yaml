@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/imgproxy/imgproxy#readme
+x-nex:
+  name: imgproxy
+  summary: Fast and secure standalone server for resizing and converting remote images
+  category: media
+  description: Fast and secure standalone server for resizing and converting remote images.
+  source: https://github.com/imgproxy/imgproxy
+  website: https://imgproxy.net/
+  docs: https://docs.imgproxy.net/usage/signing_url
+  primary_service: app
+  options:
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8080/tcp.
+    SIGNING_KEY:
+      label: Hex signing key
+      type: password
+    SIGNING_SALT:
+      label: Hex signing salt
+      type: password
+  post_install: Use separate 64-character hexadecimal strings for the signing key and salt. Sign image requests
+    with those values.
+services:
+  app:
+    image: ghcr.io/imgproxy/imgproxy:latest
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-19541}:8080/tcp
+    environment:
+      IMGPROXY_KEY: ${SIGNING_KEY}
+      IMGPROXY_SALT: ${SIGNING_SALT}

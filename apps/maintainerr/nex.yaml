@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Maintainerr
+  summary: Review and clean up media library collections
+  description: Connect your media server and automation apps, then review cleanup rules and permissions
+    before enabling automated deletion. Keep the management interface on a trusted network or behind an
+    authenticated proxy.
+  category: media
+  website: https://maintainerr.info/
+  source: https://github.com/Maintainerr/Maintainerr
+  docs: https://github.com/Maintainerr/Maintainerr#readme
+  scalable: false
+  primary_service: maintainerr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: maintainerr
+    scheme: http
+    port: 6246
+  works_with:
+  - jellyfin
+  - sonarr
+  - radarr
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for scheduled jobs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 6246.
+    DATA:
+      label: Media rules and settings
+      help: Select This host. Contains the database, integrations and deletion rules. Include this folder
+        in a stopped Nex backup.
+services:
+  maintainerr:
+    image: ghcr.io/maintainerr/maintainerr:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-6246}:6246/tcp
+    volumes:
+    - ${DATA}:/opt/data
+    deploy:
+      replicas: 1

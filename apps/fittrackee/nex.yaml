@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FitTrackee
+  summary: Record and review GPS workout activities
+  description: Provision a PostgreSQL database with PostGIS and a Redis-compatible broker before launching
+    FitTrackee. Set the public web address and supply a static-map or email configuration as needed after
+    first start.
+  category: tools
+  website: https://docs.fittrackee.org/
+  source: https://github.com/SamR1/FitTrackee
+  docs: https://docs.fittrackee.org/en/installation/index.html
+  scalable: false
+  primary_service: fittrackee
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: fittrackee
+    scheme: http
+    port: 5000
+  works_with:
+  - postgresql
+  - valkey
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Application signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    CACHE_URL:
+      label: Redis connection string
+      help: Provide the URI of the Redis-compatible queue service.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5000.
+    DATA:
+      label: Workout uploads
+      help: Select This host. Stores uploaded activity files. Include this folder in a stopped Nex backup.
+    MAPS:
+      label: Generated maps
+      help: Select This host. Stores rendered maps for workouts. Include this folder in a stopped Nex
+        backup.
+services:
+  fittrackee:
+    image: fittrackee/fittrackee:v1.3.7
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      APP_SECRET_KEY: ${SESSION_SECRET}
+      APP_URL: ${PUBLIC_URL}
+      REDIS_URL: ${CACHE_URL}
+    ports:
+    - ${PORT:-8380}:5000/tcp
+    volumes:
+    - ${DATA}:/usr/src/app/uploads
+    - ${MAPS}:/usr/src/app/.staticmap_cache
+    deploy:
+      replicas: 1

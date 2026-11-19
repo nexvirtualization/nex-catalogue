@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Bedrock
+  summary: Host a private Minecraft Bedrock Edition world
+  description: >-
+    Run one copy on a selected x86-64 host with world data stored on This host. In Network, choose a
+    cluster VLAN or routed private network reachable by players. Give the app a Fixed IPv4 address
+    and use the same address in the Advertised IPv4 field. First startup downloads the current
+    Bedrock release. Use Add Server in a Bedrock client that supports custom servers, with the
+    app's address and TCP 19132. NetherNet also uses UDP 19140–19149.
+  category: games
+  website: https://www.minecraft.net/en-us/download/server/bedrock
+  source: https://github.com/itzg/docker-minecraft-bedrock-server
+  docs: https://github.com/itzg/docker-minecraft-bedrock-server#nethernet
+  license: Proprietary game server (MIT container)
+  tags: [sandbox, survival, multiplayer]
+  architectures: [amd64]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: Read the Minecraft EULA at https://www.minecraft.net/eula and turn this on to start the server.
+    APP_IPV4:
+      label: Advertised IPv4 address
+      help: Enter the same IPv4 address chosen under Network without its prefix. Clients must be able to route to it.
+    PLAYERS:
+      label: Allowed Bedrock players
+      help: Enter comma-separated gamertag and Xbox user ID pairs, such as PlayerName:1234567890.
+    DATA:
+      label: World and settings
+      help: Choose This host and make a stopped backup before restarting to pick up a newer game version.
+services:
+  minecraft-bedrock:
+    image: ghcr.io/itzg/minecraft-bedrock-server:latest
+    environment:
+      EULA: ${EULA}
+      ALLOW_LIST: "true"
+      ALLOW_LIST_USERS: ${PLAYERS}
+      ONLINE_MODE: "true"
+      TRANSPORT: nethernet
+      SERVER_UDP_PORTS: "${APP_IPV4}:19140-19149:19140-19149"
+    expose:
+      - "19132/tcp"
+      - "19140-19149/udp"
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

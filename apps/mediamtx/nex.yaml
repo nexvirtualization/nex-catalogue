@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MediaMTX
+  summary: Ready-to-use, zero-dependency real-time media server and proxy to publish, read, record, playback
+    and route
+  description: Ready-to-use, zero-dependency real-time media server and proxy to publish, read, record, playback
+    and route video/audio streams over SRT, WebRTC, RTSP, RTMP, HLS, MPEG-TS, RTP.
+  category: media
+  source: https://github.com/bluenviron/mediamtx
+  website: https://mediamtx.org
+  docs: https://mediamtx.org/docs/kickoff/install
+  primary_service: mediamtx
+  options:
+    PORT:
+      label: Published 8554/tcp port
+      help: Host port for application listener 8554/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 1935/tcp port
+      help: Host port for application listener 1935/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_3:
+      label: Published 8888/tcp port
+      help: Host port for application listener 8888/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Publish and read streams over TCP RTSP or RTMP. The HLS endpoint is on 8888. Place this profile
+    on a trusted network or configure access controls before publication.
+services:
+  mediamtx:
+    image: docker.io/bluenviron/mediamtx:latest
+    deploy:
+      replicas: 1
+    environment:
+      MTX_RTSPTRANSPORTS: tcp
+      MTX_WEBRTC: 'no'
+      MTX_SRT: 'no'
+    ports:
+    - ${PORT:-19866}:8554/tcp
+    - ${PORT_2:-20866}:1935/tcp
+    - ${PORT_3:-21866}:8888/tcp

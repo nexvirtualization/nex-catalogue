@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Strix
+  summary: Find supported camera feeds on your local network
+  description: Use Strix only on your intended camera network. Make that network reachable from the
+    primary app network and configure the camera credentials through the UI.
+  category: home-automation
+  website: https://github.com/eduard256/Strix
+  source: https://github.com/eduard256/Strix
+  docs: https://github.com/eduard256/Strix
+  primary_service: strix
+  scalable: false
+  license: MIT
+  web:
+    port: 4567
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4567.
+services:
+  strix:
+    image: docker.io/eduard256/strix:latest
+    ports:
+    - ${PORT:-4567}:4567/tcp
+    deploy:
+      replicas: 1

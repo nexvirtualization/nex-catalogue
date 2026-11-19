@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stirling-PDF
+  summary: Edit, convert and organize PDF documents
+  description: Run Stirling PDF with sign-in enabled. The settings directory and training data are managed
+    separately.
+  category: documents
+  website: https://github.com/Stirling-Tools/Stirling-PDF
+  source: https://github.com/Stirling-Tools/Stirling-PDF
+  docs: https://docs.stirlingpdf.com/Configuration/Security
+  primary_service: stirling-pdf
+  post_install: Sign in with the administrator credentials configured during installation. Keep this processing
+    service behind HTTPS.
+  license: MIT for core files; engine and listed modules use separate licenses
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    LOGIN:
+      label: Admin username
+      help: Initial sign-in name.
+    PASSWORD:
+      label: Admin password
+      help: Strong initial administrator password.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    CONFIG:
+      label: Application settings
+      help: Managed directory mounted at /configs. Choose storage writable by the application.
+    TESSDATA:
+      label: OCR languages
+      help: Managed directory mounted at /usr/share/tessdata. Choose storage writable by the application.
+services:
+  stirling-pdf:
+    image: docker.io/stirlingtools/stirling-pdf:latest
+    ports:
+    - ${PORT:-20187}:8080/tcp
+    volumes:
+    - ${CONFIG}:/configs
+    - ${TESSDATA}:/usr/share/tessdata
+    environment:
+      DOCKER_ENABLE_SECURITY: 'true'
+      SECURITY_ENABLELOGIN: 'true'
+      SECURITY_INITIALLOGIN_USERNAME: ${LOGIN:-admin}
+      SECURITY_INITIALLOGIN_PASSWORD: ${PASSWORD}
+    deploy:
+      replicas: 1

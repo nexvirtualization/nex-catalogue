@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Papra
+  summary: Archive, search and tag your documents
+  description: Set the full browser-facing URL and create the first account on a trusted network before
+    allowing general access. Include the signing secret in recovery records.
+  category: documents
+  website: https://github.com/papra-hq/papra/
+  source: https://github.com/papra-hq/papra/
+  docs: https://docs.papra.app/self-hosting/using-docker
+  primary_service: papra
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 1221
+  options:
+    AUTH_SECRET:
+      label: Authentication secret
+      type: password
+      help: Provide a strong random secret and retain it for restores.
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL including scheme and port as needed.
+    DATA:
+      label: Documents and database
+      help: Stored documents, search metadata and application database.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 1221.
+services:
+  papra:
+    image: ghcr.io/papra-hq/papra:latest
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET}
+      APP_BASE_URL: ${BASE_URL}
+    volumes:
+    - ${DATA}:/app/app-data
+    ports:
+    - ${PORT:-1221}:1221/tcp
+    deploy:
+      replicas: 1

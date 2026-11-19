@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: linkding
+  summary: Save, tag and organize bookmarks from a browser
+  description: Use the initial administrator credentials on first sign-in. Back up the application folder
+    with linkding stopped.
+  category: reading
+  website: https://github.com/sissbruecker/linkding
+  source: https://github.com/sissbruecker/linkding
+  docs: https://linkding.link/installation/
+  primary_service: linkding
+  scalable: false
+  license: MIT
+  web:
+    port: 9090
+  options:
+    ADMIN_USER:
+      label: Initial administrator
+      help: This account is created when it does not exist.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate. Change existing credentials in linkding.
+    DATA:
+      label: Bookmark database
+      help: Bookmarks, site assets and application state.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9090.
+services:
+  linkding:
+    image: docker.io/sissbruecker/linkding:latest
+    environment:
+      LD_SUPERUSER_NAME: ${ADMIN_USER:-admin}
+      LD_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+    - ${DATA}:/etc/linkding/data
+    ports:
+    - ${PORT:-9090}:9090/tcp
+    deploy:
+      replicas: 1

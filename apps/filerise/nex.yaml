@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FileRise
+  summary: Browse managed files and share them from a browser
+  description: Create the initial administrator on a trusted endpoint. Keep account and metadata folders
+    private and back up all three folders.
+  category: documents
+  website: https://github.com/error311/FileRise
+  source: https://github.com/error311/FileRise
+  docs: https://github.com/error311/FileRise
+  primary_service: filerise
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    FILES:
+      label: Uploaded files
+      help: Keep uploaded files in this managed folder between restarts.
+    USERS:
+      label: User accounts
+      help: Keep user accounts in this managed folder between restarts.
+    METADATA:
+      label: File metadata
+      help: Keep file metadata in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  filerise:
+    image: docker.io/error311/filerise-docker:latest
+    volumes:
+    - ${FILES}:/var/www/uploads
+    - ${USERS}:/var/www/users
+    - ${METADATA}:/var/www/metadata
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

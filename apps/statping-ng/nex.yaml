@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Statping-ng
+  summary: Monitor service uptime and publish a status page
+  description: Finish the install wizard on a trusted network and create an administrator before sharing
+    the status page. The packaged SQLite database is stored with the application data.
+  category: monitoring
+  website: https://statping-ng.github.io/
+  source: https://github.com/statping-ng/statping-ng
+  docs: https://github.com/statping-ng/statping-ng#readme
+  scalable: false
+  primary_service: statping-ng
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: statping-ng
+    scheme: http
+    port: 8080
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for uptime history and alerts.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Monitoring data
+      help: Select This host. Stores checks, settings, and the SQLite database. Include this folder in
+        a stopped Nex backup.
+services:
+  statping-ng:
+    image: adamboutcher/statping-ng:latest
+    environment:
+      DB_CONN: sqlite
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8163}:8080/tcp
+    volumes:
+    - ${DATA}:/app
+    deploy:
+      replicas: 1

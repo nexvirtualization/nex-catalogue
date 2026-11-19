@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Scoold
+  summary: Host a team question-and-answer site
+  description: Prepare a Para backend and provide its app key and secret in application.conf. Place that
+    file in Configuration and configure a browser-facing HTTPS endpoint.
+  category: communication
+  website: https://scoold.com
+  source: https://github.com/Erudika/scoold
+  docs: https://github.com/Erudika/scoold#quick-start
+  primary_service: scoold
+  post_install: Prepare a Para backend and provide its app key and secret in application.conf. Place that
+    file in Configuration and configure a browser-facing HTTPS endpoint.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  web:
+    port: 8000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+    CONFIG:
+      label: Prepared Scoold configuration
+      help: Managed directory mounted at /nex-config. Choose storage readable by the application.
+services:
+  scoold:
+    image: docker.io/erudikaltd/scoold:latest
+    ports:
+    - ${PORT:-23504}:8000/tcp
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    environment:
+      JAVA_OPTS: -Dconfig.file=/nex-config/application.conf
+    deploy:
+      replicas: 1

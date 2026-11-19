@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Traefik Whoami
+  summary: See which replica served an HTTP request
+  description: >-
+    Stateless diagnostic server for testing Nex copies and Docker ingress. Each response includes
+    the container hostname and incoming request details. Use only on a trusted network and send
+    requests without credentials. Requires no persistent folders or Traefik proxy.
+  category: tools
+  website: https://github.com/traefik/whoami
+  source: https://github.com/traefik/whoami
+  docs: https://doc.traefik.io/traefik/expose/swarm/basic/
+  license: Apache-2.0
+  scalable: true
+  scale: [whoami]
+  primary_service: whoami
+  web: {port: 80}
+  tags: [docker, swarm, diagnostics]
+  post_install: >-
+    In Basics, set Copies to two or more. Keep the default Docker network and enable host
+    publishing. Send several fresh HTTP requests to the same published endpoint and compare the
+    Hostname lines to see which copies handled them.
+  options:
+    PORT:
+      label: Diagnostic port
+      help: Published HTTP port for the Swarm ingress endpoint. The container listens on port 80.
+services:
+  whoami:
+    image: docker.io/traefik/whoami:latest
+    ports:
+      - "${PORT:-8089}:80/tcp"
+    deploy:
+      replicas: 1

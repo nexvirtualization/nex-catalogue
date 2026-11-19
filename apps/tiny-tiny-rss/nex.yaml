@@ -1,0 +1,70 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tiny Tiny RSS
+  summary: Read and update feeds in a self-hosted RSS reader
+  description: Prepare PostgreSQL, then set the browser-facing reader URL. Change the upstream default
+    credentials from a trusted network before sharing access.
+  category: reading
+  website: https://github.com/tt-rss/tt-rss
+  source: https://github.com/tt-rss/tt-rss
+  docs: https://tt-rss.org/docs/install/Docker-Compose.html
+  primary_service: tiny-tiny-rss
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    DB_HOST:
+      label: PostgreSQL hostname
+      help: Reachable database server.
+    DB_NAME:
+      label: Database name
+      help: Prepared feed database.
+    DB_USER:
+      label: Database username
+      help: Dedicated database user.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the configured database account.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL including scheme and port as needed.
+    DATA:
+      label: Application files and state
+      help: Keep application files and state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  tiny-tiny-rss:
+    image: ghcr.io/tt-rss/tt-rss-web-nginx:latest
+    volumes:
+    - ${DATA}:/var/www/html/tt-rss
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1
+  app:
+    image: ghcr.io/tt-rss/tt-rss:latest
+    environment: &id001
+      TTRSS_DB_HOST: ${DB_HOST}
+      TTRSS_DB_PORT: '5432'
+      TTRSS_DB_NAME: ${DB_NAME}
+      TTRSS_DB_USER: ${DB_USER}
+      TTRSS_DB_PASS: ${DB_PASSWORD}
+      TTRSS_SELF_URL_PATH: ${PUBLIC_URL}
+    volumes:
+    - ${DATA}:/var/www/html/tt-rss
+    deploy:
+      replicas: 1
+  updater:
+    image: ghcr.io/tt-rss/tt-rss:latest
+    environment: *id001
+    volumes:
+    - ${DATA}:/var/www/html/tt-rss
+    command:
+    - /opt/tt-rss/updater.sh
+    deploy:
+      replicas: 1

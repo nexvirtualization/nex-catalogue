@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://raw.githubusercontent.com/remvze/moodist/HEAD/docker-compose.yml
+x-nex:
+  name: Moodist
+  summary: Ambient sound mixer for focus sessions, background noise, and custom soundscapes
+  category: media
+  description: Ambient sound mixer for focus sessions, background noise, and custom soundscapes.
+  source: https://github.com/remvze/moodist
+  website: https://moodist.mvze.net/
+  docs: https://moodist.mvze.net/
+  primary_service: moodist
+  options:
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8080/tcp.
+  web:
+    port: 8080
+  post_install: Open Moodist to play and mix ambient sounds in the browser.
+services:
+  moodist:
+    image: ghcr.io/remvze/moodist:latest
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8080}:8080/tcp

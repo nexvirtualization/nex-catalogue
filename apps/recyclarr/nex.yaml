@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Recyclarr
+  summary: Synchronize TRaSH guides to Sonarr and Radarr
+  description: The container runs scheduled synchronization jobs. Populate the generated configuration
+    with the address and API key for a Sonarr or Radarr installation. Nex services can use the other app’s
+    connection name and internal port.
+  category: downloads
+  website: https://recyclarr.dev/
+  source: https://github.com/recyclarr/recyclarr
+  docs: https://recyclarr.dev/wiki/installation/docker/
+  scalable: false
+  primary_service: recyclarr
+  architectures:
+  - amd64
+  - arm64
+  works_with:
+  - sonarr
+  - radarr
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for the synchronization schedule.
+    DATA:
+      label: Synchronization configuration
+      help: Select This host. Stores Recyclarr configuration, API keys and logs. Include this folder in
+        a stopped Nex backup.
+services:
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8.8.1
+    environment:
+      RECYCLARR_CREATE_CONFIG: 'true'
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

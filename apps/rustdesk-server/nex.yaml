@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RustDesk Server OSS
+  summary: Connect authorized RustDesk clients through a rendezvous and relay service
+  description: Choose a client-reachable dedicated Primary network address and leave host publishing
+    off. Set the relay address to that address on port 21117. Configure clients with the app address
+    and the public key from the managed folder.
+  category: networking
+  website: https://github.com/rustdesk/rustdesk-server
+  source: https://github.com/rustdesk/rustdesk-server
+  docs: https://github.com/rustdesk/rustdesk-server/blob/master/docs/environment-variables.md
+  primary_service: rustdesk-server
+  scalable: false
+  license: AGPL-3.0
+  options:
+    RELAY_ADDRESS:
+      label: Client-reachable relay endpoint
+      help: Enter the dedicated application address followed by :21117.
+    DATA:
+      label: Server keys and rendezvous database
+      help: Keep server keys and rendezvous database in this managed folder between restarts.
+services:
+  rustdesk-server:
+    image: docker.io/rustdesk/rustdesk-server-s6:latest
+    expose:
+    - 21115/tcp
+    - 21116/tcp
+    - 21116/udp
+    - 21117/tcp
+    environment:
+      RELAY: ${RELAY_ADDRESS}
+      ENCRYPTED_ONLY: '1'
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

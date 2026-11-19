@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kerbal Space Program Luna Multiplayer
+  summary: Host a shared game for Luna Multiplayer clients
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Install the matching Luna Multiplayer mod in Kerbal Space Program. Add the app’s Primary address
+    on UDP 8800. The image installs the publisher’s server release and checks for updates at restart.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/220200/
+  source: https://github.com/ich777/docker-lunamultiplayer-ksp
+  docs: https://github.com/ich777/docker-lunamultiplayer-ksp#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  kerbal-space-program-luna:
+    image: ghcr.io/ich777/lunamultiplayer-ksp:latest
+    environment:
+      LMP_V: latest
+      UMASK: '0077'
+    expose:
+      - 8800/udp
+    volumes:
+      - ${DATA}:/lunamultiplayer
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HumanitZ
+  summary: Host a co-op zombie survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the in-game server browser or the app’s Primary address on UDP 7777. The Steam query port
+    is UDP 27015. SteamCMD installs the server on first boot and checks for updates on restart. Make
+    a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1766060/
+  source: https://github.com/indifferentbroccoli/humanitz-server-docker
+  docs: https://github.com/indifferentbroccoli/humanitz-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  humanitz:
+    image: docker.io/indifferentbroccoli/humanitz-server-docker:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 7777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/home/steam/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

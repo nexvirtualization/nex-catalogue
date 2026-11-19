@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ownCloud
+  summary: All-in-one solution for saving, synchronizing, viewing, editing and sharing files, calendars, address
+    books
+  description: All-in-one solution for saving, synchronizing, viewing, editing and sharing files, calendars,
+    address books and more.
+  category: documents
+  source: https://github.com/owncloud/core
+  website: https://owncloud.org/
+  docs: https://doc.owncloud.com/server/next/admin_manual/installation/docker/
+  primary_service: owncloud
+  options:
+    PUBLIC_HOST:
+      label: Public host
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_HOST:
+      label: Db host
+    ADMIN_USER:
+      label: Admin user
+    ADMIN_PASSWORD:
+      label: Admin password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_HOST:
+      label: Redis host
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /mnt/data.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision compatible MariaDB and Redis instances. Apply the correct public hostname and back
+    up Data and the database together.
+  web:
+    port: 8080
+services:
+  owncloud:
+    image: docker.io/owncloud/server:11.1.0
+    deploy:
+      replicas: 1
+    environment:
+      OWNCLOUD_DOMAIN: ${PUBLIC_HOST}
+      OWNCLOUD_TRUSTED_DOMAINS: ${PUBLIC_HOST}
+      OWNCLOUD_DB_TYPE: mysql
+      OWNCLOUD_DB_NAME: ${DB_NAME:-owncloud}
+      OWNCLOUD_DB_USERNAME: ${DB_USER}
+      OWNCLOUD_DB_PASSWORD: ${DB_PASSWORD}
+      OWNCLOUD_DB_HOST: ${DB_HOST}
+      OWNCLOUD_ADMIN_USERNAME: ${ADMIN_USER:-admin}
+      OWNCLOUD_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      OWNCLOUD_REDIS_ENABLED: 'true'
+      OWNCLOUD_REDIS_HOST: ${REDIS_HOST}
+      OWNCLOUD_MYSQL_UTF8MB4: 'true'
+    volumes:
+    - ${DATA}:/mnt/data
+    ports:
+    - ${PORT:-19574}:8080/tcp

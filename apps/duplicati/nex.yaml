@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Duplicati
+  summary: Schedule encrypted backups of managed Nex folders
+  description: Select Nex storage for the files to back up and configure a destination inside Duplicati.
+    The source is mounted read-only.
+  category: management
+  website: https://duplicati.com/
+  source: https://github.com/duplicati/duplicati
+  docs: https://docs.linuxserver.io/images/docker-duplicati/
+  primary_service: duplicati
+  post_install: Open the web interface and configure a backup job for /source. This package can read the
+    selected Nex folder independently of the host filesystem.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8200
+  options:
+    SETTINGS_KEY:
+      label: Settings encryption key
+      help: Generate and retain an encryption key for the Duplicati configuration.
+      type: password
+    WEB_PASSWORD:
+      label: Web interface password
+      help: Choose a strong password.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8200 inside Nex.
+    CONFIG:
+      label: Duplicati settings
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    SOURCE:
+      label: Backup source
+      help: Managed directory mounted at /source. Choose storage readable by the application.
+    BACKUPS:
+      label: Local backup destination
+      help: Managed directory mounted at /backups. Choose storage writable by the application.
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    ports:
+    - ${PORT:-20208}:8200/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${SOURCE}:/source:ro
+    - ${BACKUPS}:/backups
+    environment:
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_KEY}
+      DUPLICATI__WEBSERVICE_PASSWORD: ${WEB_PASSWORD}
+    deploy:
+      replicas: 1

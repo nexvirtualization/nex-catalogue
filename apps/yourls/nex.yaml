@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: YOURLS
+  summary: Create a short-link service on your own domain
+  description: Prepare a MySQL or MariaDB database. Use the public HTTPS URL and initial administrator
+    credentials from Nex. Complete the installer from the /admin/ route.
+  category: tools
+  website: https://yourls.org/
+  source: https://github.com/YOURLS/YOURLS
+  docs: https://hub.docker.com/_/yourls
+  scalable: false
+  primary_service: yourls
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: yourls
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is yourls.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: Initial administrator name.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Shortener site files
+      help: Select This host. Stores plugins, customization and local app configuration. Include this
+        folder in a stopped Nex backup.
+services:
+  yourls:
+    image: yourls:latest
+    environment:
+      YOURLS_DB_HOST: ${DB_HOST}
+      YOURLS_DB_USER: ${DB_USER}
+      YOURLS_DB_PASS: ${DB_PASSWORD}
+      YOURLS_DB_NAME: ${DB_NAME:-yourls}
+      YOURLS_SITE: ${PUBLIC_URL}
+      YOURLS_USER: ${ADMIN_USERNAME:-admin}
+      YOURLS_PASS: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-8439}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    deploy:
+      replicas: 1

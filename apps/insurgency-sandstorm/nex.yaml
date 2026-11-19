@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: "Insurgency: Sandstorm"
+  summary: Host private Push matches in Insurgency Sandstorm
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Select a registered primary
+    network that players can reach. In Community servers, use Connect to IP with APP-IP:27102.
+    Server queries use UDP 27131. Keep the application on a trusted player network. The first
+    start downloads the server with SteamCMD, and a Nex restart checks for game updates.
+    Back up the stopped server before updating.
+  category: games
+  website: https://store.steampowered.com/app/581320/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://mod.io/g/insurgencysandstorm/r/server-admin-guide
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Keeps the installed server and configuration. Include this folder in stopped backups.
+services:
+  insurgency-sandstorm:
+    image: ghcr.io/gameservermanagers/gameserver:inss
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        install -d /data/config-lgsm/inssserver
+        config=/data/config-lgsm/inssserver/common.cfg
+        if [ ! -f "$$config" ]; then
+          cat > "$$config" <<'SETTINGS'
+        startparameters="Oilfield?Scenario=Scenario_Refinery_Push_Security?MaxPlayers=28 -Port=27102 -QueryPort=27131 -hostname='Nex Sandstorm' -log"
+        SETTINGS
+        fi
+        exec /bin/bash /app/entrypoint.sh
+    environment:
+      UPDATE_CHECK: "0"
+      UPDATE_ON_START: "true"
+    expose:
+      - "27102/udp"
+      - "27131/udp"
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 30m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

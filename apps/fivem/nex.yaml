@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FiveM
+  summary: Host a scripted Grand Theft Auto V multiplayer server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Create a server registration key at the Cfx.re Portal before installing. In FiveM, direct connect
+    to the app’s Primary address on port 30120. The first boot installs the basic game mode and creates
+    server.cfg. Edit your configuration and resources in the managed folder with the app stopped.
+  category: games
+  website: https://fivem.net/
+  source: https://github.com/spritsail/fivem
+  docs: https://docs.fivem.net/docs/server-manual/setting-up-a-server-vanilla/
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - sandbox
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    LICENSE_KEY:
+      label: Cfx.re registration key
+      help: Create your key at https://portal.cfx.re/servers/registration-keys.
+      type: password
+services:
+  fivem:
+    image: docker.io/spritsail/fivem:latest
+    environment:
+      LICENSE_KEY: ${LICENSE_KEY}
+    expose:
+    - 30120/tcp
+    - 30120/udp
+    volumes:
+    - ${DATA}:/config
+    entrypoint:
+    - /sbin/tini
+    - -g
+    - --
+    - /bin/sh
+    - -ec
+    - |
+      case "$$LICENSE_KEY" in
+        ''|*[!A-Za-z0-9_-]*)
+          echo "Enter a valid Cfx.re server registration key in Settings." >&2
+          exit 1 ;;
+      esac
+      if [ ! -f /config/server.cfg ]; then
+        cp -R /opt/cfx-server-data/resources /config/
+        tmp=$$(mktemp /config/server.cfg.XXXXXX)
+        cat > "$$tmp" <<'EOF'
+      endpoint_add_tcp "0.0.0.0:30120"
+      endpoint_add_udp "0.0.0.0:30120"
+      sv_hostname "Nex FiveM"
+      sets sv_projectName "Nex FiveM"
+      sets sv_projectDesc "FiveM multiplayer"
+      sv_scriptHookAllowed 0
+      sv_maxclients 32
+      sv_master1 ""
+      ensure mapmanager
+      ensure chat
+      ensure spawnmanager
+      ensure basic-gamemode
+      EOF
+        mv "$$tmp" /config/server.cfg
+      fi
+      exec /usr/bin/entrypoint
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

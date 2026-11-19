@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Note Mark
+  summary: Store and organize notes in Markdown
+  description: Open Note Mark on the configured HTTPS origin and complete first-user setup. Back up the data
+    and retain the signing secret.
+  category: productivity
+  website: https://notemark.docs.enchantedcode.co.uk/
+  source: https://github.com/enchant97/note-mark
+  docs: https://notemark.docs.enchantedcode.co.uk/
+  primary_service: note-mark
+  post_install: Open Note Mark on the configured HTTPS origin and complete first-user setup. Back up the
+    data and retain the signing secret.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8000
+  options:
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+    DATA:
+      label: Notes and attachments
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  note-mark:
+    image: ghcr.io/enchant97/note-mark-aio:latest
+    ports:
+    - ${PORT:-23506}:8000/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      JWT_SECRET: ${SIGNING_SECRET}
+      CORS_ORIGINS: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

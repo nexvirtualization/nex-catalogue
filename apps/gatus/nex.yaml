@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gatus
+  summary: Run health checks and display service status
+  description: Gatus reads monitored endpoints and alerting policy from prepared configuration. Status history
+    is kept in memory unless you configure external storage.
+  category: monitoring
+  website: https://gatus.io/
+  source: https://github.com/TwiN/gatus
+  docs: https://github.com/TwiN/gatus
+  primary_service: gatus
+  post_install: Before starting, add config.yaml to Configuration and define your service endpoints. Keep
+    operational status and routing details private where appropriate.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    CONFIG:
+      label: Prepared monitoring configuration
+      help: Managed directory mounted at /config. Choose storage readable by the application.
+services:
+  gatus:
+    image: ghcr.io/twin/gatus:stable
+    ports:
+    - ${PORT:-20243}:8080/tcp
+    volumes:
+    - ${CONFIG}:/config:ro
+    environment:
+      GATUS_CONFIG_PATH: /config/config.yaml
+    deploy:
+      replicas: 1

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ombi
+  summary: Collect and manage requests for a media server
+  description: Complete Ombi setup on a trusted network, then enter reachable addresses for your media
+    library and automation services.
+  category: media
+  website: https://github.com/Ombi-app/Ombi
+  source: https://github.com/Ombi-app/Ombi
+  docs: https://docs.linuxserver.io/images/docker-ombi/
+  primary_service: ombi
+  scalable: false
+  license: GPL-2.0
+  web:
+    port: 3579
+  options:
+    CONFIG:
+      label: Request database and configuration
+      help: Ombi users, integrations and request records.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3579.
+services:
+  ombi:
+    image: lscr.io/linuxserver/ombi:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-3579}:3579/tcp
+    deploy:
+      replicas: 1

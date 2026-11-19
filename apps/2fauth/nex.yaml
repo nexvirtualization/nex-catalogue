@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 2FAuth
+  summary: Manage one-time authentication codes in a web interface
+  description: Use an HTTPS endpoint. Register the initial user on a trusted network, then disable registration
+    in the app. Keep the application key with backups to decrypt stored tokens.
+  category: security
+  website: https://github.com/Bubka/2FAuth
+  source: https://github.com/Bubka/2FAuth
+  docs: https://docs.2fauth.app/getting-started/installation/docker/
+  primary_service: 2fauth
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    APP_KEY:
+      label: Application key
+      type: password
+      help: 'Provide a Laravel application key with base64: followed by 32 encoded random bytes. Retain
+        it for restores.'
+    APP_URL:
+      label: Public HTTPS URL
+      help: Set the browser-facing address including https://.
+    DATA:
+      label: 2FAuth data
+      help: User accounts, encryption data and stored 2FA entries.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  2fauth:
+    image: docker.io/2fauth/2fauth:latest
+    environment:
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL}
+    volumes:
+    - ${DATA}:/2fauth
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

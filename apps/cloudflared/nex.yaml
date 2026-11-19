@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Cloudflared
+  summary: Connects services to Cloudflare tunnels for proxying traffic without opening inbound ports
+  description: Connects services to Cloudflare tunnels for proxying traffic without opening inbound ports.
+  category: networking
+  source: https://github.com/cloudflare/cloudflared
+  website: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel
+  docs: https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/
+  primary_service: cloudflared
+  options:
+    TUNNEL_TOKEN:
+      label: Tunnel token
+      type: password
+      help: Use a unique value and keep it with the application backups.
+  post_install: Create a remotely managed tunnel in Cloudflare and supply its connector token. Set each origin
+    to the intended service network name and port.
+services:
+  cloudflared:
+    image: docker.io/cloudflare/cloudflared:latest
+    deploy:
+      replicas: 1
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN}
+    command:
+    - tunnel
+    - --no-autoupdate
+    - run

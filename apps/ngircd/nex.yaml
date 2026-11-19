@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ngIRCd
+  summary: Host a lightweight Internet Relay Chat server
+  description: Connect an IRC client to internal port 6667 on the dedicated app address or to the host-published
+    IRC endpoint. The packaged listener is plaintext. Keep it on a trusted network and configure your
+    local IRC policy in the managed ngircd.conf file.
+  category: communication
+  website: https://ngircd.barton.de/
+  source: https://github.com/ngircd/ngircd
+  docs: https://docs.linuxserver.io/images/docker-ngircd/
+  scalable: false
+  primary_service: ngircd
+  architectures:
+  - amd64
+  - arm64
+  options:
+    PUID:
+      label: User ID
+      help: Numeric UID allowed to write the configuration folder.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the configuration folder.
+    TZ:
+      label: Time zone
+      help: IANA time zone for logs.
+    IRC_PORT:
+      label: Irc Port
+      help: Plaintext IRC port when host publication is enabled.
+    DATA:
+      label: IRC configuration
+      help: Select This host. Stores ngircd.conf and any configured server state. Include this folder
+        in a stopped Nex backup.
+services:
+  ngircd:
+    image: lscr.io/linuxserver/ngircd:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${IRC_PORT:-6667}:6667/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

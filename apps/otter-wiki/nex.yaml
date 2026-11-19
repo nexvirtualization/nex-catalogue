@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Otter Wiki
+  summary: Write and collaborate on Markdown wiki pages
+  description: Create the wiki administrator during initial setup and restrict edits to the intended users.
+    Public or remote access should use HTTPS.
+  category: productivity
+  website: https://otterwiki.com/
+  source: https://github.com/redimp/otterwiki
+  docs: https://otterwiki.com/
+  scalable: false
+  primary_service: otter-wiki
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: otter-wiki
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Wiki repository
+      help: Select This host. Stores the wiki Git repository and application state. Include this folder
+        in a stopped Nex backup.
+services:
+  otter-wiki:
+    image: redimp/otterwiki:latest
+    ports:
+    - ${PORT:-8134}:80/tcp
+    volumes:
+    - ${DATA}:/app-data
+    deploy:
+      replicas: 1

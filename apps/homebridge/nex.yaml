@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Homebridge
+  summary: Connect supported accessories to Apple Home
+  description: Use a registered Primary network on the same LAN as Apple Home clients. Complete the web
+    setup on port 8581, configure the bridge to advertise on that network, and then scan the pairing code.
+    Plugins requiring host or USB access need separate hardware support.
+  category: home-automation
+  website: https://homebridge.io/
+  source: https://github.com/homebridge/homebridge
+  docs: https://github.com/homebridge/docker-homebridge#usage
+  scalable: false
+  primary_service: homebridge
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: homebridge
+    scheme: http
+    port: 8581
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8581.
+    DATA:
+      label: Homebridge configuration
+      help: Select This host. Stores bridge identity, configuration and installed plugins. Include this
+        folder in a stopped Nex backup.
+services:
+  homebridge:
+    image: homebridge/homebridge:latest
+    ports:
+    - ${PORT:-8581}:8581/tcp
+    expose:
+    - 51826/tcp
+    - 5353/udp
+    volumes:
+    - ${DATA}:/homebridge
+    deploy:
+      replicas: 1

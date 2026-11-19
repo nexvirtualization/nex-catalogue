@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Listmonk
+  summary: High performance newsletter and mailing list manager with a modern dashboard
+  description: High performance newsletter and mailing list manager with a modern dashboard.
+  category: communication
+  source: https://github.com/knadh/listmonk
+  website: https://listmonk.app/
+  docs: https://listmonk.app/docs/installation/
+  primary_service: listmonk
+  options:
+    DB_HOST:
+      label: Db host
+      help: Use the database app’s Nex connection name on the shared application network.
+    DB_PORT:
+      label: Db port
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_NAME:
+      label: Db name
+    DB_SSLMODE:
+      label: Db sslmode
+    UPLOADS:
+      label: Uploads folder
+      help: Choose the Nex-managed folder mounted at /listmonk/uploads.
+    PORT:
+      label: Published 9000/tcp port
+      help: Host port for application listener 9000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision an empty PostgreSQL database and a role with schema privileges before installing.
+    Open the setup page to create the super administrator and configure the SMTP relay.
+  web:
+    port: 9000
+services:
+  listmonk:
+    image: docker.io/listmonk/listmonk:latest
+    deploy:
+      replicas: 1
+    environment:
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__host: ${DB_HOST}
+      LISTMONK_db__port: ${DB_PORT:-5432}
+      LISTMONK_db__user: ${DB_USER}
+      LISTMONK_db__password: ${DB_PASSWORD}
+      LISTMONK_db__database: ${DB_NAME:-listmonk}
+      LISTMONK_db__ssl_mode: ${DB_SSLMODE:-disable}
+    volumes:
+    - ${UPLOADS}:/listmonk/uploads
+    ports:
+    - ${PORT:-19482}:9000/tcp
+    command:
+    - sh
+    - -ec
+    - ./listmonk --install --idempotent --yes --config "" && ./listmonk --upgrade --yes --config "" && exec
+      ./listmonk --config ""

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Temporal
+  summary: Executes durable application workflows that resume after process, network, and infrastructure failures
+  description: Executes durable application workflows that resume after process, network, and infrastructure
+    failures.
+  category: development
+  source: https://github.com/temporalio/temporal
+  website: https://temporal.io/
+  docs: https://github.com/temporalio/samples-server/blob/main/compose/docker-compose-postgres.yml
+  primary_service: temporal
+  options:
+    DB_PORT:
+      label: Db port
+    DB_HOST:
+      label: Db host
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    DB_NAME:
+      label: Db name
+    VISIBILITY_DB_NAME:
+      label: Visibility db name
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /etc/temporal/config/dynamicconfig.
+    PORT:
+      label: Published 7233/tcp port
+      help: Host port for application listener 7233/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Initialize the PostgreSQL workflow and visibility schemas for this server version. Supply a
+    dynamic configuration file named profile.yaml in Configuration before installation. Connect workers on a
+    private Nex network and register a namespace.
+services:
+  temporal:
+    image: docker.io/temporalio/server:1.32.2
+    deploy:
+      replicas: 1
+    environment:
+      DB: postgres12
+      DB_PORT: ${DB_PORT:-5432}
+      POSTGRES_SEEDS: ${DB_HOST}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PWD: ${DB_PASSWORD}
+      DBNAME: ${DB_NAME:-temporal}
+      VISIBILITY_DBNAME: ${VISIBILITY_DB_NAME:-temporal_visibility}
+      BIND_ON_IP: 0.0.0.0
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/profile.yaml
+    volumes:
+    - ${CONFIG}:/etc/temporal/config/dynamicconfig:ro
+    ports:
+    - ${PORT:-19966}:7233/tcp

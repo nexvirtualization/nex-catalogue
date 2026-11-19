@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ByteStash
+  summary: Store and organize reusable code snippets
+  description: Create your account from a trusted network. Restrict registration at the application
+    or proxy before sharing the endpoint.
+  category: development
+  website: https://github.com/jordan-dalby/ByteStash
+  source: https://github.com/jordan-dalby/ByteStash
+  docs: https://github.com/jordan-dalby/ByteStash
+  primary_service: bytestash
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 5000
+  options:
+    JWT_SECRET:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and retain the value for restore.
+    DATA:
+      label: Snippet database
+      help: Keep snippet database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  bytestash:
+    image: ghcr.io/jordan-dalby/bytestash:latest
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      TOKEN_EXPIRY: 24h
+    volumes:
+    - ${DATA}:/data/snippets
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

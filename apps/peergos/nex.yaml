@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Peergos
+  summary: Encrypted file storage, sharing, and collaboration on a peer-to-peer network.
+  description: Configure a TLS reverse proxy for the public domain and the wildcard subdomains used
+    by Peergos. Attach the app to a dedicated Primary network that accepts TCP and UDP 4001 for peers.
+    Create an invitation with the documented quota token command before signing up.
+  category: documents
+  website: https://github.com/Peergos/Peergos
+  source: https://github.com/Peergos/Peergos
+  docs: https://github.com/Peergos/Peergos#usage---self-hosting-with-docker
+  primary_service: peergos
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8000
+  options:
+    DOMAIN:
+      label: Public domain
+      help: Bare hostname for the HTTPS proxy, without a scheme or path.
+    PUBLIC_IPV4:
+      label: Public peer IPv4 address
+      help: Public IPv4 address that forwards TCP and UDP 4001 to the app.
+    DATA:
+      label: Peergos data
+      help: Keep peergos data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  peergos:
+    image: ghcr.io/peergos/web-ui:master
+    expose:
+    - 4001/tcp
+    - 4001/udp
+    command:
+    - daemon
+    - -listen-host
+    - 0.0.0.0
+    - -public-domain
+    - ${DOMAIN}
+    - -public-server
+    - 'true'
+    - -announce-ipfs-addresses
+    - /ip4/${PUBLIC_IPV4}/tcp/4001,/ip4/${PUBLIC_IPV4}/udp/4001/quic-v1
+    - -log-to-console
+    - 'true'
+    volumes:
+    - ${DATA}:/opt/peergos/data
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

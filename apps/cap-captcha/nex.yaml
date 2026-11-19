@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Capjs
+  summary: Verify proof-of-work CAPTCHA challenges
+  description: Open the dashboard and register a widget. Use HTTPS for the public verification endpoint and
+    protect the dashboard access key.
+  category: development
+  website: https://capjs.js.org/
+  source: https://github.com/tiagozip/cap
+  docs: https://capjs.js.org/guide/standalone.html
+  primary_service: cap-captcha
+  post_install: Open the dashboard and register a widget. Use HTTPS for the public verification endpoint
+    and protect the dashboard access key.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    ADMIN_KEY:
+      label: Admin key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    DATA:
+      label: Widget configuration
+      help: Managed directory mounted at /usr/src/app/data. Choose storage writable by the application.
+services:
+  cap-captcha:
+    image: docker.io/tiago2/cap:latest
+    ports:
+    - ${PORT:-23562}:3000/tcp
+    volumes:
+    - ${DATA}:/usr/src/app/data
+    environment:
+      ADMIN_KEY: ${ADMIN_KEY}
+      VALKEY_URL: ${REDIS_URL}
+    deploy:
+      replicas: 1

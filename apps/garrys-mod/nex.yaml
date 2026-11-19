@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Garry's Mod
+  summary: Host a persistent multiplayer sandbox
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Select a registered primary network
+    that players can reach. From the in-game developer console use connect APP-IP:27015. The
+    image includes the stock server and SteamCMD checks for updates on startup. Back up the
+    stopped server before restarting for an update. Keep the application on the player network
+    you trust.
+  category: games
+  website: https://gmod.facepunch.com/
+  source: https://github.com/ceifa/garrysmod-docker
+  docs: https://wiki.facepunch.com/gmod/Downloading_a_Dedicated_Server
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - sandbox
+    - multiplayer
+  options:
+    STEAM_TOKEN:
+      label: Steam game server login token
+      type: password
+      help: Create a separate token for this server with Steam app ID 4000.
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players.
+    DATA:
+      label: Server data
+      help: Saves gamemode data and the server database. Include this folder in stopped backups.
+services:
+  garrys-mod:
+    image: docker.io/ceifa/garrysmod:latest
+    environment:
+      GSLT: ${STEAM_TOKEN}
+      NAME: ${SERVER_NAME:-Nex Garry's Mod}
+      PRODUCTION: "1"
+    expose:
+      - "27015/udp"
+    volumes:
+      - ${DATA}:/home/gmod/server/garrysmod/data
+    healthcheck:
+      start_period: 15m
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

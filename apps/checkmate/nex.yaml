@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Checkmate
+  summary: Monitor services and publish availability dashboards
+  description: Prepare an authenticated MongoDB connection and create the initial administrator on a trusted
+    network. Run the dashboard and API on the same HTTPS origin.
+  category: monitoring
+  website: https://checkmate.so/
+  source: https://github.com/bluewave-labs/Checkmate
+  docs: https://github.com/bluewave-labs/Checkmate#getting-started
+  scalable: false
+  primary_service: checkmate
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: checkmate
+    scheme: http
+    port: 52345
+  options:
+    MONGO_URL:
+      label: Database connection string
+      help: Provide a complete authenticated MongoDB URI with database name and a percent-encoded password.
+        The MongoDB instance must already be running.
+      type: password
+    APP_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 52345.
+services:
+  checkmate:
+    image: ghcr.io/bluewave-labs/checkmate:latest
+    environment:
+      DB_CONNECTION_STRING: ${MONGO_URL}
+      JWT_SECRET: ${APP_SECRET}
+    ports:
+    - ${PORT:-52345}:52345/tcp
+    deploy:
+      replicas: 1

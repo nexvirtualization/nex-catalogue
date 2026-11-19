@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: QDirStat
+  summary: Explore disk usage in a selected Nex folder
+  description: Use the browser desktop to scan /data. Choose a managed folder to inspect. This package
+    scopes scanning to that folder rather than using a host root mount.
+  category: tools
+  website: https://github.com/shundhammer/qdirstat
+  source: https://github.com/shundhammer/qdirstat
+  docs: https://docs.linuxserver.io/images/docker-qdirstat/
+  scalable: false
+  primary_service: qdirstat
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: qdirstat
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    SCAN_DATA:
+      label: Folder to inspect
+      help: Select This host. Choose the existing managed share or folder whose disk usage you want to
+        inspect. Include this folder in a stopped Nex backup.
+services:
+  qdirstat:
+    image: lscr.io/linuxserver/qdirstat:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8154}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${SCAN_DATA}:/data:ro
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

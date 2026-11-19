@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mail Archiver
+  summary: Archive and search mail from existing accounts
+  description: Prepare PostgreSQL. Sign in on a trusted network with the configured application credentials,
+    then add IMAP or other supported mail accounts. Use HTTPS for remote access.
+  category: communication
+  website: https://github.com/s1t5/mail-archiver
+  source: https://github.com/s1t5/mail-archiver
+  docs: https://github.com/s1t5/mail-archiver#readme
+  scalable: false
+  primary_service: mail-archiver
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: mail-archiver
+    scheme: http
+    port: 5000
+  works_with:
+  - postgresql
+  options:
+    DB_STRING:
+      label: PostgreSQL connection string
+      help: Enter an Npgsql connection string containing Host, Database, Username and Password.
+      type: password
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: Initial application username.
+    TZ:
+      label: Tz
+      help: IANA time zone for archive timestamps.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5000.
+    DATA:
+      label: Data protection keys
+      help: Select This host. Keep these keys together with backups of the archive database. Include this
+        folder in a stopped Nex backup.
+services:
+  mail-archiver:
+    image: s1t5/mailarchiver:latest
+    environment:
+      ConnectionStrings__DefaultConnection: ${DB_STRING}
+      Authentication__Username: ${ADMIN_USERNAME:-admin}
+      Authentication__Password: ${ADMIN_PASSWORD}
+      TimeZone__DisplayTimeZoneId: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8437}:5000/tcp
+    volumes:
+    - ${DATA}:/app/DataProtection-Keys
+    deploy:
+      replicas: 1

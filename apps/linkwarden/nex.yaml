@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Linkwarden
+  summary: Bookmark and archive web pages together
+  description: Provision a PostgreSQL database and enter its URL. Set the authentication callback to the
+    public URL ending in /api/v1/auth. Create the first user on a trusted network.
+  category: productivity
+  website: https://linkwarden.app/
+  source: https://github.com/linkwarden/linkwarden
+  docs: https://docs.linkwarden.app/self-hosting/installation
+  scalable: false
+  primary_service: linkwarden
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: linkwarden
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    AUTH_URL:
+      label: Authentication URL
+      help: Public URL with /api/v1/auth appended.
+    AUTH_SECRET:
+      label: Authentication signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Archived pages
+      help: Select This host. Stores archived snapshots and related files. Include this folder in a stopped
+        Nex backup.
+services:
+  linkwarden:
+    image: ghcr.io/linkwarden/linkwarden:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${AUTH_URL}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+    ports:
+    - ${PORT:-8396}:3000/tcp
+    volumes:
+    - ${DATA}:/data/data
+    deploy:
+      replicas: 1

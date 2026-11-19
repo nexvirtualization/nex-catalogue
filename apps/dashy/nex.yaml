@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dashy
+  summary: Organize your dashboards, shortcuts and service widgets
+  description: Keep the dashboard on a trusted network or configure authentication in Dashy before exposing
+    it. Edit conf.yml in the dashboard folder or through the web configuration editor.
+  category: management
+  website: https://github.com/lissy93/dashy
+  source: https://github.com/lissy93/dashy
+  docs: https://dashy.to/docs/quick-start/
+  primary_service: dashy
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DASHBOARD:
+      label: Dashboard files
+      help: Dashboard configuration and custom assets.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  dashy:
+    image: ghcr.io/lissy93/dashy:latest
+    volumes:
+    - ${DASHBOARD}:/app/user-data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

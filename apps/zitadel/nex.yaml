@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zitadel
+  summary: Serve an identity provider for OIDC applications
+  description: Provision PostgreSQL with the privileges required for initialization. Route the configured
+    HTTPS hostname through a proxy that supports HTTP/2, then sign in using the initial administrator.
+  category: security
+  website: https://zitadel.com/
+  source: https://github.com/zitadel/zitadel
+  docs: https://zitadel.com/docs/self-hosting/deploy/compose
+  primary_service: zitadel
+  post_install: Provision PostgreSQL with the privileges required for initialization. Route the configured
+    HTTPS hostname through a proxy that supports HTTP/2, then sign in using the initial administrator.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_ADMIN:
+      label: Db admin
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_ADMIN_PASSWORD:
+      label: Db admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_HOST:
+      label: Public host
+      help: Enter the deployment value described in the upstream setup guide.
+    MASTER_KEY:
+      label: Master key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_USER:
+      label: Admin user
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  zitadel:
+    image: ghcr.io/zitadel/zitadel:v4.16.0
+    ports:
+    - ${PORT:-23559}:8080/tcp
+    environment:
+      ZITADEL_DATABASE_POSTGRES_HOST: ${DB_HOST}
+      ZITADEL_DATABASE_POSTGRES_PORT: ${DB_PORT:-5432}
+      ZITADEL_DATABASE_POSTGRES_DATABASE: ${DB_NAME:-zitadel}
+      ZITADEL_DATABASE_POSTGRES_USER_USERNAME: ${DB_USER}
+      ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: ${DB_PASSWORD}
+      ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE: disable
+      ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: ${DB_ADMIN}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
+      ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE: disable
+      ZITADEL_EXTERNALDOMAIN: ${PUBLIC_HOST}
+      ZITADEL_EXTERNALPORT: '443'
+      ZITADEL_EXTERNALSECURE: 'true'
+      ZITADEL_TLS_ENABLED: 'false'
+      ZITADEL_MASTERKEY: ${MASTER_KEY}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME: ${ADMIN_USER:-admin}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${ADMIN_PASSWORD}
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_EMAIL_ADDRESS: ${ADMIN_EMAIL}
+      ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED: 'false'
+    command:
+    - start-from-init
+    - --masterkeyFromEnv
+    - --tlsMode
+    - external
+    deploy:
+      replicas: 1

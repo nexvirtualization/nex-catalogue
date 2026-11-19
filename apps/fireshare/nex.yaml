@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Fireshare
+  summary: Manage and share video clips from an existing library
+  description: Use the administrator password to access the library settings. Read-only media folders
+    can be selected if clips are managed elsewhere.
+  category: media
+  website: https://github.com/fireshare-app/fireshare
+  source: https://github.com/fireshare-app/fireshare
+  docs: https://github.com/fireshare-app/fireshare
+  primary_service: fireshare
+  scalable: false
+  web:
+    port: 80
+  options:
+    ADMIN_USER:
+      label: Administrator username
+      help: Initial Fireshare administrator.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use Nex Generate.
+    SECRET_KEY:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and retain this value across restores.
+    DATA:
+      label: Application data
+      help: Keep application data in this managed folder between restarts.
+    PROCESSED:
+      label: Processed media
+      help: Keep processed media in this managed folder between restarts.
+    VIDEOS:
+      label: Source videos
+      help: Keep source videos in this managed folder between restarts.
+    IMAGES:
+      label: Source images
+      help: Keep source images in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  fireshare:
+    image: docker.io/shaneisrael/fireshare:latest
+    environment:
+      ADMIN_USERNAME: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+    volumes:
+    - ${DATA}:/data
+    - ${PROCESSED}:/processed
+    - ${VIDEOS}:/videos
+    - ${IMAGES}:/images
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

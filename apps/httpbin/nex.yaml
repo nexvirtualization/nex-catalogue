@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: httpbin
+  summary: Test HTTP client requests and responses
+  description: The Python Software Foundation maintains this continuation of the original httpbin project. Use
+    its endpoints to test requests, redirects, cookies, headers and response behaviour.
+  category: development
+  website: https://github.com/psf/httpbin
+  source: https://github.com/psf/httpbin
+  docs: https://github.com/psf/httpbin#docker
+  license: ISC OR MIT
+  primary_service: httpbin
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the endpoint reference in a browser, or send a test request to /get. Keep the service on
+    a trusted network.
+  web:
+    port: 8080
+  scale:
+  - httpbin
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+services:
+  httpbin:
+    image: ghcr.io/psf/httpbin:latest
+    ports:
+    - ${PORT:-18130}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Claper
+  summary: Collect audience responses during a presentation
+  description: Prepare a PostgreSQL database. Use an HTTPS reverse proxy with WebSocket support and create
+    an account before sharing polls. Set the host to the client-facing DNS name.
+  category: productivity
+  website: https://claper.co/
+  source: https://github.com/ClaperCo/Claper
+  docs: https://github.com/ClaperCo/Claper#readme
+  scalable: false
+  primary_service: claper
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: claper
+    scheme: http
+    port: 4000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Provide a random secret at least 64 characters long.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4000.
+    DATA:
+      label: Presentation uploads
+      help: Select This host. Stores presentation files and attachments. Include this folder in a stopped
+        Nex backup.
+services:
+  claper:
+    image: ghcr.io/claperco/claper:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BASE_URL: ${PUBLIC_URL}
+      SECRET_KEY_BASE: ${SESSION_SECRET}
+    ports:
+    - ${PORT:-8382}:4000/tcp
+    volumes:
+    - ${DATA}:/app/uploads
+    deploy:
+      replicas: 1

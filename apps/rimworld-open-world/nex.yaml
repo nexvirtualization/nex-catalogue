@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RimWorld Open World
+  version: '1.0.4'
+  summary: Host a shared world for the legacy Open World mod
+  description: >-
+    Keep the world files on This host and choose a registered primary network limited to your
+    players. Use RimWorld 1.4 and the Open World mod on each client. The server expects Open World
+    client version 1.3. Connect to the app’s Primary address on TCP 25555. Configure server
+    access in Data/Config.json before inviting players. Make a stopped backup before updating.
+  category: games
+  website: https://steamcommunity.com/sharedfiles/filedetails/?id=2954574797
+  source: https://github.com/D12-Dev/OpenWorld
+  docs: https://github.com/D12-Dev/OpenWorld#quick-installation-guide
+  license: CC-BY-NC-ND-4.0
+  architectures: [amd64, arm64]
+  tags: [multiplayer, simulation]
+  options:
+    DATA:
+      label: World, player saves and server settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  rimworld-open-world:
+    image: ghcr.io/ptero-eggs/yolks:dotnet_10
+    working_dir: /data
+    user: '0:0'
+    entrypoint: [/usr/bin/tini, -g, --, /bin/sh, -ec]
+    command:
+      - |
+        umask 027
+        chown container:container /data
+        if [ ! -f .open-world-installed-1.0.4 ] || [ ! -s OpenWorldServer.dll ]; then
+          case "$$(uname -m)" in
+            x86_64)
+              archive=linux-x64
+              sha256=dba0571b82ea2df2762d1b7640d58ee64be1290d0b22248d606c729ac1347d22
+              ;;
+            aarch64)
+              archive=linux-arm64
+              sha256=4065b0ef91f429901eae69dbee8756fc2283617f081e162c21b56dbe15e3966e
+              ;;
+            *)
+              echo 'RimWorld Open World requires amd64 or arm64.' >&2
+              exit 1
+              ;;
+          esac
+          stage=$$(mktemp -d)
+          trap 'rm -rf "$$stage"' EXIT
+          curl -fsSL --retry 3 -o "$$stage/server.zip" "https://github.com/D12-Dev/OpenWorld/releases/download/v1.0.4/$$archive.zip"
+          printf '%s  %s\n' "$$sha256" "$$stage/server.zip" | sha256sum -c -
+          unzip -q "$$stage/server.zip" -d "$$stage"
+          install -o container -g container -m 0644 "$$stage/$$archive"/*.dll "$$stage/$$archive"/*.json /data/
+          touch .open-world-installed-1.0.4
+          rm -rf "$$stage"
+          trap - EXIT
+        fi
+        exec setpriv --reuid=container --regid=container --init-groups dotnet OpenWorldServer.dll
+    environment:
+      DOTNET_ROLL_FORWARD: LatestMajor
+    expose:
+      - 25555/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

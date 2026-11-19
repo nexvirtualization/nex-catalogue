@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Uptime Kuma
+  summary: Monitor service uptime and send outage notifications
+  description: Service uptime checks, notifications and status pages. In Install keep Docker as Primary network
+    for host access, then open the host endpoint on port 3001 and create the first administrator immediately. For
+    a monitor targeting another Nex app, enter that app's Name inside applications from Review/Summary and its internal
+    listener port; published host ports are unnecessary. Host Docker socket access is not included. Upstream does
+    not support NFS for this database. On Basics choose Runs on, Only these hosts and one host; keep state folders
+    on This host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the
+    stopped-copy option and select all state folders before updates.
+  category: monitoring
+  website: https://uptime.kuma.pet
+  source: https://github.com/louislam/uptime-kuma
+  license: MIT
+  scalable: false
+  tags:
+  - uptime
+  - alerts
+  - status-page
+  options:
+    PORT:
+      label: Web port
+      help: Host HTTP port with Docker. After install use Summary, Network, Host-published endpoints; create the
+        initial administrator immediately. With an own primary address and publishing off, use APP-IP:3001.
+    DATA:
+      label: Monitoring database
+      help: Keep Monitoring database on This host; do not select an NFS share. Nex initializes the persistent /app/data
+        volume without host directory setup. Select this folder in ACTIONS, Back up now and use the stopped-copy
+        option for consistent SQLite state.
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    ports:
+    - ${PORT:-3001}:3001/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

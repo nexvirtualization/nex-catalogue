@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Databasus
+  summary: Schedule database backups and verify recovery
+  description: Create your administrator on a trusted network. Point backup jobs at an independent storage
+    destination. Back up the Databasus settings and credentials separately.
+  category: management
+  website: https://github.com/databasus/databasus
+  source: https://github.com/databasus/databasus
+  docs: https://databasus.com/installation
+  primary_service: databasus
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 4005
+  options:
+    DATA:
+      label: Databasus state
+      help: Configuration, credentials and local application data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4005.
+services:
+  databasus:
+    image: docker.io/databasus/databasus:latest
+    volumes:
+    - ${DATA}:/databasus-data
+    ports:
+    - ${PORT:-4005}:4005/tcp
+    deploy:
+      replicas: 1

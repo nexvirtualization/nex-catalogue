@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Paperless AI
+  summary: Suggest document tags and fields for your Paperless library
+  description: Connect an existing Paperless-ngx instance and a model service reachable from the application
+    network. Keep the integration console accessible only to authorized users.
+  category: documents
+  website: https://github.com/clusterzx/paperless-ai
+  source: https://github.com/clusterzx/paperless-ai
+  docs: https://github.com/clusterzx/paperless-ai
+  primary_service: paperless-ai
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    DATA:
+      label: Integration settings and state
+      help: Keep integration settings and state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  paperless-ai:
+    image: docker.io/clusterzx/paperless-ai:latest
+    volumes:
+    - ${DATA}:/app/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

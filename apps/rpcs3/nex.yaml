@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RPCS3
+  summary: Run a private browser-hosted PlayStation 3 emulator
+  description: Open the private desktop session over HTTPS. Upload game files you are authorized to use
+    and install the official system firmware from inside RPCS3. CPU performance depends on the selected
+    host.
+  category: tools
+  website: https://rpcs3.net/
+  source: https://github.com/RPCS3/rpcs3
+  docs: https://docs.linuxserver.io/images/docker-rpcs3/
+  scalable: false
+  primary_service: rpcs3
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: rpcs3
+    scheme: https
+    port: 3001
+  options:
+    APP_USERNAME:
+      label: Web login
+      help: Account name for the browser desktop session.
+    APP_PASSWORD:
+      label: Web password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID for the application and files.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the application and files.
+    TZ:
+      label: Time zone
+      help: IANA time zone for the desktop session.
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3001.
+    DATA:
+      label: Application settings
+      help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
+        Nex backup.
+    GAME_FILES:
+      label: Game files
+      help: Select This host. Holds game files and firmware you provide. Include this folder in a stopped
+        Nex backup.
+services:
+  rpcs3:
+    image: lscr.io/linuxserver/rpcs3:latest
+    environment:
+      CUSTOM_USER: ${APP_USERNAME:-admin}
+      PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8128}:3001/tcp
+    volumes:
+    - ${DATA}:/config
+    - ${GAME_FILES}:/games
+    tmpfs:
+    - /dev/shm:size=1073741824
+    deploy:
+      replicas: 1

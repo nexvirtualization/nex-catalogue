@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Vikunja
+  summary: Organize projects and to-do lists
+  description: Set the exact public URL, then register your account on a trusted network. This profile
+    uses a local SQLite database and keeps attachments in a separate folder.
+  category: productivity
+  website: https://vikunja.io/
+  source: https://github.com/go-vikunja/vikunja
+  docs: https://vikunja.io/docs/docker-walkthrough/
+  scalable: false
+  primary_service: vikunja
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: vikunja
+    scheme: http
+    port: 3456
+  options:
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    JWT_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3456.
+    DATA:
+      label: Task database
+      help: Select This host. Stores tasks, projects, and accounts. Include this folder in a stopped Nex
+        backup.
+    FILES:
+      label: Attachments
+      help: Select This host. Stores uploaded files. Include this folder in a stopped Nex backup.
+services:
+  vikunja:
+    image: vikunja/vikunja:latest
+    environment:
+      VIKUNJA_SERVICE_PUBLICURL: ${PUBLIC_URL}
+      VIKUNJA_SERVICE_JWTSECRET: ${JWT_SECRET}
+      VIKUNJA_DATABASE_TYPE: sqlite
+      VIKUNJA_DATABASE_PATH: /db/vikunja.db
+    ports:
+    - ${PORT:-8405}:3456/tcp
+    volumes:
+    - ${DATA}:/db
+    - ${FILES}:/app/vikunja/files
+    deploy:
+      replicas: 1

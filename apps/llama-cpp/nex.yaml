@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: llama.cpp Server
+  summary: Serve a GGUF language model over HTTP
+  description: Prepare a managed folder containing a supported GGUF model. Enter the filename in Nex Settings
+    and choose a host with enough memory for the model. Use the inference token to authorize client requests.
+  category: ai
+  website: https://llama.app/
+  source: https://github.com/ggml-org/llama.cpp
+  docs: https://github.com/ggml-org/llama.cpp/blob/master/docs/docker.md
+  scalable: false
+  primary_service: llama-cpp
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: llama-cpp
+    scheme: http
+    port: 8080
+  options:
+    MODEL_FILENAME:
+      label: Model Filename
+      help: Filename of a GGUF model in the selected folder.
+    API_KEY:
+      label: Inference API key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: GGUF models
+      help: Select This host. Select or prepare the managed folder containing the chosen model. Include
+        this folder in a stopped Nex backup.
+services:
+  llama-cpp:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command:
+    - --model
+    - /models/${MODEL_FILENAME}
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --api-key
+    - ${API_KEY}
+    ports:
+    - ${PORT:-8776}:8080/tcp
+    volumes:
+    - ${DATA}:/models:ro
+    deploy:
+      replicas: 1

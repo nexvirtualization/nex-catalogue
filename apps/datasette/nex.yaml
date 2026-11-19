@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Datasette
+  summary: Explore SQLite databases in a browser with a read-only API
+  description: Put intended SQLite databases in the managed folder and restart to load them. Restrict
+    access when serving internal data.
+  category: development
+  website: https://github.com/simonw/datasette
+  source: https://github.com/simonw/datasette
+  docs: https://docs.datasette.io/en/stable/installation.html
+  primary_service: datasette
+  scalable: false
+  license: Apache-2.0
+  architectures:
+  - amd64
+  web:
+    port: 8001
+  options:
+    DATA:
+      label: SQLite datasets
+      help: Keep sqlite datasets in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8001.
+services:
+  datasette:
+    image: docker.io/datasetteproject/datasette:latest
+    command:
+    - serve
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8001'
+    - /data
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8001}:8001/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PeerTube
+  summary: Publish and federate a video site
+  description: Provide prepared PostgreSQL and Redis services and a stable HTTPS video hostname. Read
+    the administrator setup logs on a trusted network and configure federation and transcoding before
+    opening access.
+  category: media
+  website: https://github.com/Chocobozzz/PeerTube
+  source: https://github.com/Chocobozzz/PeerTube
+  docs: https://docs.joinpeertube.org/install/docker
+  primary_service: peertube
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 9000
+  options:
+    PEERTUBE_WEBSERVER_HOSTNAME:
+      label: Public instance hostname
+      help: DNS hostname of the HTTPS endpoint.
+    PEERTUBE_DB_HOSTNAME:
+      label: PostgreSQL hostname
+      help: Reachable database host.
+    PEERTUBE_DB_USERNAME:
+      label: Database username
+      help: Prepared database account.
+    PEERTUBE_DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the database account.
+    PEERTUBE_REDIS_HOSTNAME:
+      label: Redis hostname
+      help: Reachable Redis host.
+    PEERTUBE_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DATA:
+      label: Video libraries and cache
+      help: Keep video libraries and cache in this managed folder between restarts.
+    CONFIG:
+      label: PeerTube configuration
+      help: Keep peertube configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9000.
+services:
+  peertube:
+    image: docker.io/chocobozzz/peertube:v8.3.2
+    environment:
+      PEERTUBE_WEBSERVER_HTTPS: 'true'
+      PEERTUBE_WEBSERVER_PORT: '443'
+      PEERTUBE_DB_SSL: 'false'
+      PEERTUBE_WEBSERVER_HOSTNAME: ${PEERTUBE_WEBSERVER_HOSTNAME}
+      PEERTUBE_DB_HOSTNAME: ${PEERTUBE_DB_HOSTNAME}
+      PEERTUBE_DB_USERNAME: ${PEERTUBE_DB_USERNAME}
+      PEERTUBE_DB_PASSWORD: ${PEERTUBE_DB_PASSWORD}
+      PEERTUBE_REDIS_HOSTNAME: ${PEERTUBE_REDIS_HOSTNAME}
+      PEERTUBE_SECRET: ${PEERTUBE_SECRET}
+    volumes:
+    - ${DATA}:/data
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-9000}:9000/tcp
+    deploy:
+      replicas: 1

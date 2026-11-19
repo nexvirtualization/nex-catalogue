@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pavlov VR
+  summary: Host a multiplayer VR shooter server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the game’s community server browser. The game uses UDP 7777 and UDP 8177. Community listing
+    and custom maps may require registration with the game’s services. First boot downloads the server
+    through SteamCMD. Restarts check for updates. Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/555160/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/pvrserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  pavlov-vr:
+    image: ghcr.io/gameservermanagers/gameserver:pvr
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 7777/udp
+      - 8177/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

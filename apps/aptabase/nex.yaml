@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Aptabase
+  summary: Measure application usage with privacy-focused analytics
+  description: Provision PostgreSQL and ClickHouse with dedicated credentials. Create your account using
+    the verification link in the app logs or configure SMTP.
+  category: monitoring
+  website: https://aptabase.com/
+  source: https://github.com/aptabase/aptabase
+  docs: https://github.com/aptabase/self-hosting
+  primary_service: aptabase
+  post_install: Provision PostgreSQL and ClickHouse with dedicated credentials. Create your account using
+    the verification link in the app logs or configure SMTP.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    POSTGRES_CONNECTION:
+      label: PostgreSQL connection string
+      help: Use the Npgsql format Server=db;Port=5432;User Id=aptabase;Password=…;Database=aptabase.
+      type: password
+    CLICKHOUSE_CONNECTION:
+      label: ClickHouse connection string
+      help: Use the format Host=clickhouse;Port=8123;Username=aptabase;Password=….
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+services:
+  aptabase:
+    image: ghcr.io/aptabase/aptabase:main
+    ports:
+    - ${PORT:-23508}:8080/tcp
+    environment:
+      BASE_URL: ${PUBLIC_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      DATABASE_URL: ${POSTGRES_CONNECTION}
+      CLICKHOUSE_URL: ${CLICKHOUSE_CONNECTION}
+    deploy:
+      replicas: 1

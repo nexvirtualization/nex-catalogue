@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: WBO
+  summary: Collaborate on shared browser whiteboards
+  description: Create and share a board using the web page. Keep access on a trusted network or behind
+    an authenticating proxy when boards are private.
+  category: productivity
+  website: https://github.com/lovasoa/whitebophir
+  source: https://github.com/lovasoa/whitebophir
+  docs: https://github.com/lovasoa/whitebophir
+  primary_service: wbo
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Whiteboard data
+      help: Keep whiteboard data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  wbo:
+    image: docker.io/lovasoa/wbo:latest
+    volumes:
+    - ${DATA}:/opt/app/server-data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

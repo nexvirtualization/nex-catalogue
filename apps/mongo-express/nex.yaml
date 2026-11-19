@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Mongo Express
+  summary: Inspect data in an existing MongoDB instance
+  description: Mongo Express connects to the supplied MongoDB URL. The UI requires its own login.
+  category: development
+  website: https://github.com/mongo-express/mongo-express
+  source: https://github.com/mongo-express/mongo-express
+  docs: https://github.com/mongo-express/mongo-express
+  primary_service: mongo-express
+  post_install: Use HTTPS on a trusted network, sign in with the configured web account, and choose the desired
+    MongoDB database.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8081
+  options:
+    USER:
+      label: Email or login name
+      help: Account identifier supplied to the application.
+    PASSWORD:
+      label: Account password
+      help: Choose a strong password for this deployment.
+      type: password
+    MONGO_URL:
+      label: MongoDB URI
+      help: Connection string for a reachable MongoDB service, including credentials if needed.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8081 inside Nex.
+services:
+  mongo-express:
+    image: docker.io/library/mongo-express:latest
+    ports:
+    - ${PORT:-20257}:8081/tcp
+    environment:
+      ME_CONFIG_MONGODB_URL: ${MONGO_URL}
+      ME_CONFIG_BASICAUTH_ENABLED: 'true'
+      ME_CONFIG_BASICAUTH_USERNAME: ${USER:-mongo}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${PASSWORD}
+    deploy:
+      replicas: 1

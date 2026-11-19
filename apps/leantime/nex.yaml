@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Leantime
+  summary: Plan and manage projects collaboratively
+  description: Prepare a MySQL or MariaDB database and then run the initial installer on a trusted network.
+    Use the public HTTPS URL for the app and keep the session secret stable.
+  category: productivity
+  website: https://leantime.io
+  source: https://github.com/leantime/leantime
+  docs: https://github.com/leantime/leantime#readme
+  scalable: false
+  primary_service: leantime
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: leantime
+    scheme: http
+    port: 8080
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is leantime.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Private project attachments
+      help: Select This host. Stores user uploads and private attachments. Include this folder in a stopped
+        Nex backup.
+    PUBLIC_FILES:
+      label: Public file assets
+      help: Select This host. Stores public files served by Leantime. Include this folder in a stopped
+        Nex backup.
+services:
+  leantime:
+    image: leantime/leantime:latest
+    environment:
+      LEAN_DB_HOST: ${DB_HOST}
+      LEAN_DB_USER: ${DB_USER}
+      LEAN_DB_PASSWORD: ${DB_PASSWORD}
+      LEAN_DB_DATABASE: ${DB_NAME:-leantime}
+      LEAN_APP_URL: ${PUBLIC_URL}
+      LEAN_SESSION_PASSWORD: ${SESSION_SECRET}
+    ports:
+    - ${PORT:-8415}:8080/tcp
+    volumes:
+    - ${DATA}:/var/www/html/userfiles
+    - ${PUBLIC_FILES}:/var/www/html/public/userfiles
+    deploy:
+      replicas: 1

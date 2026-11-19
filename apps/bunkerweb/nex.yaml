@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BunkerWeb
+  summary: Next-gen Web Application Firewall (WAF) that will protect your web services
+  description: Next-gen Web Application Firewall (WAF) that will protect your web services.
+  category: security
+  source: https://github.com/bunkerity/bunkerweb
+  website: https://www.bunkerweb.io
+  docs: https://docs.bunkerweb.io/latest/integrations/
+  primary_service: bunkerweb
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 8443/tcp port
+      help: Host port for application listener 8443/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_3:
+      label: Published 8443/udp port
+      help: Host port for application listener 8443/udp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Complete the built-in setup wizard using a trusted network. Use Nex service names for the protected
+    backends. Ensure the Data folder is writable by UID and GID 101.
+  web:
+    port: 8080
+services:
+  bunkerweb:
+    image: docker.io/bunkerity/bunkerweb-all-in-one:latest
+    deploy:
+      replicas: 1
+    environment:
+      AUTOCONF_MODE: 'no'
+      SERVICE_API: 'no'
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-19913}:8080/tcp
+    - ${PORT_2:-20913}:8443/tcp
+    - ${PORT_3:-21913}:8443/udp

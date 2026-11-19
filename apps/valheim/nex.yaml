@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Valheim
+  summary: Explore and build together in a private Valheim world
+  description: >-
+    Run one copy on a selected x86-64 host and choose This host for both folders. In Network,
+    choose a cluster VLAN or routed private network reachable by players. First startup
+    downloads the dedicated server from Steam and can take several minutes to generate a world.
+    In the Steam edition of Valheim, choose Join Game
+    and enter the app's Primary address on UDP 2456. Keep UDP 2456 and 2457 reachable.
+  category: games
+  website: https://www.valheim.com/
+  source: https://github.com/community-valheim-tools/valheim-server-docker
+  docs: https://www.valheim.com/support/a-guide-to-dedicated-servers/
+  license: Proprietary game server (Apache-2.0 container)
+  architectures: [amd64]
+  tags: [survival, sandbox, steamcmd]
+  options:
+    SERVER_NAME:
+      label: Server name
+    WORLD_NAME:
+      label: World name
+      help: When restoring a world, use its original world name.
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+      help: Use at least five characters and choose a password that is not part of the server name.
+    DATA:
+      label: Worlds and settings
+      help: Choose This host. Include this folder in a stopped backup before restarting to apply game updates.
+    GAME_FILES:
+      label: Downloaded game files
+      help: Choose This host. The image can download this folder again after a restore.
+services:
+  valheim:
+    image: ghcr.io/community-valheim-tools/valheim-server:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Valheim}
+      WORLD_NAME: ${WORLD_NAME:-World}
+      SERVER_PASS: ${SERVER_PASSWORD}
+      SERVER_PUBLIC: "false"
+      CROSSPLAY: "false"
+      UPDATE_CRON: ""
+      RESTART_CRON: ""
+    expose:
+      - "2456/udp"
+      - "2457/udp"
+    volumes:
+      - ${DATA}:/config
+      - ${GAME_FILES}:/opt/valheim
+    stop_grace_period: 120s
+    deploy:
+      replicas: 1

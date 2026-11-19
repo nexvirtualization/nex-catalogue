@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Zipline
+  summary: Upload and organize shareable files
+  description: Create a PostgreSQL database and complete initial administrator setup on a trusted network.
+    Use HTTPS for share URLs and upload clients.
+  category: tools
+  website: https://github.com/diced/zipline
+  source: https://github.com/diced/zipline
+  docs: https://zipline.diced.sh/docs/get-started
+  scalable: false
+  primary_service: zipline
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: zipline
+    scheme: http
+    port: 3000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    SESSION_SECRET:
+      label: Session signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Shared files
+      help: Select This host. Stores user uploads. Include this folder in a stopped Nex backup.
+    PUBLIC:
+      label: Public assets
+      help: Select This host. Stores customization assets. Include this folder in a stopped Nex backup.
+    THEMES:
+      label: Themes
+      help: Select This host. Stores custom themes. Include this folder in a stopped Nex backup.
+services:
+  zipline:
+    image: ghcr.io/diced/zipline:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      CORE_SECRET: ${SESSION_SECRET}
+      CORE_HOSTNAME: 0.0.0.0
+      CORE_PORT: '3000'
+      DATASOURCE_TYPE: local
+      DATASOURCE_LOCAL_DIRECTORY: /zipline/uploads
+    ports:
+    - ${PORT:-8410}:3000/tcp
+    volumes:
+    - ${DATA}:/zipline/uploads
+    - ${PUBLIC}:/zipline/public
+    - ${THEMES}:/zipline/themes
+    deploy:
+      replicas: 1

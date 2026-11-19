@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Local Deep Research
+  summary: Run research projects with a model and search service
+  description: Configure a compatible model provider and search service before running research. Existing
+    Nex Ollama and SearXNG apps can be reached through their app names and internal ports. Finish the
+    initial web setup on a trusted network.
+  category: ai
+  website: https://github.com/LearningCircuit/local-deep-research
+  source: https://github.com/LearningCircuit/local-deep-research
+  docs: https://github.com/LearningCircuit/local-deep-research#readme
+  scalable: false
+  primary_service: local-deep-research
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: local-deep-research
+    scheme: http
+    port: 5000
+  works_with:
+  - ollama
+  - searxng
+  options:
+    OLLAMA_URL:
+      label: Ollama Url
+      help: Full URL of the Ollama model service.
+    SEARCH_URL:
+      label: Search Url
+      help: Full URL to the SearXNG search service.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5000.
+    DATA:
+      label: Research data
+      help: Select This host. Stores sessions, configuration, and research material. Include this folder
+        in a stopped Nex backup.
+    SCRIPTS:
+      label: Local scripts
+      help: Select This host. Stores scripts you elect to provide to the app. Include this folder in a
+        stopped Nex backup.
+services:
+  local-deep-research:
+    image: localdeepresearch/local-deep-research:latest
+    environment:
+      LDR_WEB_HOST: 0.0.0.0
+      LDR_WEB_PORT: '5000'
+      LDR_DATA_DIR: /data
+      LDR_LLM_OLLAMA_URL: ${OLLAMA_URL}
+      LDR_SEARCH_ENGINE_WEB_SEARXNG_DEFAULT_PARAMS_INSTANCE_URL: ${SEARCH_URL}
+    ports:
+    - ${PORT:-8812}:5000/tcp
+    volumes:
+    - ${DATA}:/data
+    - ${SCRIPTS}:/scripts
+    deploy:
+      replicas: 1

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Meilisearch
+  summary: Run a full-text search API and persistent search indexes
+  description: Use the master key to create limited API keys for clients. Keep the administrative API
+    private. Back up indexes and check the supported migration procedure before changing versions.
+  category: development
+  website: https://github.com/meilisearch/MeiliSearch
+  source: https://github.com/meilisearch/MeiliSearch
+  docs: https://www.meilisearch.com/docs/guides/docker
+  primary_service: meilisearch
+  scalable: false
+  license: MIT for Community Edition; Business Source License for Enterprise Edition
+  options:
+    MASTER_KEY:
+      label: Master key
+      type: password
+      help: Use Nex Generate or provide at least 16 bytes.
+    DATA:
+      label: Search indexes
+      help: Meilisearch database, indexes and snapshots.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7700.
+services:
+  meilisearch:
+    image: docker.io/getmeili/meilisearch:latest
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MASTER_KEY}
+    volumes:
+    - ${DATA}:/meili_data
+    ports:
+    - ${PORT:-7700}:7700/tcp
+    deploy:
+      replicas: 1

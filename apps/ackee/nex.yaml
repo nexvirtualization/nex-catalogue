@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ackee
+  summary: Track website traffic and events privately
+  description: Connect an authenticated MongoDB database before installing. Sign in using the provided
+    administrator credentials and use the site script from the web UI after configuring HTTPS.
+  category: monitoring
+  website: https://ackee.electerious.com/
+  source: https://github.com/electerious/Ackee
+  docs: https://github.com/electerious/Ackee#readme
+  scalable: false
+  primary_service: ackee
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: ackee
+    scheme: http
+    port: 3000
+  options:
+    MONGO_URL:
+      label: Database connection string
+      help: Provide a complete authenticated MongoDB URI with database name and a percent-encoded password.
+        The MongoDB instance must already be running.
+      type: password
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: Account name for the dashboard.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  ackee:
+    image: electerious/ackee:latest
+    environment:
+      ACKEE_USERNAME: ${ADMIN_USERNAME:-admin}
+      ACKEE_PASSWORD: ${ADMIN_PASSWORD}
+      ACKEE_MONGODB: ${MONGO_URL}
+    ports:
+    - ${PORT:-8470}:3000/tcp
+    deploy:
+      replicas: 1

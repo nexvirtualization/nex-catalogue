@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: "ARK: Survival Evolved"
+  summary: Host The Island for a private group of ARK survivors
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep the ARK folder on This host
+    with one eligible x86-64 host. First boot downloads roughly 25 GB from Steam before loading The Island.
+    In Steam Game Servers, add the application's IPv4 address on UDP 27015 to Favorites, or use the game
+    address on UDP 7777. Allow UDP 7777, 7778, and 27015 for players. Keep TCP 27020 restricted to
+    administrators. Steam checks for updates on start. Back up the ARK folder with the app stopped first.
+  category: games
+  website: https://playark.com/
+  source: https://github.com/Hermsi1337/docker-ark-server
+  docs: https://github.com/Hermsi1337/docker-ark-server#readme
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - survival
+    - co-op
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+    SERVER_PASSWORD:
+      label: Player password
+      type: password
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Generate a separate password for in-game administration and the remote console.
+    DATA:
+      label: Server files and saves
+      help: Keep this folder on This host. It holds downloads, configuration, and the world.
+services:
+  ark-survival-evolved:
+    image: docker.io/hermsi/ark-server:latest
+    expose:
+      - "7777/udp"
+      - "7778/udp"
+      - "27015/udp"
+    environment:
+      SESSION_NAME: ${SERVER_NAME:-ARK Survival Evolved}
+      SERVER_PASSWORD: ${SERVER_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SERVER_MAP: TheIsland
+      UPDATE_ON_START: "true"
+    volumes:
+      - ${DATA}:/app
+    stop_grace_period: 5m
+    deploy:
+      replicas: 1

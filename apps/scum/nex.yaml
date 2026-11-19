@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SCUM
+  summary: Host a multiplayer survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot downloads the dedicated server from Steam. Join through the server browser or use its
+    direct connection field with the Primary address and port 7777. Set a join password in the generated
+    SCUM/Saved/Config/WindowsServer/ServerSettings.ini before changing network access. Make a stopped
+    backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/513710/
+  source: https://github.com/EvilOlaf/scum
+  docs: https://github.com/EvilOlaf/scum#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - steam
+  options:
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  scum:
+    image: ghcr.io/evilolaf/scum:latest
+    environment:
+      GAMEPORT: '7777'
+      QUERYPORT: '27015'
+      MEMORY_THRESHOLD_PERCENT: '0'
+    expose:
+      - 7777/udp
+      - 7777/tcp
+      - 7778/udp
+      - 7778/tcp
+      - 7779/udp
+      - 7779/tcp
+      - 27015/udp
+      - 27015/tcp
+    volumes:
+      - ${DATA}:/opt/scumserver
+      - ${STEAMCMD}:/opt/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

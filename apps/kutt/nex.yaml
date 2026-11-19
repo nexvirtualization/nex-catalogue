@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kutt
+  summary: Create and manage short links
+  description: Kutt uses the upstream standalone SQLite deployment with a separate folder for custom site
+    assets.
+  category: productivity
+  website: https://kutt.to
+  source: https://github.com/thedevs-network/kutt
+  docs: https://github.com/thedevs-network/kutt
+  primary_service: kutt
+  post_install: Use your configured hostname behind HTTPS. Create the first administrator and then disable
+    public registration in settings if you do not accept public users.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    DOMAIN:
+      label: Link domain
+      help: Default public hostname for generated short links.
+    JWT_SECRET:
+      label: Signing secret
+      help: Generate and preserve a random secret.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    DB:
+      label: Link database
+      help: Managed directory mounted at /var/lib/kutt. Choose storage writable by the application.
+    CUSTOM:
+      label: Custom site assets
+      help: Managed directory mounted at /kutt/custom. Choose storage writable by the application.
+services:
+  kutt:
+    image: docker.io/kutt/kutt:latest
+    ports:
+    - ${PORT:-20270}:3000/tcp
+    volumes:
+    - ${DB}:/var/lib/kutt
+    - ${CUSTOM}:/kutt/custom
+    environment:
+      DB_CLIENT: sqlite3
+      DB_FILENAME: /var/lib/kutt/data.sqlite
+      DEFAULT_DOMAIN: ${DOMAIN}
+      JWT_SECRET: ${JWT_SECRET}
+    deploy:
+      replicas: 1

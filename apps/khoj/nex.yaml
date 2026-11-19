@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Khoj
+  summary: Use your own knowledge base with a configured model provider
+  description: Prepare PostgreSQL with pgvector. Sign in with your configured admin credentials on a
+    trusted HTTPS endpoint. This profile connects to model services you configure.
+  category: ai
+  website: https://github.com/khoj-ai/khoj
+  source: https://github.com/khoj-ai/khoj
+  docs: https://docs.khoj.dev/get-started/setup/
+  primary_service: khoj
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 42110
+  options:
+    POSTGRES_HOST:
+      label: PostgreSQL hostname
+      help: Reachable server with pgvector.
+    POSTGRES_DB:
+      label: Database name
+      help: Prepared Khoj database.
+    POSTGRES_USER:
+      label: Database username
+      help: Dedicated application user.
+    POSTGRES_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of that application account.
+    KHOJ_DJANGO_SECRET_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    KHOJ_ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for your private instance.
+    KHOJ_ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate.
+    DATA:
+      label: Khoj application settings
+      help: Keep khoj application settings in this managed folder between restarts.
+    MODELS:
+      label: Local model cache
+      help: Keep local model cache in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 42110.
+services:
+  khoj:
+    image: ghcr.io/khoj-ai/khoj:latest
+    command:
+    - --host=0.0.0.0
+    - --port=42110
+    - --non-interactive
+    environment:
+      POSTGRES_PORT: '5432'
+      KHOJ_DEBUG: 'false'
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      KHOJ_DJANGO_SECRET_KEY: ${KHOJ_DJANGO_SECRET_KEY}
+      KHOJ_ADMIN_EMAIL: ${KHOJ_ADMIN_EMAIL}
+      KHOJ_ADMIN_PASSWORD: ${KHOJ_ADMIN_PASSWORD}
+    volumes:
+    - ${DATA}:/root/.khoj
+    - ${MODELS}:/root/.cache
+    ports:
+    - ${PORT:-42110}:42110/tcp
+    deploy:
+      replicas: 1

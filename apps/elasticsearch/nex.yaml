@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Elasticsearch
+  summary: Index JSON documents in a single-node Elasticsearch service
+  description: Authenticate with user elastic and the configured password. Keep this single-node profile
+    on a trusted application network and terminate TLS at a reverse proxy for remote access.
+  category: development
+  website: https://github.com/elastic/elasticsearch
+  source: https://github.com/elastic/elasticsearch
+  docs: https://www.elastic.co/docs/deploy-manage/deploy/self-managed/install-elasticsearch-docker-basic
+  primary_service: elasticsearch
+  scalable: false
+  license: Elastic License 2.0 for default releases; AGPL-3.0 or SSPL-1.0 options for source code, with
+    ELv2-only directories
+  options:
+    ELASTIC_PASSWORD:
+      label: Initial elastic password
+      type: password
+      help: Use Nex Generate.
+    DATA:
+      label: Elasticsearch data
+      help: Keep elasticsearch data in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9200.
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.3
+    environment:
+      discovery.type: single-node
+      node.store.allow_mmap: 'false'
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      xpack.security.enabled: 'true'
+      xpack.security.http.ssl.enabled: 'false'
+    volumes:
+    - ${DATA}:/usr/share/elasticsearch/data
+    ports:
+    - ${PORT:-9200}:9200/tcp
+    deploy:
+      replicas: 1

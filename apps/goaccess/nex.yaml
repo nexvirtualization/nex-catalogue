@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: GoAccess
+  summary: Read web-server access logs in a live report
+  description: Select the managed access-log folder produced by an application you administer. The report
+    folder receives index.html. Serve that file through a separate web server and configure the report
+    to reach the WebSocket port.
+  category: monitoring
+  website: https://github.com/allinurl/goaccess
+  source: https://github.com/allinurl/goaccess
+  docs: https://goaccess.io/get-started
+  primary_service: goaccess
+  scalable: false
+  license: MIT
+  options:
+    LOGS:
+      label: Prepared access logs
+      help: Keep prepared access logs in this managed folder between restarts.
+    REPORT:
+      label: Generated report
+      help: Keep generated report in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7890.
+services:
+  goaccess:
+    image: docker.io/allinurl/goaccess:latest
+    command:
+    - /srv/logs/access.log
+    - --log-format=COMBINED
+    - --real-time-html
+    - --port=7890
+    - -o
+    - /srv/report/index.html
+    volumes:
+    - ${LOGS}:/srv/logs
+    - ${REPORT}:/srv/report
+    ports:
+    - ${PORT:-7890}:7890/tcp
+    deploy:
+      replicas: 1

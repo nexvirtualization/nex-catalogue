@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gerrit
+  summary: Host Git repositories and review changes before merge
+  description: Set up a supported authentication provider and your site URL before exposing the instance.
+    This profile keeps the site private during initial configuration.
+  category: development
+  website: https://github.com/GerritCodeReview/gerrit
+  source: https://github.com/GerritCodeReview/gerrit
+  docs: https://hub.docker.com/r/gerritcodereview/gerrit
+  primary_service: gerrit
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    CONFIG:
+      label: Site configuration
+      help: Keep site configuration in this managed folder between restarts.
+    GIT:
+      label: Git repositories
+      help: Keep git repositories in this managed folder between restarts.
+    INDEX:
+      label: Review search indexes
+      help: Keep review search indexes in this managed folder between restarts.
+    CACHE:
+      label: Gerrit caches
+      help: Keep gerrit caches in this managed folder between restarts.
+    DATA:
+      label: Gerrit data
+      help: Keep gerrit data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    SSH_PORT:
+      label: Git SSH port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 29418.
+services:
+  gerrit:
+    image: docker.io/gerritcodereview/gerrit:latest
+    volumes:
+    - ${CONFIG}:/var/gerrit/etc
+    - ${GIT}:/var/gerrit/git
+    - ${INDEX}:/var/gerrit/index
+    - ${CACHE}:/var/gerrit/cache
+    - ${DATA}:/var/gerrit/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${SSH_PORT:-29418}:29418/tcp
+    deploy:
+      replicas: 1

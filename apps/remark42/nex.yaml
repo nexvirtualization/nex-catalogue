@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: remark42
+  summary: Add moderated comments to your own sites
+  description: Set the public Remark42 endpoint and configure the authentication providers you use.
+    Enable anonymous commenting only if it suits your moderation policy.
+  category: communication
+  website: https://github.com/umputun/remark42
+  source: https://github.com/umputun/remark42
+  docs: https://remark42.com/docs/getting-started/installation/
+  primary_service: remark42
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    PUBLIC_URL:
+      label: Public comment server URL
+      help: Set the browser-facing URL including its scheme.
+    SECRET:
+      label: Application signing key
+      type: password
+      help: Use Nex Generate and retain the key for restore.
+    SITE_ID:
+      label: Comment site ID
+      help: Match the ID in your website embed configuration.
+    DATA:
+      label: Comment records and configuration
+      help: Keep comment records and configuration in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  remark42:
+    image: ghcr.io/umputun/remark42:latest
+    environment:
+      REMARK_URL: ${PUBLIC_URL}
+      SECRET: ${SECRET}
+      SITE: ${SITE_ID:-remark}
+    volumes:
+    - ${DATA}:/srv/var
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

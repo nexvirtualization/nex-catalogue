@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Miniflux
+  summary: Read and organize RSS and Atom feeds
+  description: Prepare a PostgreSQL database that allows schema migrations, then enter the initial administrator
+    credentials. Miniflux stores its state in PostgreSQL.
+  category: reading
+  website: https://miniflux.app/
+  source: https://github.com/miniflux/v2
+  docs: https://miniflux.app/docs/docker.html
+  scalable: false
+  primary_service: miniflux
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: miniflux
+    scheme: http
+    port: 8080
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_USERNAME:
+      label: Initial administrator name
+      help: Account to create on first deployment.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+services:
+  miniflux:
+    image: miniflux/miniflux:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      RUN_MIGRATIONS: '1'
+      CREATE_ADMIN: '1'
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      BASE_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8417}:8080/tcp
+    deploy:
+      replicas: 1

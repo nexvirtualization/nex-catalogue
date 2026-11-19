@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Filestash
+  summary: Browse multiple remote file stores through a web interface
+  description: Set up the administrator from the web interface. Add storage providers as needed. Use an
+    authenticated HTTPS route for remote use. A document editor is optional and requires its own integration.
+  category: tools
+  website: https://www.filestash.app/
+  source: https://github.com/mickael-kerjean/filestash
+  docs: https://www.filestash.app/docs/install-and-upgrade/
+  scalable: false
+  primary_service: filestash
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: filestash
+    scheme: http
+    port: 8334
+  options:
+    PUBLIC_HOST:
+      label: Public hostname
+      help: Client-facing host used by the application, including a port if needed.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8334.
+    DATA:
+      label: Filestash settings
+      help: Select This host. Stores application configuration and local session data. Include this folder
+        in a stopped Nex backup.
+services:
+  filestash:
+    image: machines/filestash:latest
+    environment:
+      APPLICATION_URL: ${PUBLIC_HOST}
+      CANARY: 'false'
+    ports:
+    - ${PORT:-8334}:8334/tcp
+    volumes:
+    - ${DATA}:/app/data/state
+    deploy:
+      replicas: 1

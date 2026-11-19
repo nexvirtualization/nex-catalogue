@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: DreamFactory
+  summary: Generate and manage REST APIs for databases and other data sources.
+  description: This single-instance deployment stores the system database in SQLite. Supply the encryption
+    key and first administrator credentials. Back up the storage folder and preserve the encryption
+    key together. Run behind a TLS reverse proxy when accessing it remotely.
+  category: development
+  website: https://github.com/dreamfactorysoftware/dreamfactory
+  source: https://github.com/dreamfactorysoftware/dreamfactory
+  docs: https://github.com/dreamfactorysoftware/df-docker#environment-variables
+  primary_service: dreamfactory
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    APP_KEY:
+      label: Laravel encryption key
+      type: password
+      help: 'Use base64: followed by the Base64 encoding of 32 random bytes. Preserve this key when
+        recreating the instance.'
+    ADMIN_EMAIL:
+      label: Administrator email
+      help: Email address for the initial DreamFactory administrator.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use a unique password with at least 16 characters.
+    HTTPS_HEADER:
+      label: TLS proxy setting
+      help: Set on if a reverse proxy terminates HTTPS, or off for direct HTTP.
+    DATA:
+      label: DreamFactory storage
+      help: Keep dreamfactory storage in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  dreamfactory:
+    image: docker.io/dreamfactorysoftware/df-docker:latest
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /opt/dreamfactory/storage/databases/dreamfactory.sqlite
+      APP_KEY: ${APP_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      HTTPS_HEADER: ${HTTPS_HEADER}
+    volumes:
+    - ${DATA}:/opt/dreamfactory/storage
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

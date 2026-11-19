@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ergo
+  summary: Host an IRC network with accounts and channel history
+  description: Set your network name and operators in ircd.yaml. Use an appropriate TLS configuration
+    for client access.
+  category: communication
+  website: https://github.com/ergochat/ergo
+  source: https://github.com/ergochat/ergo
+  docs: https://github.com/ergochat/ergo
+  primary_service: ergo
+  scalable: false
+  license: MIT
+  options:
+    DATA:
+      label: IRC configuration and state
+      help: Keep irc configuration and state in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6667.
+    TLS_PORT:
+      label: IRC TLS port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6697.
+services:
+  ergo:
+    image: ghcr.io/ergochat/ergo:latest
+    volumes:
+    - ${DATA}:/ircd
+    ports:
+    - ${PORT:-6667}:6667/tcp
+    - ${TLS_PORT:-6697}:6697/tcp
+    deploy:
+      replicas: 1

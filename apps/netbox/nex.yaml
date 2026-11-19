@@ -1,0 +1,122 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NetBox
+  summary: Document network assets and IP address allocations
+  description: Provision PostgreSQL plus Redis for jobs and caching. Use a single eligible host for the managed
+    Media folder, and sign in using the initial account.
+  category: management
+  website: https://netboxlabs.com/products/netbox
+  source: https://github.com/netbox-community/netbox
+  docs: https://github.com/netbox-community/netbox-docker
+  primary_service: netbox
+  post_install: Provision PostgreSQL plus Redis for jobs and caching. Use a single eligible host for the
+    managed Media folder, and sign in using the initial account.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    API_TOKEN_SECRET:
+      label: Api token secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    USER:
+      label: User
+      help: Enter the deployment value described in the upstream setup guide.
+    EMAIL:
+      label: Email
+      help: Enter the deployment value described in the upstream setup guide.
+    PASSWORD:
+      label: Password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ALLOWED_HOSTS:
+      label: Allowed hosts
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    MEDIA:
+      label: NetBox uploads
+      help: Managed directory mounted at /opt/netbox/netbox/media. Choose storage writable by the application.
+services:
+  netbox:
+    image: docker.io/netboxcommunity/netbox:latest
+    ports:
+    - ${PORT:-23511}:8080/tcp
+    volumes:
+    - ${MEDIA}:/opt/netbox/netbox/media
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME:-netbox}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: '0'
+      REDIS_CACHE_HOST: ${REDIS_HOST}
+      REDIS_CACHE_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_CACHE_DATABASE: '1'
+      SECRET_KEY: ${SIGNING_SECRET}
+      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}
+      SKIP_SUPERUSER: 'false'
+      SUPERUSER_NAME: ${USER:-admin}
+      SUPERUSER_EMAIL: ${EMAIL}
+      SUPERUSER_PASSWORD: ${PASSWORD}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+    deploy:
+      replicas: 1
+  worker:
+    image: docker.io/netboxcommunity/netbox:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME:-netbox}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: '0'
+      REDIS_CACHE_HOST: ${REDIS_HOST}
+      REDIS_CACHE_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_CACHE_DATABASE: '1'
+      SECRET_KEY: ${SIGNING_SECRET}
+      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}
+      SKIP_SUPERUSER: 'false'
+      SUPERUSER_NAME: ${USER:-admin}
+      SUPERUSER_EMAIL: ${EMAIL}
+      SUPERUSER_PASSWORD: ${PASSWORD}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+    deploy:
+      replicas: 1
+    command:
+    - /opt/netbox/venv/bin/python
+    - /opt/netbox/netbox/manage.py
+    - rqworker
+    volumes:
+    - ${MEDIA}:/opt/netbox/netbox/media

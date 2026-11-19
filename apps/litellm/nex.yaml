@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LiteLLM
+  summary: Proxy language model APIs through one endpoint
+  description: Place config.yaml in Configuration with your model providers and authentication settings.
+    Use the configured master key through trusted HTTPS.
+  category: ai
+  website: https://github.com/berriai/litellm
+  source: https://github.com/berriai/litellm
+  docs: https://docs.litellm.ai/docs/proxy/docker_quick_start
+  primary_service: litellm
+  post_install: Place config.yaml in Configuration with your model providers and authentication settings.
+    Use the configured master key through trusted HTTPS.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 4000
+  options:
+    MASTER_KEY:
+      label: Master key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 4000 inside Nex.
+    CONFIG:
+      label: Prepared LiteLLM configuration
+      help: Managed directory mounted at /config. Choose storage readable by the application.
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    ports:
+    - ${PORT:-23547}:4000/tcp
+    volumes:
+    - ${CONFIG}:/config:ro
+    environment:
+      LITELLM_MASTER_KEY: ${MASTER_KEY}
+    command:
+    - --config
+    - /config/config.yaml
+    - --port
+    - '4000'
+    deploy:
+      replicas: 1

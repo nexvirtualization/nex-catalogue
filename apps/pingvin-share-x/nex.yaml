@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pingvin Share X
+  summary: Send and receive files through share links
+  description: Create the initial administrator account before opening the app to other users. Set your
+    public HTTPS address and review sign-up settings before sharing links.
+  category: tools
+  website: https://github.com/smp46/pingvin-share-x
+  source: https://github.com/smp46/pingvin-share-x
+  docs: https://smp46.github.io/pingvin-share-x/setup/installation/
+  scalable: false
+  primary_service: pingvin-share-x
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: pingvin-share-x
+    scheme: http
+    port: 3000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Shares and uploads
+      help: Select This host. Holds account information, share metadata and uploads. Include this folder
+        in a stopped Nex backup.
+    IMAGES:
+      label: Appearance assets
+      help: Select This host. Stores images used to customize the web interface. Include this folder in
+        a stopped Nex backup.
+services:
+  pingvin-share-x:
+    image: ghcr.io/smp46/pingvin-share-x:latest
+    environment:
+      TRUST_PROXY: 'false'
+    ports:
+    - ${PORT:-8137}:3000/tcp
+    volumes:
+    - ${DATA}:/opt/app/backend/data
+    - ${IMAGES}:/opt/app/frontend/public/img
+    deploy:
+      replicas: 1

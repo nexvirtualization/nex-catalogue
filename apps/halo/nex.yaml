@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Halo
+  summary: Write, publish and manage a content website
+  description: Provision PostgreSQL before deploying. Set the public address and complete the administrator
+    setup from a trusted network.
+  category: documents
+  website: https://github.com/halo-dev/halo
+  source: https://github.com/halo-dev/halo
+  docs: https://docs.halo.run/getting-started/install/docker-compose
+  primary_service: halo
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8090
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing URL including scheme.
+    DB_URL:
+      label: PostgreSQL R2DBC connection URL
+      help: Use an upstream-supported r2dbc:pool:postgresql:// address.
+    DB_USER:
+      label: Database user
+      help: Dedicated PostgreSQL application user.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for the prepared database account.
+    DATA:
+      label: Site files, themes and application data
+      help: Keep site files, themes and application data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8090.
+services:
+  halo:
+    image: docker.io/halohub/halo:latest
+    command:
+    - --spring.r2dbc.url=${DB_URL}
+    - --spring.r2dbc.username=${DB_USER:-halo}
+    - --spring.r2dbc.password=${DB_PASSWORD}
+    - --halo.external-url=${BASE_URL}
+    volumes:
+    - ${DATA}:/root/.halo2
+    ports:
+    - ${PORT:-8090}:8090/tcp
+    deploy:
+      replicas: 1

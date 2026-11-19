@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kanidm
+  summary: Run an identity management and directory service
+  description: Prepare the data folder with Kanidm server.toml, TLS assets and the public origin. Connect
+    to the HTTPS endpoint and follow upstream setup for the initial administrator.
+  category: security
+  website: https://github.com/kanidm/kanidm
+  source: https://github.com/kanidm/kanidm
+  docs: https://kanidm.github.io/kanidm/stable/
+  primary_service: kanidm
+  scalable: false
+  license: MPL-2.0
+  options:
+    DATA:
+      label: Prepared identity state and configuration
+      help: Keep prepared identity state and configuration in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8443.
+services:
+  kanidm:
+    image: docker.io/kanidm/server:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8443}:8443/tcp
+    deploy:
+      replicas: 1

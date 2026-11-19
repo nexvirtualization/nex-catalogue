@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Alby Hub ✨
+  summary: Run a Lightning wallet connection hub
+  description: Alby Hub keeps wallet data and settings in a managed folder. Make this service reachable only
+    through trusted networks or a private access proxy.
+  category: finance
+  website: https://albyhub.com/
+  source: https://github.com/getalby/hub
+  docs: https://github.com/getalby/hub
+  primary_service: alby-hub
+  post_install: Complete first-run setup over HTTPS. Save the recovery information and follow the upstream
+    wallet backup procedure before using real funds.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Wallet and application data
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+services:
+  alby-hub:
+    image: ghcr.io/getalby/hub:latest
+    ports:
+    - ${PORT:-20265}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      WORK_DIR: /data/albyhub
+    deploy:
+      replicas: 1

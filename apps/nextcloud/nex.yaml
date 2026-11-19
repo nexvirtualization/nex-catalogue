@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Nextcloud
+  summary: Keep and share your files in a personal cloud
+  description: Personal file cloud using the Apache image and built-in SQLite database for a small household. Complete
+    the web installer immediately; SQLite and browser-triggered AJAX background jobs suit light use. Configure trusted
+    domains and HTTPS before remote access. Back up before updates and follow Nextcloud major-version upgrade requirements.
+    One copy only. In Nex, keep one chosen host when using This host folders; local data has no automatic host failover.
+  category: productivity
+  website: https://nextcloud.com
+  source: https://github.com/nextcloud/server
+  license: AGPL-3.0
+  scalable: false
+  tags:
+  - files
+  - cloud
+  - sharing
+  options:
+    PORT:
+      label: Web port
+      help: Published HTTP port. Finish the first-run web installer on a trusted network, create an administrator
+        and select SQLite. Add each access hostname to trusted_domains in config/config.php; use a TLS reverse proxy
+        for remote access. With Network → Docker and host publishing enabled, use the chosen host web port. On a
+        registered VLAN or private Primary network with its own address, use that address and internal port 80;
+        host publishing is a separate switch. Use Nex File Browser → Files, settings and database → config/config.php
+        to edit trusted_domains, then restart from ACTIONS.
+    DATA:
+      label: Files, settings and database
+      help: Persistent /var/www/html holds the application, uploads, config and SQLite database. The image initializes
+        it and uses www-data (UID/GID 33) for writes. Choose reliable storage on This host and back up this entire
+        folder. Keep major upgrades sequential; latest may skip unsupported intermediate versions.
+  primary_service: nextcloud
+services:
+  nextcloud:
+    image: nextcloud:latest
+    ports:
+    - ${PORT:-8085}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    deploy:
+      replicas: 1

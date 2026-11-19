@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: blocky
+  summary: Fast and lightweight DNS proxy as ad-blocker for local network with many features (alternative to
+    Pi-hole)
+  description: Fast and lightweight DNS proxy as ad-blocker for local network with many features (alternative
+    to Pi-hole).
+  category: networking
+  source: https://github.com/0xERR0R/blocky
+  website: https://0xerr0r.github.io/blocky/latest/
+  docs: https://0xerr0r.github.io/blocky/latest/installation/
+  primary_service: blocky
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /nex-config.
+    PORT:
+      label: Published 53/tcp port
+      help: Host port for application listener 53/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_2:
+      label: Published 53/udp port
+      help: Host port for application listener 53/udp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Put a valid config.yml in Configuration using the upstream config guide. For standard DNS port
+    53, select a dedicated primary network that your home network can reach.
+services:
+  blocky:
+    image: ghcr.io/0xerr0r/blocky:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/nex-config
+    ports:
+    - ${PORT:-19748}:53/tcp
+    - ${PORT_2:-20748}:53/udp
+    command:
+    - --config
+    - /nex-config/config.yml

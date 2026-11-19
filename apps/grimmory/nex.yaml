@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Grimmory
+  summary: Organize, search and read a self-hosted book library
+  description: Start a private MariaDB instance before deploying Grimmory. Complete the onboarding in
+    a trusted browser and select managed folders for the collection and drop folder.
+  category: reading
+  website: https://github.com/grimmory-tools/grimmory
+  source: https://github.com/grimmory-tools/grimmory
+  docs: https://github.com/grimmory-tools/grimmory
+  primary_service: grimmory
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 6060
+  options:
+    DB_URL:
+      label: MariaDB JDBC URL
+      help: Use the JDBC address for the prepared database, for example jdbc:mariadb://database:3306/grimmory.
+    DB_USER:
+      label: Database user
+      help: Use a dedicated MariaDB application user.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Supply the password for the existing MariaDB user.
+    DATA:
+      label: Library state
+      help: Keep library state in this managed folder between restarts.
+    BOOKS:
+      label: Book collection
+      help: Keep book collection in this managed folder between restarts.
+    BOOKDROP:
+      label: Import drop folder
+      help: Keep import drop folder in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6060.
+services:
+  grimmory:
+    image: docker.io/grimmory/grimmory:latest
+    environment:
+      USER_ID: '1000'
+      GROUP_ID: '1000'
+      DATABASE_URL: ${DB_URL}
+      DATABASE_USERNAME: ${DB_USER:-grimmory}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DATA}:/app/data
+    - ${BOOKS}:/books
+    - ${BOOKDROP}:/bookdrop
+    ports:
+    - ${PORT:-6060}:6060/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://docs.linuxserver.io/images/docker-code-server/
+x-nex:
+  name: code-server
+  summary: VS Code in the browser, hosted on a remote server
+  category: development
+  description: VS Code in the browser, hosted on a remote server. Back up the application folders together
+    and keep them writable by the container.
+  source: https://github.com/coder/code-server
+  website: https://github.com/coder/code-server
+  docs: https://github.com/coder/code-server
+  primary_service: code-server
+  options:
+    TZ:
+      label: Tz
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Projects folder
+      help: Nex-managed folder mounted at /projects. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8443/tcp.
+    PASSWORD:
+      label: Editor password
+      type: password
+  web:
+    port: 8443
+  post_install: Open the browser editor on a trusted network and sign in using the configured password. Use
+    HTTPS for service worker support.
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: ${TZ}
+      PASSWORD: ${PASSWORD}
+      DEFAULT_WORKSPACE: /projects
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/projects
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8443}:8443/tcp

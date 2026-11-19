@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenTTD
+  summary: Build competing or cooperative transport networks
+  description: >-
+    Run one copy on a selected host and keep saves on This host. In Network, choose a cluster
+    VLAN or routed private network reachable by players. In the OpenTTD multiplayer menu, add
+    the app's Primary address and port 3979. Allow TCP and UDP. Enter the join password and
+    use a matching game version. Back up saves before updating.
+  category: games
+  website: https://www.openttd.org/
+  source: https://github.com/bateau84/openttd
+  docs: https://wiki.openttd.org/en/Manual/Dedicated%20server
+  license: GPL-2.0-only
+  architectures: [amd64]
+  tags: [trains, simulation, multiplayer]
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Sets the initial server name. After installation, edit openttd.cfg in Files while the app is stopped.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use Generate and share the password with players. To rotate it, edit openttd.cfg while the app is stopped.
+    DATA:
+      label: Saves and settings
+      help: Choose This host. Include this folder in a stopped backup. The server resumes the latest autosave.
+services:
+  openttd:
+    image: docker.io/bateau/openttd:15.3
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex OpenTTD}
+      JOIN_PASSWORD: ${JOIN_PASSWORD}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        data=/home/openttd/.openttd
+        config="$$data/openttd.cfg"
+        if [ ! -f "$$config" ]; then
+          umask 077
+          printf '%s\n' '[network]' 'server_game_type = local' "server_name = $$SERVER_NAME" \
+            "server_password = $$JOIN_PASSWORD" '[gui]' 'autosave_on_exit = true' > "$$config.tmp"
+          mv "$$config.tmp" "$$config"
+        fi
+        export loadgame=false
+        for save in "$$data"/save/autosave/*.sav; do
+          if [ -f "$$save" ]; then
+            export loadgame=last-autosave
+            break
+          fi
+        done
+        exec /openttd.sh
+    expose:
+      - "3979/tcp"
+      - "3979/udp"
+    volumes:
+      - ${DATA}:/home/openttd/.openttd
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

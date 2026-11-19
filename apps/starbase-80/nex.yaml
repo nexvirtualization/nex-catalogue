@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Starbase 80
+  summary: Serve a dashboard of bookmarked applications
+  description: Starbase 80 uses a prepared configuration for dashboard groups and applications.
+  category: productivity
+  website: https://github.com/notclickable-jordan/starbase-80
+  source: https://github.com/notclickable-jordan/starbase-80
+  docs: https://github.com/notclickable-jordan/starbase-80
+  primary_service: starbase-80
+  post_install: Add the upstream dashboard configuration to Configuration before starting. Keep links to
+    administrative endpoints within a trusted network.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 4173
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 4173 inside Nex.
+    CONFIG:
+      label: Prepared dashboard configuration
+      help: Managed directory mounted at /app/src/config. Choose storage readable by the application.
+services:
+  starbase-80:
+    image: ghcr.io/notclickable-jordan/starbase-80:latest
+    ports:
+    - ${PORT:-20255}:4173/tcp
+    volumes:
+    - ${CONFIG}:/app/src/config:ro
+    deploy:
+      replicas: 1

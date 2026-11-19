@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Avorion
+  summary: Host a persistent multiplayer galaxy
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the app’s Primary address on port 27000 from Multiplayer. Other listed ports handle discovery.
+    First boot downloads the server through SteamCMD. Restarts check for updates. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/445220/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/avserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - sandbox
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  avorion:
+    image: ghcr.io/gameservermanagers/gameserver:av
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 27000/tcp
+      - 27000/udp
+      - 27003/udp
+      - 27020/udp
+      - 27021/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

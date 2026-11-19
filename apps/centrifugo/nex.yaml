@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Centrifugo
+  summary: Language-agnostic real-time messaging (Websocket or SockJS) server
+  description: Language-agnostic real-time messaging (Websocket or SockJS) server.
+  category: communication
+  source: https://github.com/centrifugal/centrifugo
+  website: https://centrifugal.dev/
+  docs: https://centrifugal.dev/docs/getting-started/installation
+  primary_service: centrifugo
+  options:
+    TOKEN_SECRET:
+      label: Token secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SERVER_API_KEY:
+      label: Server api key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    CLIENT_ORIGINS:
+      label: Client origins
+    PORT:
+      label: Published 8000/tcp port
+      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Configure your application to use the HTTP API and mint signed client tokens. Supply the origin
+    of the client application. This package uses the single-instance in-memory engine.
+  web:
+    port: 8000
+services:
+  centrifugo:
+    image: docker.io/centrifugo/centrifugo:latest
+    deploy:
+      replicas: 1
+    environment:
+      CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${TOKEN_SECRET}
+      CENTRIFUGO_HTTP_API_KEY: ${SERVER_API_KEY}
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: ${CLIENT_ORIGINS}
+    ports:
+    - ${PORT:-19703}:8000/tcp

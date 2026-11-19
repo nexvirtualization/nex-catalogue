@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/libredb/libredb-studio#readme
+x-nex:
+  name: LibreDB Studio
+  summary: Browser-based SQL IDE for PostgreSQL, MySQL, Oracle, SQL Server, MongoDB, Redis, ClickHouse, DuckDB
+    and more, with SSO
+  category: development
+  description: Browser-based SQL IDE for PostgreSQL, MySQL, Oracle, SQL Server, MongoDB, Redis, ClickHouse,
+    DuckDB and more, with SSO, audit trail, ER diagrams and optional AI assistance on your own model key (alternative
+    to DataGrip, DBeaver, CloudBeaver).
+  source: https://github.com/libredb/libredb-studio
+  website: https://libredb.org
+  docs: https://libredb.org
+  primary_service: app
+  options:
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 3000/tcp.
+  web:
+    port: 3000
+  post_install: Complete setup with the configured administrator credentials. Put the UI behind HTTPS for remote
+    administration.
+services:
+  app:
+    image: ghcr.io/libredb/libredb-studio:latest
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-3000}:3000/tcp

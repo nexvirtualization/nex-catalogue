@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Apache Kafka
+  summary: Publish and consume event streams through a Kafka broker
+  description: Use this single-node KRaft broker on the private application network. Set the exactly
+    reachable broker address including port before connecting clients.
+  category: development
+  website: https://github.com/apache/kafka
+  source: https://github.com/apache/kafka
+  docs: https://kafka.apache.org/quickstart
+  primary_service: kafka
+  scalable: false
+  license: Apache-2.0
+  options:
+    BROKER_ADDRESS:
+      label: Broker address
+      help: Client-resolvable broker hostname and port, for example broker.example.test:9092.
+    DATA:
+      label: Broker records and metadata
+      help: Keep broker records and metadata in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9092.
+services:
+  kafka:
+    image: docker.io/apache/kafka:latest
+    environment:
+      KAFKA_NODE_ID: '1'
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${BROKER_ADDRESS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+    volumes:
+    - ${DATA}:/tmp/kraft-combined-logs
+    ports:
+    - ${PORT:-9092}:9092/tcp
+    deploy:
+      replicas: 1

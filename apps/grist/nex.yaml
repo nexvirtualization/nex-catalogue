@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Grist
+  summary: Build relational spreadsheets and lightweight team applications
+  description: Complete the Quick setup page with the boot key and configure how users sign in. Use
+    an authenticating deployment for remote access and configure a supported formula sandbox before
+    processing untrusted documents.
+  category: productivity
+  website: https://github.com/gristlabs/grist-core
+  source: https://github.com/gristlabs/grist-core
+  docs: https://support.getgrist.com/install/first-run-setup/
+  primary_service: grist
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8484
+  options:
+    BOOT_KEY:
+      label: Setup boot key
+      type: password
+      help: Use Nex Generate. Enter this key during Quick setup.
+    DATA:
+      label: Grist data
+      help: Document databases and Grist settings.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8484.
+services:
+  grist:
+    image: docker.io/gristlabs/grist:latest
+    environment:
+      GRIST_BOOT_KEY: ${BOOT_KEY}
+    volumes:
+    - ${DATA}:/persist
+    ports:
+    - ${PORT:-8484}:8484/tcp
+    deploy:
+      replicas: 1

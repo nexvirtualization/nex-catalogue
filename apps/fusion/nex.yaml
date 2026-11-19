@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Fusion
+  summary: Read and organize feeds in a lightweight reader
+  description: Sign in with the configured password. Use the managed folder to retain subscriptions
+    and reading history.
+  category: reading
+  website: https://github.com/0x2E/fusion
+  source: https://github.com/0x2E/fusion
+  docs: https://github.com/0x2E/fusion
+  primary_service: fusion
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    PASSWORD:
+      label: Reader password
+      type: password
+      help: Use Nex Generate and use HTTPS when accessing Fusion remotely.
+    DATA:
+      label: Feeds and reading history
+      help: Keep feeds and reading history in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  fusion:
+    image: ghcr.io/0x2e/fusion:latest
+    environment:
+      FUSION_PASSWORD: ${PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

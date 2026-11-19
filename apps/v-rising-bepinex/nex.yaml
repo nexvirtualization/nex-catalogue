@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: V Rising BepInEx
+  summary: Host V Rising with the BepInEx plugin framework
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Extract a current V Rising BepInExPack into the managed Mods folder alongside its BepInEx, dotnet
+    and winhttp.dll files. Put game-compatible plugins under BepInEx/plugins while the app is stopped.
+    Use Direct Connect in the PC client with the Primary address and UDP 9876. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://playvrising.com/
+  source: https://github.com/RunOnFlux/vrising-server-flux
+  docs: https://github.com/RunOnFlux/vrising-server-flux#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - mods
+    - steam
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed to players in the multiplayer browser.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: World and configuration
+      help: Choose This host and include this folder in stopped backups.
+    SERVER_FILES:
+      label: Downloaded server files
+      help: Choose This host and include this folder in stopped backups.
+    MODS:
+      label: BepInExPack and plugins
+      help: Choose This host and include this folder in stopped backups.
+services:
+  v-rising-bepinex:
+    image: docker.io/runonflux/vrising-server-flux:latest
+    environment:
+      VR_NAME: ${SERVER_NAME:-Nex V Rising}
+      VR_PASSWORD: ${JOIN_PASSWORD}
+      VR_GAME_PORT: '9876'
+      VR_QUERY_PORT: '9877'
+      VR_LIST_ON_STEAM: 'false'
+      VR_LIST_ON_EOS: 'false'
+      VR_RCON_ENABLED: 'false'
+      ENABLE_MODS: '1'
+    expose:
+      - 9876/udp
+    volumes:
+      - ${DATA}:/mnt/vrising/persistentdata
+      - ${SERVER_FILES}:/mnt/vrising/server
+      - ${MODS}:/mnt/vrising/mods
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

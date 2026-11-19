@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: CS2D
+  summary: Host top-down tactical multiplayer matches
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use a matching CS2D 1.0.1.8 client and connect to the app’s Primary address on UDP 36963. The first
+    start installs the publisher’s dedicated binary and game data. Edit sys/server.cfg and add custom
+    maps in the managed folder.
+  category: games
+  website: https://www.cs2d.com/
+  source: https://www.cs2d.com/download.php
+  docs: https://www.cs2d.com/serverhosting.php
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - shooter
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  cs2d:
+    image: ghcr.io/ptero-eggs/yolks:debian
+    expose:
+    - 36963/udp
+    volumes:
+    - ${DATA}:/home/container
+    user: 1000:1000
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      download() {
+        local url="$$1" sha256="$$2" target="$$3"
+        curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
+        printf '%s  %s\n' "$$sha256" "$$target" | sha256sum --check --status || {
+          echo "The server download did not match the release checksum." >&2
+          return 1
+        }
+      }
+
+
+      cd "$$HOME"
+      if [ ! -x ./cs2d_dedicated ]; then
+        staging=$$(mktemp -d ./.cs2d-install.XXXXXX)
+        trap 'rm -rf "$$staging"' EXIT
+        download 'https://www.unrealsoftware.de/get.php?get=cs2d_1018_linux.zip&p=1&cid=1225' \
+          855314b79c1cca60e93834461784882464fe00bf6a5aa2e86017c4ecbc4b16b1 "$$staging/data.zip"
+        download https://www.unrealsoftware.de/files_pub/cs2d_dedicated_linux.zip \
+          a1b39e1f0aaca1903dc150dd9dfbfe67fcae67a264de56c3de1a7ba3b20ca7b0 "$$staging/server.zip"
+        unzip -oq "$$staging/data.zip" -d "$$staging/files"
+        unzip -p "$$staging/server.zip" cs2d_dedicated > "$$staging/cs2d_dedicated"
+        cp -Rn "$$staging/files/." ./
+        chmod 755 "$$staging/cs2d_dedicated"
+        mv "$$staging/cs2d_dedicated" ./cs2d_dedicated
+        rm -rf "$$staging"
+        trap - EXIT
+      fi
+      exec ./cs2d_dedicated
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

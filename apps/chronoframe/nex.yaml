@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ChronoFrame
+  summary: Publish and organize a personal photo gallery
+  description: Finish the setup wizard and create your administrator on a trusted network. Choose Local
+    storage with /app/data/storage to keep uploads with the database. An external object-storage provider
+    can be configured later.
+  category: media
+  website: https://chronoframe.bh8.ga/
+  source: https://github.com/HoshinoSuzumi/chronoframe
+  docs: https://github.com/HoshinoSuzumi/chronoframe#readme
+  scalable: false
+  primary_service: chronoframe
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: chronoframe
+    scheme: http
+    port: 3000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+    DATA:
+      label: Gallery data
+      help: Select This host. Holds the database, settings, session secrets and local photos. Include
+        this folder in a stopped Nex backup.
+services:
+  chronoframe:
+    image: ghcr.io/hoshinosuzumi/chronoframe:latest
+    ports:
+    - ${PORT:-8105}:3000/tcp
+    volumes:
+    - ${DATA}:/app/data
+    deploy:
+      replicas: 1

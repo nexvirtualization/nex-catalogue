@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Coral
+  summary: Add comments and moderation to a website
+  description: Prepare MongoDB and Redis, then open the installer and enter your website origin. Keep the
+    dashboard behind HTTPS.
+  category: communication
+  website: https://coralproject.net/
+  source: https://github.com/coralproject/talk
+  docs: https://docs.coralproject.net/operations/
+  primary_service: coral
+  post_install: Prepare MongoDB and Redis, then open the installer and enter your website origin. Keep the
+    dashboard behind HTTPS.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  web:
+    port: 3000
+  options:
+    MONGODB_URI:
+      label: Mongodb uri
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  coral:
+    image: docker.io/coralproject/talk:9.7.0
+    ports:
+    - ${PORT:-23496}:3000/tcp
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      REDIS_URI: ${REDIS_URL}
+      SIGNING_SECRET: ${SIGNING_SECRET}
+      NODE_ENV: production
+    deploy:
+      replicas: 1

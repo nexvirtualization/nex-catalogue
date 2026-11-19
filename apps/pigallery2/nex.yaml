@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PiGallery 2
+  summary: Directory-first photo gallery website, with a rich UI, optimised for running on low resource servers
+  description: Directory-first photo gallery website, with a rich UI, optimised for running on low resource
+    servers.
+  category: photos
+  source: https://github.com/bpatrik/pigallery2
+  website: https://bpatrik.github.io/pigallery2/
+  docs: https://bpatrik.github.io/pigallery2/
+  primary_service: pigallery2
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /app/data/config.
+    DB:
+      label: Db folder
+      help: Choose the Nex-managed folder mounted at /app/data/db.
+    IMAGES:
+      label: Images folder
+      help: Choose the Nex-managed folder mounted at /app/data/images.
+    THUMBNAILS:
+      label: Thumbnails folder
+      help: Choose the Nex-managed folder mounted at /app/data/tmp.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Configure the images folder as a Nex share and change the initial administrator password. Back
+    up the Config and database folders together.
+  web:
+    port: 80
+services:
+  pigallery2:
+    image: docker.io/bpatrik/pigallery2:latest
+    deploy:
+      replicas: 1
+    environment:
+      NODE_ENV: production
+    volumes:
+    - ${CONFIG}:/app/data/config
+    - ${DB}:/app/data/db
+    - ${IMAGES}:/app/data/images:ro
+    - ${THUMBNAILS}:/app/data/tmp
+    ports:
+    - ${PORT:-19962}:80/tcp

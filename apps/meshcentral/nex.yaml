@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MeshCentral
+  summary: Administer your registered devices through a web console
+  description: Select a prepared configuration with the browser-facing address. Keep the console private
+    during onboarding and create your administrator before enrolling your own devices.
+  category: management
+  website: https://github.com/Ylianst/MeshCentral
+  source: https://github.com/Ylianst/MeshCentral
+  docs: https://github.com/Ylianst/MeshCentral/tree/master/docker
+  primary_service: meshcentral
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: Configuration and database
+      help: Keep configuration and database in this managed folder between restarts.
+    FILES:
+      label: Managed files
+      help: Keep managed files in this managed folder between restarts.
+    BACKUPS:
+      label: Server backups
+      help: Keep server backups in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 443.
+services:
+  meshcentral:
+    image: ghcr.io/ylianst/meshcentral:latest
+    volumes:
+    - ${DATA}:/opt/meshcentral/meshcentral-data
+    - ${FILES}:/opt/meshcentral/meshcentral-files
+    - ${BACKUPS}:/opt/meshcentral/meshcentral-backups
+    ports:
+    - ${PORT:-443}:443/tcp
+    deploy:
+      replicas: 1

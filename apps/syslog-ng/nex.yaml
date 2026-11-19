@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Syslog-ng
+  summary: Receive and route syslog messages
+  description: The syslog-ng service reads and writes managed storage directories selected for configuration
+    and collected logs.
+  category: monitoring
+  website: https://www.syslog-ng.com/
+  source: https://github.com/syslog-ng/syslog-ng
+  docs: https://docs.linuxserver.io/images/docker-syslog-ng/
+  primary_service: syslog-ng
+  post_install: Configure a source on TCP port 5514 in Configuration and point authorized senders at the
+    app connection name. Use a dedicated network or a trusted proxy for access from outside Nex.
+  license: GPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  options:
+    SYSLOG_PORT:
+      label: Published syslog TCP port
+      help: Host-published port for the internal 5514/tcp endpoint.
+    CONFIG:
+      label: syslog-ng configuration
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+    LOGS:
+      label: Collected log files
+      help: Managed directory mounted at /var/log. Choose storage writable by the application.
+services:
+  syslog-ng:
+    image: lscr.io/linuxserver/syslog-ng:latest
+    ports:
+    - ${SYSLOG_PORT:-21264}:5514/tcp
+    volumes:
+    - ${CONFIG}:/config
+    - ${LOGS}:/var/log
+    deploy:
+      replicas: 1

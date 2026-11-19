@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Longvinter
+  summary: Host a persistent island survival server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join through the Longvinter server browser. Game traffic uses UDP 7777. The image fetches the Uuvana
+    dedicated server through SteamCMD on first start and checks for updates on restart. Make a stopped
+    backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/1635450/
+  source: https://github.com/kimzuni/longvinter-docker-server
+  docs: https://github.com/kimzuni/longvinter-docker-server#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - multiplayer
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  longvinter:
+    image: ghcr.io/kimzuni/longvinter-docker-server:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      PORT: '7777'
+      CFG_SERVER_NAME: Nex Longvinter
+      CFG_PASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 7777/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

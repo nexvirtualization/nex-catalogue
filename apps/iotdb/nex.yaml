@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Apache IoTDB
+  summary: Store and query time-series data from connected devices
+  description: Give the host the file descriptor limits specified by Apache IoTDB. Connect through a
+    private network and replace the default root password before using this deployment.
+  category: development
+  website: https://github.com/apache/iotdb
+  source: https://github.com/apache/iotdb
+  docs: https://iotdb.apache.org/UserGuide/latest/QuickStart/QuickStart.html
+  primary_service: iotdb
+  scalable: false
+  license: Apache-2.0
+  options:
+    DATA:
+      label: IoTDB database
+      help: Keep iotdb database in this managed folder between restarts.
+    LOGS:
+      label: IoTDB logs
+      help: Keep iotdb logs in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6667.
+services:
+  iotdb:
+    image: docker.io/apache/iotdb:latest
+    volumes:
+    - ${DATA}:/iotdb/data
+    - ${LOGS}:/iotdb/logs
+    ports:
+    - ${PORT:-6667}:6667/tcp
+    deploy:
+      replicas: 1

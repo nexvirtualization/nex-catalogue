@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AdventureLog
+  summary: Track travel experiences and plan trips
+  description: Set up a PostgreSQL database with the PostGIS extension enabled. Enter the client-facing
+    site address and provision administrator credentials. The upstream integrated image serves its UI
+    and API on the same web route.
+  category: productivity
+  website: https://adventurelog.app
+  source: https://github.com/seanmorley15/AdventureLog
+  docs: https://adventurelog.app/docs/install/installation.html
+  scalable: false
+  primary_service: adventurelog
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: adventurelog
+    scheme: http
+    port: 80
+  works_with:
+  - postgresql
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 5432.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is adventurelog.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for initial application sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    APP_SECRET:
+      label: Django application secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Travel photos and files
+      help: Select This host. Stores uploaded media and processed assets. Include this folder in a stopped
+        Nex backup.
+services:
+  adventurelog:
+    image: ghcr.io/seanmorley15/adventurelog:latest
+    environment:
+      PGHOST: ${DB_HOST}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-adventurelog}
+      SITE_URL: ${PUBLIC_URL}
+      PORT: '3000'
+      SECRET_KEY: ${APP_SECRET}
+      DJANGO_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      DJANGO_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DJANGO_ADMIN_USERNAME: admin
+    ports:
+    - ${PORT:-8418}:80/tcp
+    volumes:
+    - ${DATA}:/code/media
+    deploy:
+      replicas: 1

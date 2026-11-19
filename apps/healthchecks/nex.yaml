@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Healthchecks
+  summary: Track scheduled jobs with heartbeat URLs
+  description: Healthchecks records job pings and alerts on missed schedules. This image uses a local database
+    in managed storage.
+  category: monitoring
+  website: https://healthchecks.io/
+  source: https://github.com/healthchecks/healthchecks
+  docs: https://docs.linuxserver.io/images/docker-healthchecks/
+  primary_service: healthchecks
+  post_install: Open the web interface and add a first check. Use an HTTPS origin for public ping URLs and
+    configure service notifications.
+  license: BSD-3-Clause
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8000
+  options:
+    SITE_ROOT:
+      label: Application address
+      help: Browser URL including scheme and port, such as https://checks.example.org.
+    SECRET_KEY:
+      label: Signing secret
+      help: Generate a random Django signing key.
+      type: password
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Initial administrator address.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Strong initial administrator password.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+    CONFIG:
+      label: Configuration and SQLite database
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+services:
+  healthchecks:
+    image: lscr.io/linuxserver/healthchecks:latest
+    ports:
+    - ${PORT:-20269}:8000/tcp
+    volumes:
+    - ${CONFIG}:/config
+    environment:
+      SITE_ROOT: ${SITE_ROOT}
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: 'False'
+      SUPERUSER_EMAIL: ${ADMIN_EMAIL}
+      SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+      REGISTRATION_OPEN: 'False'
+    deploy:
+      replicas: 1

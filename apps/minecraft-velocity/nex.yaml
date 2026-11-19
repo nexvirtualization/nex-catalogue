@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Velocity
+  summary: Connect Java Edition servers through one proxy
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25577. Edit velocity.toml in the data folder
+    to define the private backends and configure secure player forwarding. Restrict backend access
+    to the proxy before allowing players to connect. Make a stopped backup before applying updates.
+  category: games
+  website: https://papermc.io/software/velocity
+  source: https://github.com/itzg/docker-mc-proxy
+  docs: https://docs.papermc.io/velocity/configuration/
+  license: GPL-3.0
+  architectures: [amd64, arm64]
+  tags: [minecraft, proxy]
+  options:
+    DATA:
+      label: Proxy settings and plugins
+      help: >-
+        Choose This host and include this folder in stopped backups. It contains the forwarding
+        secret.
+services:
+  minecraft-velocity:
+    image: ghcr.io/itzg/mc-proxy:latest
+    environment:
+      TYPE: VELOCITY
+      ENABLE_RCON: 'false'
+      VELOCITY_VERSION: 3.5.1
+    expose:
+      - 25577/tcp
+    volumes:
+      - ${DATA}:/server
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 5m

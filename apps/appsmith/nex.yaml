@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Appsmith
+  summary: Build internal tools from data sources and reusable widgets
+  description: Use a trusted network for onboarding and create the first administrator. Connect services
+    by addresses reachable from the app.
+  category: development
+  website: https://github.com/appsmithorg/appsmith
+  source: https://github.com/appsmithorg/appsmith
+  docs: https://docs.appsmith.com/getting-started/setup/installation-guides/docker
+  primary_service: appsmith
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Appsmith stacks
+      help: Applications, configuration and embedded backing services.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  appsmith:
+    image: docker.io/appsmith/appsmith-ce:latest
+    volumes:
+    - ${DATA}:/appsmith-stacks
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

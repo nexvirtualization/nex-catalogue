@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NeonLink
+  summary: Store and organize bookmark collections
+  description: Use the web interface to build your bookmark library. Keep this older shared-bookmark app
+    on a trusted network or use an authenticated HTTPS reverse proxy.
+  category: productivity
+  website: https://github.com/AlexSciFier/neonlink
+  source: https://github.com/AlexSciFier/neonlink
+  docs: https://github.com/AlexSciFier/neonlink#readme
+  scalable: false
+  primary_service: neonlink
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: neonlink
+    scheme: http
+    port: 3333
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3333.
+    DATA:
+      label: Bookmarks
+      help: Select This host. Stores bookmark collections, accounts and local settings. Include this folder
+        in a stopped Nex backup.
+    BACKGROUNDS:
+      label: Backgrounds
+      help: Select This host. Stores uploaded backgrounds. Include this folder in a stopped Nex backup.
+services:
+  neonlink:
+    image: alexscifier/neonlink:latest
+    environment:
+      FASTIFY_PLUGIN_TIMEOUT: '120000'
+    ports:
+    - ${PORT:-8176}:3333/tcp
+    volumes:
+    - ${DATA}:/app/data
+    - ${BACKGROUNDS}:/app/public/static/media/background
+    deploy:
+      replicas: 1

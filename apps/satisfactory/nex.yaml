@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Satisfactory
+  summary: Build and automate a shared factory on a dedicated server
+  description: >-
+    Choose a client-reachable VLAN or private network as Primary network, and keep the server folder on This host
+    with one eligible x86-64 host. Steam downloads the server on first boot and checks for updates at startup.
+    From Satisfactory's Server Manager, add the application's IPv4 address on port 7777. Allow TCP and UDP 7777
+    and TCP 8888 for players. Claim the server and set its administrator and player passwords in Server Manager
+    before allowing other players to reach it. Back up the server folder with the app stopped before updating.
+  category: games
+  website: https://www.satisfactorygame.com/
+  source: https://github.com/robtme/satisfactory-server
+  docs: https://satisfactory.wiki.gg/wiki/Dedicated_servers
+  license: Proprietary
+  architectures: [amd64]
+  tags:
+    - automation
+    - co-op
+    - steam
+  options:
+    DATA:
+      label: Server files and saves
+      help: Keep this folder on This host. It holds the world, blueprints, configuration, and downloaded server files.
+services:
+  satisfactory:
+    image: docker.io/robtme/satisfactory-server:latest
+    expose:
+      - "7777/tcp"
+      - "7777/udp"
+      - "8888/tcp"
+    environment:
+      STEAMBETA: "false"
+    volumes:
+      - ${DATA}:/config
+    healthcheck:
+      start_period: 45m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

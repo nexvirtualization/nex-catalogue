@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PufferPanel
+  summary: Game server management panel designed for both small networks and game server providers
+  description: Game server management panel designed for both small networks and game server providers.
+  category: games
+  source: https://github.com/pufferpanel/pufferpanel
+  website: https://www.pufferpanel.com/
+  docs: https://docs.pufferpanel.com/en/latest/installing.html
+  primary_service: pufferpanel
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /etc/pufferpanel.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/lib/pufferpanel.
+  post_install: Use the upstream CLI to create the first panel administrator. Configure standard process-based
+    templates. This package does not expose a Docker socket to game server tasks.
+  web:
+    port: 8080
+services:
+  pufferpanel:
+    image: docker.io/pufferpanel/pufferpanel:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/etc/pufferpanel
+    - ${DATA}:/var/lib/pufferpanel
+    expose:
+    - 8080/tcp
+    - 5657/tcp

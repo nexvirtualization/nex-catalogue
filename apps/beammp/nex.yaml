@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BeamMP
+  summary: Host an unlisted multiplayer server for BeamNG.drive
+  description: >-
+    Players need BeamNG.drive and the BeamMP client. Choose one x86-64 host and a registered
+    client-reachable IPv4 primary network. In the BeamMP server browser choose Direct Connect
+    and enter APP-IP and port 30814. Both TCP and UDP are required. The server stays unlisted,
+    so use a trusted network to control who can reach it. Back up the server data while stopped before
+    redeploying the image.
+  category: games
+  website: https://beammp.com/
+  source: https://github.com/mbentley/docker-beammp-server
+  docs: https://docs.beammp.com/server/create-a-server/
+  license: AGPL-3.0
+  architectures: [amd64]
+  tags: [driving, simulation, mod, dedicated-server]
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Use a name your players will recognize.
+    AUTH_KEY:
+      label: BeamMP authentication key
+      type: password
+      help: Create a unique server key in the BeamMP key dashboard before installation.
+    SERVER_DATA:
+      label: Server settings and mods
+      help: Select This host. The folder holds ServerConfig.toml and the Resources directory for BeamMP mods.
+services:
+  beammp:
+    image: docker.io/mbentley/beammp-server:latest
+    environment:
+      BEAMMP_NAME: ${SERVER_NAME:-Nex BeamMP Server}
+      BEAMMP_AUTH_KEY: ${AUTH_KEY}
+      BEAMMP_PRIVATE: 'true'
+      BEAMMP_ALLOW_GUESTS: 'false'
+      BEAMMP_PORT: '30814'
+    expose: ['30814/tcp', '30814/udp']
+    volumes:
+      - ${SERVER_DATA}:/data
+    stop_grace_period: 1m
+    deploy:
+      replicas: 1

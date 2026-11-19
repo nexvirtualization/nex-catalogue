@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SuperTokens
+  summary: Provide authentication primitives for compatible applications
+  description: Connect a prepared PostgreSQL database. Keep the Core API private and give the application
+    backend the same API key.
+  category: security
+  website: https://github.com/supertokens/supertokens-core
+  source: https://github.com/supertokens/supertokens-core
+  docs: https://supertokens.com/docs/deployment/self-host-supertokens
+  primary_service: supertokens
+  scalable: false
+  license: Apache-2.0 core; commercial enterprise modules
+  options:
+    POSTGRESQL_CONNECTION_URI:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    API_KEYS:
+      label: Core API key
+      type: password
+      help: Use Nex Generate and configure this key in your application server.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3567.
+services:
+  supertokens:
+    image: docker.io/supertokens/supertokens-postgresql:latest
+    environment:
+      POSTGRESQL_CONNECTION_URI: ${POSTGRESQL_CONNECTION_URI}
+      API_KEYS: ${API_KEYS}
+    ports:
+    - ${PORT:-3567}:3567/tcp
+    deploy:
+      replicas: 1

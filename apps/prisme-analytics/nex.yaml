@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Prisme Analytics
+  summary: Collect privacy-focused website analytics
+  description: Provision compatible ClickHouse and Grafana services. Set the list of tracked domains and
+    point the tracking snippet to the HTTPS Prisme endpoint. Review reports in Grafana.
+  category: monitoring
+  website: https://www.prismeanalytics.com
+  source: https://github.com/prismelabs/analytics
+  docs: https://www.prismeanalytics.com/docs/guides/self-host-prisme-docker/
+  primary_service: prisme-analytics
+  post_install: Provision compatible ClickHouse and Grafana services. Set the list of tracked domains and
+    point the tracking snippet to the HTTPS Prisme endpoint. Review reports in Grafana.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 8000
+  options:
+    CLICKHOUSE_TLS:
+      label: Clickhouse tls
+      help: Enter the deployment value described in the upstream setup guide.
+    CLICKHOUSE_ADDRESS:
+      label: Clickhouse address
+      help: Enter the deployment value described in the upstream setup guide.
+    CLICKHOUSE_DB:
+      label: Clickhouse db
+      help: Enter the deployment value described in the upstream setup guide.
+    CLICKHOUSE_USER:
+      label: Clickhouse user
+      help: Enter the deployment value described in the upstream setup guide.
+    CLICKHOUSE_PASSWORD:
+      label: Clickhouse password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    TRACKED_DOMAINS:
+      label: Tracked domains
+      help: Enter the deployment value described in the upstream setup guide.
+    GRAFANA_URL:
+      label: Grafana url
+      help: Enter the deployment value described in the upstream setup guide.
+    GRAFANA_USER:
+      label: Grafana user
+      help: Enter the deployment value described in the upstream setup guide.
+    GRAFANA_PASSWORD:
+      label: Grafana password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+services:
+  prisme-analytics:
+    image: docker.io/prismelabs/analytics:v0.20.0
+    ports:
+    - ${PORT:-23521}:8000/tcp
+    environment:
+      PRISME_PORT: '8000'
+      PRISME_DEBUG: 'false'
+      PRISME_ACCESS_LOG: /dev/stdout
+      PRISME_CLICKHOUSE_TLS: ${CLICKHOUSE_TLS:-false}
+      PRISME_CLICKHOUSE_HOSTPORT: ${CLICKHOUSE_ADDRESS}
+      PRISME_CLICKHOUSE_DB: ${CLICKHOUSE_DB:-prisme}
+      PRISME_CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      PRISME_CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      PRISME_SOURCE_REGISTRY_SOURCES: ${TRACKED_DOMAINS}
+      PRISME_GRAFANA_URL: ${GRAFANA_URL}
+      PRISME_GRAFANA_USER: ${GRAFANA_USER}
+      PRISME_GRAFANA_PASSWORD: ${GRAFANA_PASSWORD}
+    deploy:
+      replicas: 1

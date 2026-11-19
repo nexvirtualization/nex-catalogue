@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kerbal Space Program DarkMultiPlayer
+  version: 0.3.8.5
+  summary: Share a Kerbal Space Program universe with DarkMultiPlayer
+  description: >-
+    Keep the universe on This host and choose a registered primary network that players can reach.
+    Install DarkMultiPlayer 0.3.8.5 on every Kerbal Space Program client and connect to the app’s
+    Primary address on port 6702. Edit Config/Settings.txt in the managed folder to configure the
+    game mode and allowlist. Make a stopped backup before applying updates.
+  category: games
+  website: https://d-mp.org/
+  source: https://github.com/godarklight/DarkMultiPlayer
+  docs: https://github.com/godarklight/DarkMultiPlayer#server
+  license: MIT
+  architectures: [amd64]
+  tags: [multiplayer, space]
+  options:
+    DATA:
+      label: Universe and server settings
+      help: Choose This host and include this folder in stopped backups.
+services:
+  kerbal-space-program-dmp:
+    image: ghcr.io/ptero-eggs/yolks:mono_latest
+    working_dir: /data
+    user: '0:0'
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        umask 027
+        chown container:container /data
+        if [ ! -f .dmp-installed-0.3.8.5 ] || [ ! -s DMPServer.exe ]; then
+          stage=$$(mktemp -d)
+          trap 'rm -rf "$$stage"' EXIT
+          curl -fsSL --retry 3 -o "$$stage/server.zip" https://d-mp.org/builds/release/v0.3.8.5/DMPServer.zip
+          printf '%s  %s\n' 'c1dbc89502fbd7837b80f6c1d5d5c08b87cc8c4063756f97b3f70d9b9177f28b' "$$stage/server.zip" | sha256sum -c -
+          unzip -q "$$stage/server.zip" -d "$$stage"
+          install -o container -g container -m 0644 "$$stage"/DMPServer/* /data/
+          touch .dmp-installed-0.3.8.5
+          rm -rf "$$stage"
+          trap - EXIT
+        fi
+        exec setpriv --reuid=container --regid=container --init-groups mono DMPServer.exe
+    expose:
+      - 6702/tcp
+      - 6702/udp
+    volumes:
+      - ${DATA}:/data
+    stop_signal: SIGINT
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

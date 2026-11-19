@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Beaver Habit Tracker
+  summary: Track and review your daily habits
+  description: Open the application on a trusted network and register your own account. The package uses
+    local user files. Add authenticated HTTPS access before sharing the service over an untrusted network.
+  category: productivity
+  website: https://github.com/daya0576/beaverhabits
+  source: https://github.com/daya0576/beaverhabits
+  docs: https://github.com/daya0576/beaverhabits/wiki/Environment-variables
+  scalable: false
+  primary_service: beaver-habit-tracker
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: beaver-habit-tracker
+    scheme: http
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: Habit data
+      help: Select This host. Holds habit files and local account data. Include this folder in a stopped
+        Nex backup.
+services:
+  beaver-habit-tracker:
+    image: daya0576/beaverhabits:latest
+    environment:
+      HABITS_STORAGE: USER_DISK
+    ports:
+    - ${PORT:-8108}:8080/tcp
+    volumes:
+    - ${DATA}:/app/.user
+    deploy:
+      replicas: 1

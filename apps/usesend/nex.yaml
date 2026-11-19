@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: useSend
+  summary: Manage transactional email delivery through Amazon SES
+  description: Provision PostgreSQL and Redis, then configure Amazon SES sender permissions and a GitHub
+    OAuth application. Keep the API secret private.
+  category: communication
+  website: https://usesend.com/
+  source: https://github.com/usesend/useSend
+  docs: https://docs.usesend.com/self-hosting/overview
+  primary_service: usesend
+  post_install: Provision PostgreSQL and Redis, then configure Amazon SES sender permissions and a GitHub
+    OAuth application. Keep the API secret private.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    AUTH_SECRET:
+      label: Auth secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    AWS_ACCESS_KEY:
+      label: Aws access key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    AWS_SECRET_KEY:
+      label: Aws secret key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    AWS_REGION:
+      label: Aws region
+      help: Enter the deployment value described in the upstream setup guide.
+    GITHUB_ID:
+      label: Github id
+      help: Enter the deployment value described in the upstream setup guide.
+    GITHUB_SECRET:
+      label: Github secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+services:
+  usesend:
+    image: docker.io/usesend/usesend:v1.10.3
+    ports:
+    - ${PORT:-23553}:3000/tcp
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_DEFAULT_REGION: ${AWS_REGION}
+      GITHUB_ID: ${GITHUB_ID}
+      GITHUB_SECRET: ${GITHUB_SECRET}
+      NEXT_PUBLIC_IS_CLOUD: 'false'
+      HOSTNAME: 0.0.0.0
+    deploy:
+      replicas: 1

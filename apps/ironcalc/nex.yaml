@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: IronCalc
+  summary: Create and edit spreadsheets in a browser
+  description: Open the spreadsheet editor and export your work from the browser. The included conversion
+    service stays on the application-private network.
+  category: productivity
+  website: https://github.com/ironcalc/IronCalc
+  source: https://github.com/ironcalc/IronCalc
+  docs: https://github.com/ironcalc/IronCalc/blob/main/docker-compose.yml
+  primary_service: ironcalc
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 2080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 2080.
+services:
+  ironcalc:
+    image: ghcr.io/ironcalc/ironcalc-caddy:0.9.1
+    ports:
+    - ${PORT:-2080}:2080/tcp
+    deploy:
+      replicas: 1
+  server:
+    image: ghcr.io/ironcalc/ironcalc-server:0.9.1
+    deploy:
+      replicas: 1

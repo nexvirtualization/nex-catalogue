@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: VictoriaMetrics
+  summary: Store and query Prometheus-compatible time series
+  description: A single-node time-series database. Query metrics in the built-in VMUI and use the Nex
+    application DNS name on port 8428 for internal ingestion. Limit access to trusted clients or an authenticating
+    proxy.
+  category: monitoring
+  website: https://victoriametrics.com/
+  source: https://github.com/VictoriaMetrics/VictoriaMetrics
+  docs: https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/
+  scalable: false
+  primary_service: victoriametrics
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: victoriametrics
+    scheme: http
+    port: 8428
+    path: /vmui/
+  works_with:
+  - grafana
+  options:
+    RETENTION_PERIOD:
+      label: Retention Period
+      help: Retention period. A bare number is months. See upstream docs for duration units.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8428.
+    DATA:
+      label: Metrics data
+      help: Select This host. Stores the single-node time-series database. Include this folder in a stopped
+        Nex backup.
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    command:
+    - -storageDataPath=/victoria-metrics-data
+    - -retentionPeriod=${RETENTION_PERIOD:-1}
+    ports:
+    - ${PORT:-8428}:8428/tcp
+    volumes:
+    - ${DATA}:/victoria-metrics-data
+    deploy:
+      replicas: 1

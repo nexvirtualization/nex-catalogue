@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Databunker
+  summary: Encrypted storage and tokenized access for sensitive user records.
+  description: Before deployment, prepare a private PostgreSQL database named databunkerdb and run the
+    one-time Databunker initialization from the upstream installation guide. Provide the same master
+    key used during initialization, retain the root token securely, and place the service behind a TLS
+    proxy.
+  category: security
+  website: https://github.com/securitybunker/databunker
+  source: https://github.com/securitybunker/databunker
+  docs: https://docs.databunker.org/oss/installation/overview
+  primary_service: databunker
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    PGSQL_HOST:
+      label: PostgreSQL hostname
+      help: Reachable hostname for the prepared PostgreSQL server.
+    PGSQL_PORT:
+      label: PostgreSQL port
+      help: TCP port for the prepared PostgreSQL server, usually 5432.
+    PGSQL_USER_NAME:
+      label: PostgreSQL username
+      help: Database user with access to the initialized Databunker database.
+    PGSQL_USER_PASS:
+      label: PostgreSQL password
+      type: password
+      help: Password for the prepared database user.
+    DATABUNKER_MASTERKEY:
+      label: Encryption master key
+      type: password
+      help: Use the exact key used during Databunker initialization. Losing it prevents decryption.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  databunker:
+    image: docker.io/securitybunker/databunker:latest
+    command:
+    - -start
+    - -db
+    - databunkerdb
+    - -conf
+    - /databunker/conf/databunker.yaml
+    entrypoint:
+    - /databunker/bin/databunker
+    environment:
+      PGSQL_HOST: ${PGSQL_HOST}
+      PGSQL_PORT: ${PGSQL_PORT}
+      PGSQL_USER_NAME: ${PGSQL_USER_NAME}
+      PGSQL_USER_PASS: ${PGSQL_USER_PASS}
+      DATABUNKER_MASTERKEY: ${DATABUNKER_MASTERKEY}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

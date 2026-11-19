@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Veloren
+  summary: Host a persistent open-source voxel RPG world
+  description: >-
+    Choose one x86-64 host and a registered client-reachable primary network. Launch the current
+    Veloren client with Airshipper, add APP-IP:14004 as a custom server and sign in with a Veloren
+    account. The world and configuration are created on first start. For an invite-only server,
+    add your players to the Veloren whitelist. Take a stopped Nex backup before redeploying the
+    weekly image to match client updates.
+  category: games
+  website: https://veloren.net/
+  source: https://gitlab.com/veloren/veloren
+  docs: https://book.veloren.net/players/server-hosting/on-docker.html
+  license: GPL-3.0
+  architectures: [amd64]
+  tags: [rpg, sandbox, co-op, dedicated-server]
+  options:
+    SERVER_DATA:
+      label: World and settings
+      help: >-
+        Select This host. The server folder contains saves and server_config, including the server name
+        in settings.ron and the allowlist in whitelist.ron.
+services:
+  veloren:
+    image: registry.gitlab.com/veloren/veloren/server-cli:weekly
+    command: [--non-interactive]
+    expose: ['14004/tcp', '14006/udp']
+    volumes:
+      - ${SERVER_DATA}:/opt/userdata
+    stop_signal: SIGUSR1
+    stop_grace_period: 150s
+    deploy:
+      replicas: 1

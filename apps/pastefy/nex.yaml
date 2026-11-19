@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pastefy
+  summary: Publish and organize text pastes in Pastefy
+  description: Provision MySQL or MariaDB, then open the client-facing HTTPS origin. Configure access controls
+    before posting private pastes.
+  category: development
+  website: https://pastefy.app/
+  source: https://github.com/interaapps/pastefy
+  docs: https://github.com/interaapps/pastefy#setup
+  primary_service: pastefy
+  post_install: Provision MySQL or MariaDB, then open the client-facing HTTPS origin. Configure access controls
+    before posting private pastes.
+  license: MIT
+  architectures:
+  - amd64
+  web:
+    port: 80
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+services:
+  pastefy:
+    image: docker.io/interaapps/pastefy:latest
+    ports:
+    - ${PORT:-23503}:80/tcp
+    environment:
+      HTTP_SERVER_PORT: '80'
+      DATABASE_DRIVER: mysql
+      DATABASE_HOST: ${DB_HOST}
+      DATABASE_PORT: ${DB_PORT:-3306}
+      DATABASE_NAME: ${DB_NAME:-pastefy}
+      DATABASE_USER: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      SERVER_NAME: ${PUBLIC_URL}
+    deploy:
+      replicas: 1

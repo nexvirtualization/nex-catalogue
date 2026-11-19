@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SRS
+  summary: Simple, high efficiency and real-time video server, supports RTMP, WebRTC, HLS, HTTP-FLV and SRT
+  description: Simple, high efficiency and real-time video server, supports RTMP, WebRTC, HLS, HTTP-FLV and
+    SRT.
+  category: media
+  source: https://github.com/ossrs/srs
+  website: https://ossrs.io/
+  docs: https://ossrs.io/lts/en-us/docs/v6/doc/getting-started
+  primary_service: srs
+  options:
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_2:
+      label: Published 1935/tcp port
+      help: Host port for application listener 1935/tcp. Leave host publishing off to use only the assigned
+        app address.
+    PORT_3:
+      label: Published 1985/tcp port
+      help: Host port for application listener 1985/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Publish RTMP on 1935 and use 8080 for HTTP playback. Keep the HTTP API on a trusted network
+    or restrict it at a reverse proxy. WebRTC is outside this TCP profile.
+  web:
+    port: 8080
+services:
+  srs:
+    image: docker.io/ossrs/srs:6
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-19675}:8080/tcp
+    - ${PORT_2:-20675}:1935/tcp
+    - ${PORT_3:-21675}:1985/tcp

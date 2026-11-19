@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: StarMade
+  summary: Host a shared space sandbox
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    The container downloads the StarMade launcher and server on first start. Join through Multiplayer
+    with the app’s Primary address on TCP 4242. Stop the app before editing StarMade/server.cfg. Make
+    a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/244770/
+  source: https://github.com/ich777/docker-starmade
+  docs: https://github.com/ich777/docker-starmade#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - space
+    - sandbox
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  starmade:
+    image: ghcr.io/ich777/starmade-server:latest
+    environment:
+      DL_URL: https://files.star-made.org/StarMade-Starter.jar
+      GAME_PARAMS: -port:4242
+      XMX_SIZE: '2048'
+      XMS_SIZE: '1024'
+    expose:
+      - 4242/tcp
+    volumes:
+      - ${DATA}:/starmade
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

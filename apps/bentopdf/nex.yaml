@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BentoPDF
+  summary: Merge, split and edit PDFs in your browser
+  description: The upstream self-hosted edition provides PDF processing in the browser. Document contents are
+    handled locally and some tools fetch WebAssembly modules or language files from public CDNs.
+  category: documents
+  website: https://bentopdf.com
+  source: https://github.com/alam00000/bentopdf
+  docs: https://bentopdf.com/docs/self-hosting
+  license: AGPL-3.0
+  primary_service: bentopdf
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the web interface and import a PDF. Download the results to keep them. The container does
+    not store your documents.
+  web:
+    port: 8080
+  scale:
+  - bentopdf
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+services:
+  bentopdf:
+    image: ghcr.io/alam00000/bentopdf-simple:latest
+    ports:
+    - ${PORT:-18101}:8080/tcp
+    deploy:
+      replicas: 1

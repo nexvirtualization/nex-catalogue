@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LibreSpeed
+  summary: Measure network throughput and latency from a browser
+  description: Use the web page to measure a client connection to this instance. Keep the bandwidth-intensive
+    endpoint scoped to your intended clients.
+  category: networking
+  website: https://github.com/librespeed/speedtest
+  source: https://github.com/librespeed/speedtest
+  docs: https://github.com/librespeed/speedtest/blob/master/doc_docker.md
+  primary_service: librespeed
+  scalable: true
+  license: LGPL-3.0
+  scale:
+  - librespeed
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  librespeed:
+    image: ghcr.io/librespeed/speedtest:latest
+    environment:
+      MODE: standalone
+      WEBPORT: '8080'
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

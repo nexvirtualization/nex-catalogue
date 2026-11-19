@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Plik
+  summary: Share files temporarily from a web interface or CLI
+  description: Keep the service on a trusted network or restrict access in the reverse proxy. Configure
+    retention settings appropriate to your available storage.
+  category: downloads
+  website: https://github.com/root-gg/plik
+  source: https://github.com/root-gg/plik
+  docs: https://github.com/root-gg/plik
+  primary_service: plik
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Uploads and application data
+      help: Keep uploads and application data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  plik:
+    image: docker.io/rootgg/plik:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

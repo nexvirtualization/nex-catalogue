@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Seerr
+  summary: Manage requests for a Jellyfin, Emby or Plex media library
+  description: Complete the setup wizard on a trusted network. Enter server-side URLs reachable from
+    this app for your media server and any Radarr or Sonarr integrations.
+  category: media
+  website: https://github.com/seerr-team/seerr
+  source: https://github.com/seerr-team/seerr
+  docs: https://docs.seerr.dev/getting-started/docker/
+  primary_service: seerr
+  scalable: false
+  license: MIT
+  web:
+    port: 5055
+  options:
+    CONFIG:
+      label: Configuration and database
+      help: Seerr settings, SQLite database and request history. Back up with Seerr stopped.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5055.
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    volumes:
+    - ${CONFIG}:/app/config
+    ports:
+    - ${PORT:-5055}:5055/tcp
+    deploy:
+      replicas: 1

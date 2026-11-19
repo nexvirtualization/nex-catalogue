@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tailscale
+  summary: Join a tailnet from a userspace container
+  description: Use a Tailscale authentication key authorized for this node. This package exposes a userspace
+    outbound SOCKS5 proxy at internal port 1055 for trusted Nex applications. Put it on a suitable private
+    Docker app network and restrict which apps can reach the proxy.
+  category: networking
+  website: https://tailscale.com/
+  source: https://github.com/tailscale/tailscale
+  docs: https://tailscale.com/kb/1282/docker
+  scalable: false
+  primary_service: tailscale
+  architectures:
+  - amd64
+  - arm64
+  options:
+    AUTH_KEY:
+      label: Tailscale authentication key
+      help: Provide an auth key generated in your Tailscale administration console.
+      type: password
+    DATA:
+      label: Tailscale identity
+      help: Select This host. Stores the node identity and connection state. Include this folder in a
+        stopped Nex backup.
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    environment:
+      TS_AUTHKEY: ${AUTH_KEY}
+      TS_AUTH_ONCE: 'true'
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: 'true'
+      TS_SOCKS5_SERVER: 0.0.0.0:1055
+    expose:
+    - 1055/tcp
+    volumes:
+    - ${DATA}:/var/lib/tailscale
+    deploy:
+      replicas: 1

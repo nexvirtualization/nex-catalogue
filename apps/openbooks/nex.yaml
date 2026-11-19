@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenBooks
+  summary: Search and download e-books over IRC
+  description: Run the web server on a trusted network. Choose an IRC display name and use the managed
+    downloads folder to retain books after restarts.
+  category: reading
+  website: https://evan-buss.github.io/openbooks/
+  source: https://github.com/evan-buss/openbooks
+  docs: https://github.com/evan-buss/openbooks#readme
+  scalable: false
+  primary_service: openbooks
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openbooks
+    scheme: http
+    port: 80
+  options:
+    IRC_NAME:
+      label: IRC display name
+      help: Unique name presented by OpenBooks to the upstream IRC network.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Downloaded books
+      help: Select This host. Stores books downloaded by OpenBooks. Include this folder in a stopped Nex
+        backup.
+services:
+  openbooks:
+    image: evanbuss/openbooks:latest
+    command:
+    - --persist
+    - --name
+    - ${IRC_NAME}
+    ports:
+    - ${PORT:-8156}:80/tcp
+    volumes:
+    - ${DATA}:/books
+    deploy:
+      replicas: 1

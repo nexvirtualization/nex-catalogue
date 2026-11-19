@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: pgAdmin 4
+  summary: Manage PostgreSQL servers in a browser
+  description: Sign in with the initial administrator email and password from Nex Settings. Add a database
+    using its application name and internal PostgreSQL port if it is on the Nex app network.
+  category: development
+  website: https://www.pgadmin.org/
+  source: https://github.com/pgadmin-org/pgadmin4
+  docs: https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html
+  scalable: false
+  primary_service: pgadmin-4
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: pgadmin-4
+    scheme: http
+    port: 80
+  works_with:
+  - postgresql
+  options:
+    ADMIN_EMAIL:
+      label: Administrator email
+      help: Email address used for initial sign-in.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: pgAdmin data
+      help: Select This host. Stores registered servers, preferences and login data. Include this folder
+        in a stopped Nex backup.
+services:
+  pgadmin-4:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+    ports:
+    - ${PORT:-8180}:80/tcp
+    volumes:
+    - ${DATA}:/var/lib/pgadmin
+    deploy:
+      replicas: 1

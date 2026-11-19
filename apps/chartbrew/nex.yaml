@@ -1,0 +1,90 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Chartbrew
+  summary: Create dashboards from databases and APIs
+  description: Provision MySQL and an authenticated Redis service. Use separate client-reachable addresses
+    for the frontend and backend. Forward both HTTPS routes to the specified ports.
+  category: development
+  website: https://chartbrew.com
+  source: https://github.com/chartbrew/chartbrew
+  docs: https://github.com/chartbrew/chartbrew#readme
+  scalable: false
+  primary_service: chartbrew
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: chartbrew
+    scheme: http
+    port: 4018
+  works_with:
+  - mariadb
+  - valkey
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is chartbrew.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    CACHE_HOST:
+      label: Cache Host
+      help: Host or Nex application name of Redis.
+    API_URL:
+      label: Api Url
+      help: External HTTPS URL for the API.
+    CACHE_PASSWORD:
+      label: Redis password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Enter a random 32-byte key as described in the upstream installation instructions.
+      type: password
+    QUEUE_SECRET:
+      label: Job queue dashboard password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4018.
+    API_PORT:
+      label: Api Port
+      help: Host-published Chartbrew API port.
+services:
+  chartbrew:
+    image: razvanilin/chartbrew:latest
+    environment:
+      CB_DB_HOST: ${DB_HOST}
+      CB_DB_USERNAME: ${DB_USER}
+      CB_DB_PASSWORD: ${DB_PASSWORD}
+      CB_DB_NAME: ${DB_NAME:-chartbrew}
+      CB_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CB_BULLMQ_USERNAME: chartbrew
+      CB_BULLMQ_PASSWORD: ${QUEUE_SECRET}
+      CB_API_HOST: 0.0.0.0
+      CB_API_PORT: '4019'
+      CB_DB_PORT: '3306'
+      CB_REDIS_HOST: ${CACHE_HOST}
+      CB_REDIS_PORT: '6379'
+      CB_REDIS_PASSWORD: ${CACHE_PASSWORD}
+      VITE_APP_CLIENT_HOST: ${PUBLIC_URL}
+      VITE_APP_CLIENT_PORT: '4018'
+      VITE_APP_API_HOST: ${API_URL}
+    ports:
+    - ${PORT:-8442}:4018/tcp
+    - ${API_PORT:-4019}:4019/tcp
+    deploy:
+      replicas: 1

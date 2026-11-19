@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Path of Titans
+  summary: Host a persistent Path of Titans community server
+  description: >-
+    Use an x86-64 host, choose This host for Server data, and select a registered primary
+    network reachable by your players. Obtain a server hosting token through your Alderon
+    Games account. First boot downloads the publisher’s server and creates a local database.
+    The game uses UDP 7777 and community server queries use TCP 7778. Choose the server in
+    the game’s Community Servers browser. A restart checks for updates. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://pathoftitans.com/
+  source: https://github.com/Alderon-Games/pot-community-servers
+  docs: https://hosting.pathoftitans.wiki/setup/server-setup
+  license: Proprietary game server
+  architectures: [amd64]
+  tags: [survival, multiplayer]
+  options:
+    HOSTING_TOKEN:
+      label: Alderon hosting token
+      type: password
+      help: Create a server hosting token in your Alderon Games account under Games.
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed in the Community Servers browser.
+    DATA:
+      label: Server data
+      help: Keep the installed server, configuration, local database and instance ID together.
+services:
+  path-of-titans:
+    image: ghcr.io/ptero-eggs/steamcmd:debian
+    environment:
+      HOSTING_TOKEN: ${HOSTING_TOKEN}
+      SERVER_NAME: ${SERVER_NAME:-Nex Path of Titans}
+    expose:
+      - 7777/udp
+      - 7778/tcp
+    volumes:
+      - ${DATA}:/home/container
+    command:
+      - /bin/bash
+      - -ec
+      - |
+        set -o pipefail
+        umask 077
+        cd "$$HOME"
+        if [[ ! -x AlderonGamesCmd ]]; then
+          pending=$$(mktemp)
+          trap 'rm -f "$$pending"' EXIT
+          curl --fail --silent --show-error --location --retry 3 \
+            https://launcher-cdn.alderongames.com/AlderonGamesCmd-Linux-x64 -o "$$pending"
+          chmod 0700 "$$pending"
+          mv "$$pending" AlderonGamesCmd
+          trap - EXIT
+        fi
+        if [[ ! -s server-guid ]]; then
+          cat /proc/sys/kernel/random/uuid > server-guid
+        fi
+        redact_token() {
+          local line
+          while IFS= read -r line || [[ -n "$$line" ]]; do
+            printf '%s\n' "$${line//"$$HOSTING_TOKEN"/[redacted]}"
+          done
+        }
+        ./AlderonGamesCmd --game path-of-titans --server true --beta-branch production \
+          --auth-token "$$HOSTING_TOKEN" --install-dir "$$HOME/server" 2>&1 | redact_token
+        cd server
+        exec ./PathOfTitansServer.sh 'Island?listen?MaxPlayers=50' -Port=7777 \
+          -QueryPort=7778 -nullRHI "-ServerName=$$SERVER_NAME" \
+          "-ServerGUID=$$(cat ../server-guid)" -BranchKey=production -Database=Local -log
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

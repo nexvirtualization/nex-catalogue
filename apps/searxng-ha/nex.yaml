@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SearXNG HA
+  summary: Run load-balanced metasearch on a private network
+  description: >-
+    SearXNG copies use the same secret and read configuration from a cluster share on startup. Each copy
+    keeps its favicon cache and generated defaults in its own container. Use the Docker network and
+    host publishing for load balancing. The optional Valkey endpoint is shared when a custom settings.yml
+    enables rate limiting. For this package, use a trusted network or an authenticating reverse proxy.
+  category: tools
+  website: https://docs.searxng.org
+  source: https://github.com/searxng/searxng
+  docs: https://docs.searxng.org/admin/architecture.html
+  license: AGPL-3.0
+  primary_service: searxng
+  scale: [searxng]
+  web: {port: 8080}
+  tags: [search, privacy, high-availability]
+  options:
+    PORT:
+      label: Web port
+      help: Publish through the Docker network so each available Swarm node can forward traffic to a search copy.
+    CONFIG:
+      label: Shared search configuration
+      help: Choose a cluster share for multiple copies. Start with an empty folder for defaults, or add settings.yml and any companion configuration files. After editing the share, restart all copies.
+    SEARCH_SECRET:
+      label: Search instance secret
+      type: password
+      help: Use Generate once. All copies use this value even if their generated defaults differ.
+    SEARCH_PUBLIC_URL:
+      label: Public web URL
+      help: Browser URL with scheme and port as needed. Leave blank to derive links from each request.
+    VALKEY_URL:
+      label: Shared Valkey URL
+      type: password
+      help: Leave blank for the default private setup. If you enable the limiter in settings.yml, supply a Valkey URL reachable by all copies.
+services:
+  searxng:
+    image: searxng/searxng:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        cp -R /nex-config/. /etc/searxng/
+        exec /usr/local/searxng/entrypoint.sh
+    environment:
+      SEARXNG_SECRET: "${SEARCH_SECRET}"
+      SEARXNG_BASE_URL: "${SEARCH_PUBLIC_URL:-}"
+      SEARXNG_VALKEY_URL: "${VALKEY_URL:-}"
+    ports:
+      - "${PORT:-8889}:8080/tcp"
+    volumes:
+      - "${CONFIG}:/nex-config:ro"
+    deploy:
+      replicas: 1

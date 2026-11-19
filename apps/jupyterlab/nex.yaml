@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: JupyterLab
+  summary: Use interactive notebooks and terminals in a private browser workspace
+  description: Sign in with the Jupyter access token. Notebook and terminal users can run code within
+    this container. Keep the endpoint private or behind an authenticating HTTPS proxy.
+  category: development
+  website: https://github.com/jupyterlab/jupyterlab/
+  source: https://github.com/jupyterlab/jupyterlab/
+  docs: https://jupyter-docker-stacks.readthedocs.io/en/latest/using/running.html
+  primary_service: jupyterlab
+  scalable: false
+  license: BSD-3-Clause
+  web:
+    port: 8888
+  options:
+    JUPYTER_TOKEN:
+      label: Jupyter access token
+      type: password
+      help: Use Nex Generate. Use this token to sign in to JupyterLab.
+    NOTEBOOKS:
+      label: Notebook files
+      help: Use the work directory for projects and files that must survive restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8888.
+services:
+  jupyterlab:
+    image: quay.io/jupyter/base-notebook:latest
+    environment:
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN}
+    volumes:
+    - ${NOTEBOOKS}:/home/jovyan/work
+    ports:
+    - ${PORT:-8888}:8888/tcp
+    deploy:
+      replicas: 1

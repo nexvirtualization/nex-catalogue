@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OctoBot
+  summary: Run an automated trading and backtesting dashboard
+  description: Complete account setup on a trusted network. Evaluate strategies using backtesting or paper
+    trading first. Add exchange credentials only for the connections you intend to use.
+  category: finance
+  website: https://www.octobot.cloud/
+  source: https://github.com/Drakkar-Software/OctoBot
+  docs: https://github.com/Drakkar-Software/OctoBot#readme
+  scalable: false
+  primary_service: octobot
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: octobot
+    scheme: http
+    port: 5001
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for logs and jobs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5001.
+    DATA:
+      label: User configuration
+      help: Select This host. Stores preferences and exchange configuration. Include this folder in a
+        stopped Nex backup.
+    ADDONS:
+      label: Add-ons
+      help: Select This host. Stores OctoBot strategy modules. Include this folder in a stopped Nex backup.
+    LOGS:
+      label: Logs
+      help: Select This host. Stores program and strategy logs. Include this folder in a stopped Nex backup.
+    BACKTEST:
+      label: Backtesting data
+      help: Select This host. Stores datasets. Include this folder in a stopped Nex backup.
+services:
+  octobot:
+    image: drakkarsoftware/octobot:stable
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8810}:5001/tcp
+    volumes:
+    - ${DATA}:/octobot/user
+    - ${ADDONS}:/octobot/tentacles
+    - ${LOGS}:/octobot/logs
+    - ${BACKTEST}:/octobot/backtesting
+    deploy:
+      replicas: 1

@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenWA
+  summary: Connect authorized WhatsApp sessions to a local API
+  description: Use the web dashboard on a restricted network and complete account setup. Authorize your
+    account through its pairing flow. Use the SQLite configuration and persist the data folder between
+    restarts.
+  category: communication
+  website: https://www.open-wa.org
+  source: https://github.com/rmyndharis/OpenWA
+  docs: https://github.com/rmyndharis/OpenWA#readme
+  scalable: false
+  primary_service: openwa
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openwa
+    scheme: http
+    port: 2785
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 2785.
+    DATA:
+      label: Session data
+      help: Select This host. Stores paired accounts, application configuration and local database. Include
+        this folder in a stopped Nex backup.
+services:
+  openwa:
+    image: ghcr.io/rmyndharis/openwa:latest
+    environment:
+      NODE_ENV: production
+      PORT: '2785'
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp/.config
+      XDG_CACHE_HOME: /tmp/.cache
+    ports:
+    - ${PORT:-2785}:2785/tcp
+    volumes:
+    - ${DATA}:/app/data
+    tmpfs:
+    - /dev/shm:size=536870912
+    deploy:
+      replicas: 1

@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TileServer GL
+  summary: Serve map tiles and styles over HTTP
+  description: TileServer GL reads map data from a managed folder and serves vector and raster tile endpoints.
+  category: development
+  website: https://tileserver.readthedocs.io/
+  source: https://github.com/maptiler/tileserver-gl
+  docs: https://tileserver.readthedocs.io/en/latest/installation.html
+  primary_service: tileserver-gl
+  post_install: Before starting, put your licensed MBTiles file or complete TileServer GL configuration in
+    Map files. Verify the dataset is visible in the preview.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Map tiles and styles
+      help: Managed directory mounted at /data. Choose storage readable by the application.
+services:
+  tileserver-gl:
+    image: docker.io/maptiler/tileserver-gl:latest
+    ports:
+    - ${PORT:-20274}:8080/tcp
+    volumes:
+    - ${DATA}:/data:ro
+    deploy:
+      replicas: 1

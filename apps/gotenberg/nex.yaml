@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gotenberg
+  summary: Convert documents and webpages to PDF through an HTTP API
+  description: Use the API to render HTML or a public URL, convert Office files, or combine PDFs. Basic authentication
+    is required. Page fetches cannot target private IPs, and downloadFrom and outbound webhooks are disabled.
+  category: development
+  website: https://gotenberg.dev
+  source: https://github.com/gotenberg/gotenberg
+  docs: https://gotenberg.dev/docs/getting-started/installation
+  license: MIT
+  primary_service: gotenberg
+  architectures:
+  - amd64
+  - arm64
+  post_install: Use HTTPS through a trusted proxy when the API is accessed across an untrusted network. Connect
+    from another Nex app using its application connection name on port 3000. The /health endpoint is available
+    without credentials.
+  web:
+    port: 3000
+  scale:
+  - gotenberg
+  options:
+    API_USERNAME:
+      label: API username
+      help: Basic authentication username used by API clients.
+    API_PASSWORD:
+      label: API password
+      help: Generate a strong password and provide it to authorised API clients.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+services:
+  gotenberg:
+    image: docker.io/gotenberg/gotenberg:latest
+    ports:
+    - ${PORT:-18102}:3000/tcp
+    environment:
+      API_ENABLE_BASIC_AUTH: 'true'
+      GOTENBERG_API_BASIC_AUTH_USERNAME: ${API_USERNAME:-gotenberg}
+      GOTENBERG_API_BASIC_AUTH_PASSWORD: ${API_PASSWORD}
+      API_DISABLE_DOWNLOAD_FROM: 'true'
+      CHROMIUM_DENY_PRIVATE_IPS: 'true'
+      LIBREOFFICE_DENY_PRIVATE_IPS: 'true'
+      WEBHOOK_DISABLE: 'true'
+    deploy:
+      replicas: 1

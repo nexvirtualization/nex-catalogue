@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/getumbrel/umbrel-apps/blob/HEAD/ersatztv-legacy/docker-compose.yml
+x-nex:
+  name: ErsatzTV Legacy
+  summary: Server for creating custom live TV channels from a personal media library
+  category: media
+  description: Server for creating custom live TV channels from a personal media library. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/ersatztv/legacy
+  website: https://ersatztv.org/
+  docs: https://ersatztv.org/
+  primary_service: web
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Transcode folder
+      help: Nex-managed folder mounted at /transcode. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Media folder
+      help: Nex-managed folder mounted at /media. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8409/tcp.
+  web:
+    port: 8409
+  post_install: Complete setup in ErsatzTV and choose /media for local libraries. The transcode folder is working
+    storage.
+services:
+  web:
+    image: ghcr.io/ersatztv/legacy:v26.12.0
+    environment:
+      HOME: /config
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/transcode
+    - ${FOLDER_3}:/media:ro
+    user: 1000:1000
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8409}:8409/tcp

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Raneto
+  summary: Publish a lightweight Markdown knowledge base
+  description: Populate the content folder and configure your Raneto site and authentication before
+    sharing the endpoint.
+  category: documents
+  website: https://github.com/ryanlelek/Raneto
+  source: https://github.com/ryanlelek/Raneto
+  docs: https://docs.linuxserver.io/images/docker-raneto/
+  primary_service: raneto
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    CONFIG:
+      label: Documents and configuration
+      help: Raneto configuration and published Markdown files.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  raneto:
+    image: lscr.io/linuxserver/raneto:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

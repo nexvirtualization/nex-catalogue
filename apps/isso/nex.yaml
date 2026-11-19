@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Isso
+  summary: Host a small comment system for your site
+  description: Select a prepared Isso configuration for your own web origin. Set the SQLite database
+    path to /db/comments.db and configure moderation before allowing comments.
+  category: communication
+  website: https://github.com/isso-comments/isso
+  source: https://github.com/isso-comments/isso
+  docs: https://isso-comments.de/docs/reference/server-config/
+  primary_service: isso
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    CONFIG:
+      label: Prepared Isso configuration
+      help: Folder containing isso.cfg with your configured site origin.
+    DATA:
+      label: Comment database
+      help: Keep comment database in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  isso:
+    image: ghcr.io/isso-comments/isso:latest
+    volumes:
+    - ${CONFIG}:/config
+    - ${DATA}:/db
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

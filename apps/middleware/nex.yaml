@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Middleware
+  summary: Track development delivery and operations metrics
+  description: Open the dashboard on a trusted network. Connect only the repositories and platforms
+    you administer and place their endpoints behind HTTPS.
+  category: monitoring
+  website: https://github.com/middlewarehq/middleware
+  source: https://github.com/middlewarehq/middleware
+  docs: https://github.com/middlewarehq/middleware
+  primary_service: middleware
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 3333
+  options:
+    DATA:
+      label: Metrics database
+      help: Keep metrics database in this managed folder between restarts.
+    KEYS:
+      label: Integration key material
+      help: Keep integration key material in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3333.
+    EVENTS_PORT:
+      label: Analytics service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9696.
+    SYNC_PORT:
+      label: Synchronization service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9697.
+services:
+  middleware:
+    image: docker.io/middlewareeng/middleware:latest
+    volumes:
+    - ${DATA}:/var/lib/postgresql/data
+    - ${KEYS}:/app/keys
+    ports:
+    - ${PORT:-3333}:3333/tcp
+    - ${EVENTS_PORT:-9696}:9696/tcp
+    - ${SYNC_PORT:-9697}:9697/tcp
+    deploy:
+      replicas: 1

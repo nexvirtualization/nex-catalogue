@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rust
+  summary: Run a persistent vanilla Rust world
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Attach a registered primary network
+    your players can reach. From the Rust F1 console use client.connect APP-IP:28015. Steam queries
+    use UDP 28016. Use a trusted player network to control who can reach the vanilla server.
+    SteamCMD downloads the server on first start and checks for updates on Nex restart. Back up
+    the stopped world before updates or a planned wipe.
+  category: games
+  website: https://rust.facepunch.com/
+  source: https://github.com/indifferentbroccoli/rust-server-docker
+  docs: https://wiki.facepunch.com/rust/Creating-a-server
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - survival
+    - multiplayer
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name shown to Rust players. Changing it keeps the same world.
+    RCON_PASSWORD:
+      label: RCON password
+      type: password
+      help: Use Generate for a unique administration password. The image uses RCON to save on shutdown.
+    DATA:
+      label: Server data
+      help: Keeps the installed server, configuration and world. Include this folder in stopped backups.
+services:
+  rust:
+    image: docker.io/indifferentbroccoli/rust-server-docker:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Rust}
+      SERVER_IDENTITY: nex-rust
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      STARTUP_ARGUMENTS: +rcon.ip 127.0.0.1
+      APP_PORT: "1-"
+    expose:
+      - "28015/udp"
+      - "28016/udp"
+    volumes:
+      - ${DATA}:/steamcmd/rust
+    healthcheck:
+      start_period: 20m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Redlib
+  summary: Read public Reddit posts in a lightweight web interface
+  description: Redlib serves an alternative interface for reading Reddit. Reddit must be reachable from the
+    container and upstream access limits may affect availability.
+  category: reading
+  website: https://github.com/redlib-org/redlib
+  source: https://github.com/redlib-org/redlib
+  docs: https://github.com/redlib-org/redlib#deployment
+  license: AGPL-3.0
+  primary_service: redlib
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open Redlib to browse public posts. The service has no local account settings to back up.
+  web:
+    port: 8080
+  scale:
+  - redlib
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+services:
+  redlib:
+    image: quay.io/redlib/redlib:latest
+    ports:
+    - ${PORT:-18109}:8080/tcp
+    deploy:
+      replicas: 1

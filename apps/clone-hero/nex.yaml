@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Clone Hero
+  summary: Host an online rhythm-game session
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use Clone Hero version 1.1.0.6161 and connect from Online to the app’s Primary address on UDP 14242.
+    Players need matching song charts. First boot downloads the official standalone server after you
+    accept its EULA.
+  category: games
+  website: https://clonehero.net/
+  source: https://github.com/clonehero-game/releases
+  docs: https://wiki.clonehero.net/books/guides-and-tutorials/page/online-multiplayer
+  license: Proprietary game server
+  architectures:
+  - amd64
+  tags:
+  - rhythm
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    EULA:
+      label: Accept the Clone Hero EULA
+      help: Read https://clonehero.net/eula and agree before starting the server.
+      type: bool
+    SERVER_NAME:
+      label: Server name
+      help: Name shown to players in the server browser.
+    JOIN_PASSWORD:
+      label: Player password
+      help: Share this with players who should be able to join.
+      type: password
+services:
+  clone-hero:
+    image: ghcr.io/ptero-eggs/yolks:debian
+    environment:
+      EULA: ${EULA:-false}
+      SERVER_NAME: ${SERVER_NAME:-Nex Clone Hero}
+      JOIN_PASSWORD: ${JOIN_PASSWORD:-}
+    expose:
+    - 14242/udp
+    volumes:
+    - ${DATA}:/home/container
+    user: 1000:1000
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      download() {
+        local url="$$1" sha256="$$2" target="$$3"
+        curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
+        printf '%s  %s\n' "$$sha256" "$$target" | sha256sum --check --status || {
+          echo "The server download did not match the release checksum." >&2
+          return 1
+        }
+      }
+
+
+      [[ "$${EULA,,}" == true ]] || {
+        echo "Accept the Clone Hero EULA in Nex before starting." >&2
+        exit 1
+      }
+      cd "$$HOME"
+      if [ ! -x ./Server ]; then
+        staging=$$(mktemp -d ./.clone-hero-install.XXXXXX)
+        trap 'rm -rf "$$staging"' EXIT
+        download https://github.com/clonehero-game/releases/releases/download/v1.1.0.6161-final/CloneHero-StandaloneServer.zip \
+          1a67883edfbf100b5c5794cd6124832701ad5d742c5105e60b7d6974f2d61c1f "$$staging/release.zip"
+        unzip -p "$$staging/release.zip" build/linux-x64/Server > "$$staging/Server"
+        chmod 755 "$$staging/Server"
+        mv "$$staging/Server" ./Server
+        rm -rf "$$staging"
+        trap - EXIT
+      fi
+      args=(-l 4 -n "$$SERVER_NAME" -p 14242 -a 0.0.0.0)
+      if [ -n "$$JOIN_PASSWORD" ]; then
+        args+=(-ps "$$JOIN_PASSWORD")
+      else
+        args+=(-np)
+      fi
+      exec ./Server "$${args[@]}"
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SearXNG
+  summary: Search the web through a private metasearch instance
+  description: Privacy-focused search frontend combining results from multiple search engines. Creates settings.yml
+    and a random secret automatically on first start. This standalone configuration is for a trusted home network;
+    configure a reverse proxy and rate limiting before offering a public instance. One copy only. In Nex, keep one
+    chosen host when using This host folders; local data has no automatic host failover.
+  category: tools
+  website: https://docs.searxng.org
+  source: https://github.com/searxng/searxng
+  license: AGPL-3.0
+  scalable: false
+  tags:
+  - search
+  - privacy
+  - web
+  options:
+    PORT:
+      label: Web port
+      help: Published HTTP port. No built-in login is enabled; restrict access to your trusted network. Configure
+        engines in the persistent settings.yml file. With Network → Docker and host publishing enabled, use the
+        chosen host web port. On a registered VLAN or private Primary network with its own address, use that address
+        and internal port 8080; host publishing is a separate switch.
+    CONFIG:
+      label: Search configuration
+      help: Persistent /etc/searxng with generated settings.yml and instance secret. The image initializes missing
+        settings and may change ownership to its searxng account. Use a dedicated writable folder and back it up.
+        Edit settings.yml with Nex File Browser → Search configuration, then restart from ACTIONS.
+    CACHE:
+      label: Search cache
+      help: Persistent /var/cache/searxng for favicon and other cache data. Use a dedicated writable folder; the
+        image may change its ownership.
+  primary_service: searxng
+services:
+  searxng:
+    image: searxng/searxng:latest
+    ports:
+    - ${PORT:-8888}:8080/tcp
+    volumes:
+    - ${CONFIG}:/etc/searxng
+    - ${CACHE}:/var/cache/searxng
+    deploy:
+      replicas: 1

@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Reaparr
+  summary: Manage authorized transfers from Plex libraries
+  description: Open the application on a trusted network and connect your Plex account. Select the folders
+    for downloads, movies and TV shows. Keep the web interface behind authentication if it is reachable
+    elsewhere.
+  category: media
+  website: https://www.reaparr.rocks/
+  source: https://github.com/Reaparr/Reaparr
+  docs: https://github.com/Reaparr/Reaparr#readme
+  scalable: false
+  primary_service: reaparr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: reaparr
+    scheme: http
+    port: 7000
+  options:
+    PUID:
+      label: Puid
+      help: Numeric UID allowed to write the managed libraries.
+    PGID:
+      label: Pgid
+      help: Numeric GID allowed to write the managed libraries.
+    TZ:
+      label: Tz
+      help: IANA time zone for logs and jobs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7000.
+    DATA:
+      label: Reaparr configuration
+      help: Select This host. Stores settings and transfer history. Include this folder in a stopped Nex
+        backup.
+    DOWNLOADS:
+      label: Download queue
+      help: Select This host. Stores active downloads. Include this folder in a stopped Nex backup.
+    MOVIES:
+      label: Movie library
+      help: Select This host. Stores movie imports. Include this folder in a stopped Nex backup.
+    TV:
+      label: TV library
+      help: Select This host. Stores TV imports. Include this folder in a stopped Nex backup.
+services:
+  reaparr:
+    image: reaparr/reaparr:latest
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-7000}:7000/tcp
+    volumes:
+    - ${DATA}:/Config
+    - ${DOWNLOADS}:/Downloads
+    - ${MOVIES}:/Movies
+    - ${TV}:/TvShows
+    deploy:
+      replicas: 1

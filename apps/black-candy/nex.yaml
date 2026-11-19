@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Black Candy
+  summary: Stream music from an existing library
+  description: Open the web UI and sign in with the upstream initial administrator account, then change
+    its password. Select a managed folder containing music. The package scans that folder and keeps its
+    own application data separate.
+  category: media
+  website: https://github.com/blackcandy-org/blackcandy
+  source: https://github.com/blackcandy-org/blackcandy
+  docs: https://github.com/blackcandy-org/blackcandy#readme
+  scalable: false
+  primary_service: black-candy
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: black-candy
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Music library database
+      help: Select This host. Stores application data and settings. Include this folder in a stopped Nex
+        backup.
+    MEDIA:
+      label: Music files
+      help: Select This host. Select the managed music directory to index. Include this folder in a stopped
+        Nex backup.
+services:
+  black-candy:
+    image: ghcr.io/blackcandy-org/blackcandy:latest
+    environment:
+      MEDIA_PATH: /media_data
+    ports:
+    - ${PORT:-8378}:80/tcp
+    volumes:
+    - ${DATA}:/app/storage
+    - ${MEDIA}:/media_data:ro
+    deploy:
+      replicas: 1

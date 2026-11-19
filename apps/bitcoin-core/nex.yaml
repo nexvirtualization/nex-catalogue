@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: bitcoind
+  summary: Run a Bitcoin full node
+  description: Place bitcoin.conf in the data folder. Select a client-reachable network for incoming peers,
+    keep RPC access private and plan disk usage.
+  category: finance
+  website: https://bitcoincore.org/
+  source: https://github.com/bitcoin/bitcoin
+  docs: https://github.com/lncm/docker-bitcoind
+  primary_service: bitcoin-core
+  post_install: Place bitcoin.conf in the data folder. Select a client-reachable network for incoming peers,
+    keep RPC access private and plan disk usage.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  options:
+    P2P_PORT:
+      label: Published Bitcoin peer port
+      help: Host-published port for the internal 8333/tcp endpoint.
+    DATA:
+      label: Blockchain and node configuration
+      help: Managed directory mounted at /data/.bitcoin. Choose storage writable by the application.
+services:
+  bitcoin-core:
+    image: docker.io/lncm/bitcoind:v28.0
+    ports:
+    - ${P2P_PORT:-24587}:8333/tcp
+    volumes:
+    - ${DATA}:/data/.bitcoin
+    deploy:
+      replicas: 1

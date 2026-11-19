@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Accent
+  summary: Developer-oriented translation tool
+  description: Developer-oriented translation tool.
+  category: development
+  source: https://github.com/mirego/accent
+  website: https://www.accent.reviews/
+  docs: https://github.com/mirego/accent#-environment-variables
+  primary_service: accent
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SESSION_SECRET:
+      label: Session secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SIGNING_SALT:
+      label: Signing salt
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    VAULT_KEY:
+      label: Vault key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    GITHUB_CLIENT_ID:
+      label: Github client id
+    GITHUB_CLIENT_SECRET:
+      label: Github client secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 4000/tcp port
+      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL and set up a GitHub OAuth app with the appropriate callback URL. Provide
+    at least 64 random characters for the session secret. Back up the database and the vault key.
+  web:
+    port: 4000
+services:
+  accent:
+    image: docker.io/mirego/accent:latest
+    deploy:
+      replicas: 1
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY_BASE: ${SESSION_SECRET}
+      SIGNING_SALT: ${SIGNING_SALT}
+      MACHINE_TRANSLATIONS_VAULT_KEY: ${VAULT_KEY}
+      CANONICAL_URL: ${PUBLIC_URL}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+    ports:
+    - ${PORT:-19998}:4000/tcp

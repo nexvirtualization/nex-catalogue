@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kometa
+  summary: Maintain collections and overlays in your Plex library
+  description: Kometa uses a prepared config.yml to connect to existing libraries, metadata sources, and
+    your schedules.
+  category: media
+  website: https://kometa.wiki/
+  source: https://github.com/Kometa-Team/Kometa
+  docs: https://kometa.wiki/en/latest/kometa/install/docker/
+  primary_service: kometa
+  post_install: Place the upstream configuration in the managed folder before starting. Add the Plex API
+    URL and token and a TMDB API key, and review the run log.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  options:
+    CONFIG:
+      label: Kometa configuration and cache
+      help: Managed directory mounted at /config. Choose storage writable by the application.
+services:
+  kometa:
+    image: docker.io/kometateam/kometa:latest
+    volumes:
+    - ${CONFIG}:/config
+    deploy:
+      replicas: 1

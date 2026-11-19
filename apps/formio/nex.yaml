@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: form.io
+  summary: Build forms and manage submitted data through an API
+  description: Provision MongoDB and create the initial administrator on a trusted endpoint. Configure
+    roles and data-access permissions before sharing forms.
+  category: development
+  website: https://github.com/formio/formio
+  source: https://github.com/formio/formio
+  docs: https://github.com/formio/formio
+  primary_service: formio
+  scalable: false
+  license: OSL-3.0
+  architectures:
+  - amd64
+  web:
+    port: 3001
+  options:
+    MONGO:
+      label: MongoDB connection URL
+      type: password
+      help: Full MongoDB URL for the prepared database.
+    JWT_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    ROOT_EMAIL:
+      label: Initial administrator email
+      help: Email address for the initial account.
+    ROOT_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Use Nex Generate.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3001.
+services:
+  formio:
+    image: docker.io/formio/formio:latest
+    environment:
+      MONGO: ${MONGO}
+      JWT_SECRET: ${JWT_SECRET}
+      ROOT_EMAIL: ${ROOT_EMAIL}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+    ports:
+    - ${PORT:-3001}:3001/tcp
+    deploy:
+      replicas: 1

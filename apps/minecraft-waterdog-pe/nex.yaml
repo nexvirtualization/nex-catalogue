@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Waterdog PE
+  summary: Connect Bedrock Edition servers through one proxy
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join the app’s Primary address on port 19132. NetherNet media uses UDP 19134. Edit
+    config.yml in the data folder to point the proxy to your Bedrock backends. Restrict backend
+    access to the proxy. Make a stopped backup before applying updates.
+  category: games
+  website: https://waterdog.dev/
+  source: https://github.com/WaterdogPE/WaterdogPE
+  docs: https://docs.waterdog.dev/
+  license: GPL-2.0
+  architectures: [amd64]
+  tags: [minecraft, proxy]
+  options:
+    DATA:
+      label: Proxy settings and plugins
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-waterdog-pe:
+    image: ghcr.io/waterdogpe/waterdogpe:latest
+    working_dir: /data
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        if [ ! -f config.yml ]; then
+          printf 'nethernet:\n  webrtc_port: 19134\n' > config.yml
+        fi
+        exec java -Xmx1G -jar /home/Waterdog.jar
+    expose:
+      - 19132/tcp
+      - 19132/udp
+      - 19134/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://raw.githubusercontent.com/qdm12/ddns-updater/HEAD/docker-compose.yml
+x-nex:
+  name: DDNS Updater
+  summary: Dynamic DNS updater for refreshing DNS records across providers on a schedule
+  category: networking
+  description: Dynamic DNS updater for refreshing DNS records across providers on a schedule. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/qdm12/ddns-updater
+  website: https://github.com/qdm12/ddns-updater
+  docs: https://github.com/qdm12/ddns-updater
+  primary_service: ddns-updater
+  options:
+    FOLDER_1:
+      label: Data folder
+      help: Nex-managed folder mounted at /updater/data. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8000/tcp.
+  web:
+    port: 8000
+  post_install: Complete first-run or file-based configuration with your DNS provider details. Keep provider
+    credentials in the data folder.
+services:
+  ddns-updater:
+    image: ghcr.io/qdm12/ddns-updater:latest
+    environment:
+      CONFIG: ''
+      PERIOD: 5m
+      UPDATE_COOLDOWN_PERIOD: 5m
+      PUBLICIP_FETCHERS: all
+      PUBLICIP_HTTP_PROVIDERS: all
+      PUBLICIPV4_HTTP_PROVIDERS: all
+      PUBLICIPV6_HTTP_PROVIDERS: all
+      PUBLICIP_DNS_PROVIDERS: all
+      PUBLICIP_DNS_TIMEOUT: 3s
+      HTTP_TIMEOUT: 10s
+      LISTENING_ADDRESS: :8000
+      ROOT_URL: /
+      BACKUP_PERIOD: '0'
+      BACKUP_DIRECTORY: /updater/data
+      LOG_LEVEL: info
+      LOG_CALLER: hidden
+      SHOUTRRR_ADDRESSES: ''
+    volumes:
+    - ${FOLDER_1}:/updater/data
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8000}:8000/tcp

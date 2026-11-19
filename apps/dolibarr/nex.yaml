@@ -1,0 +1,76 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Dolibarr
+  summary: Manage customers, sales and invoicing
+  description: Provision a MariaDB database and dedicated database user. Use the public URL and initial
+    administrator credentials from Nex Settings.
+  category: productivity
+  website: https://www.dolibarr.org/
+  source: https://github.com/Dolibarr/dolibarr
+  docs: https://github.com/Dolibarr/dolibarr#readme
+  scalable: false
+  primary_service: dolibarr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: dolibarr
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is dolibarr.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: Initial administrator name.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Business documents
+      help: Select This host. Stores generated and uploaded documents. Include this folder in a stopped
+        Nex backup.
+    APP:
+      label: Dolibarr installation
+      help: Select This host. Stores application files and persistent local configuration. Include this
+        folder in a stopped Nex backup.
+services:
+  dolibarr:
+    image: dolibarr/dolibarr:latest
+    environment:
+      DOLI_DB_HOST: ${DB_HOST}
+      DOLI_DB_NAME: ${DB_NAME:-dolibarr}
+      DOLI_DB_USER: ${DB_USER}
+      DOLI_DB_PASSWORD: ${DB_PASSWORD}
+      DOLI_URL_ROOT: ${PUBLIC_URL}
+      DOLI_ADMIN_LOGIN: ${ADMIN_USERNAME:-admin}
+      DOLI_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-8421}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/documents
+    - ${APP}:/var/www/html
+    deploy:
+      replicas: 1

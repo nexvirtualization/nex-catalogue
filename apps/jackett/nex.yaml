@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/getumbrel/umbrel-apps/blob/HEAD/jackett/docker-compose.yml
+x-nex:
+  name: Jackett
+  summary: Exposes torrent tracker results through an API for media automation apps
+  category: media
+  description: Exposes torrent tracker results through an API for media automation apps. Back up the application
+    folders together and keep them writable by the container.
+  source: https://github.com/Jackett/Jackett
+  website: https://github.com/Jackett/Jackett
+  docs: https://github.com/Jackett/Jackett
+  primary_service: server
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Downloads folder
+      help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 9117/tcp.
+  web:
+    port: 9117
+  post_install: Configure indexers and set an admin password in settings before publishing publicly. Downloads
+    appear in the configured blackhole folder at /downloads.
+services:
+  server:
+    image: lscr.io/linuxserver/jackett:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/downloads
+    stop_grace_period: 1m
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-9117}:9117/tcp

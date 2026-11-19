@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Foundry Virtual Tabletop
+  summary: Run a Foundry VTT campaign for your group
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    A purchased Foundry VTT license is required. In your Foundry account, select the Node.js download
+    and copy its Timed URL shortly before installing. Open the app’s Primary address on TCP 30000 to
+    configure worlds, systems and modules. Use HTTPS through a reverse proxy for remote browser access
+    and built-in voice or video.
+  category: games
+  website: https://foundryvtt.com/
+  source: https://github.com/felddy/foundryvtt-docker
+  docs: https://github.com/felddy/foundryvtt-docker#readme
+  license: Commercial license required
+  architectures:
+  - amd64
+  - arm64
+  tags:
+  - tabletop
+  - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+    RELEASE_URL:
+      label: Timed Node.js download URL
+      help: Copy the Timed URL from your purchased Foundry software license.
+      type: password
+    LICENSE_KEY:
+      label: Foundry license key
+      help: Enter the key from your purchased license.
+      type: password
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate for a unique administrator password.
+      type: password
+services:
+  foundry-vtt:
+    image: ghcr.io/felddy/foundryvtt:release
+    environment:
+      FOUNDRY_RELEASE_URL: ${RELEASE_URL}
+      FOUNDRY_LICENSE_KEY: ${LICENSE_KEY}
+      FOUNDRY_ADMIN_KEY: ${ADMIN_PASSWORD}
+    expose:
+    - 30000/tcp
+    volumes:
+    - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

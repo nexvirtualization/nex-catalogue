@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: imagor
+  summary: Fast, secure image processing server and Go library built on libvips, with on-demand resizing, cropping,
+  description: Fast, secure image processing server and Go library built on libvips, with on-demand resizing,
+    cropping, filtering, format conversion and image composition, signed URLs and streaming pipelines for high-concurrency
+    throughput.
+  category: media
+  source: https://github.com/cshum/imagor
+  website: https://github.com/cshum/imagor
+  docs: https://github.com/cshum/imagor#docker
+  primary_service: imagor
+  options:
+    SIGNING_SECRET:
+      label: Signing secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 8000/tcp port
+      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Use the configured secret to sign requests. Use HTTPS to reach the image transformation endpoint.
+services:
+  imagor:
+    image: docker.io/shumc/imagor:latest
+    deploy:
+      replicas: 1
+    environment:
+      IMAGOR_SECRET: ${SIGNING_SECRET}
+      IMAGOR_UNSAFE: 'false'
+    ports:
+    - ${PORT:-19994}:8000/tcp

@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: grocy
+  summary: Track household stock, shopping and chores
+  description: Sign in with the default admin account on a trusted network and change its password immediately.
+  category: productivity
+  website: https://github.com/grocy/grocy
+  source: https://github.com/grocy/grocy
+  docs: https://docs.linuxserver.io/images/docker-grocy/
+  primary_service: grocy
+  scalable: false
+  license: MIT
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Grocy data
+      help: Grocy configuration, SQLite database and uploaded files.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  grocy:
+    image: lscr.io/linuxserver/grocy:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

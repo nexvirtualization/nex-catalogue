@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Yarr
+  summary: Read and organize RSS feeds from one place
+  description: Open the Yarr reader from a trusted endpoint. Use the configured credentials and HTTPS
+    for remote access.
+  category: reading
+  website: https://github.com/nkanaev/yarr
+  source: https://github.com/nkanaev/yarr
+  docs: https://github.com/nkanaev/yarr
+  primary_service: yarr
+  scalable: false
+  license: MIT
+  web:
+    port: 7070
+  options:
+    USERNAME:
+      label: Reader username
+      help: Username for first sign-in.
+    PASSWORD:
+      label: Reader password
+      type: password
+      help: Use Nex Generate.
+    DATA:
+      label: Feeds and reading history
+      help: Keep feeds and reading history in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7070.
+services:
+  yarr:
+    image: ghcr.io/nkanaev/yarr:latest
+    environment:
+      YARR_ADDR: 0.0.0.0:7070
+      YARR_DB: /data/yarr.db
+      YARR_AUTH: ${USERNAME:-admin}:${PASSWORD}
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-7070}:7070/tcp
+    deploy:
+      replicas: 1

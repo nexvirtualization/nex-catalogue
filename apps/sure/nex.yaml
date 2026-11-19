@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sure
+  summary: Track personal finances and transactions
+  description: Provision PostgreSQL and Redis. Keep web and worker on one host or shared storage. Create
+    the first user and protect your financial data with HTTPS.
+  category: finance
+  website: https://github.com/we-promise/sure
+  source: https://github.com/we-promise/sure
+  docs: https://github.com/we-promise/sure#self-hosting
+  primary_service: sure
+  post_install: Provision PostgreSQL and Redis. Keep web and worker on one host or shared storage. Create
+    the first user and protect your financial data with HTTPS.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3000
+  options:
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_URL:
+      label: Redis url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+    DATA:
+      label: Financial records and attachments
+      help: Managed directory mounted at /rails/storage. Choose storage writable by the application.
+services:
+  sure:
+    image: ghcr.io/we-promise/sure:latest
+    ports:
+    - ${PORT:-23600}:3000/tcp
+    volumes:
+    - ${DATA}:/rails/storage
+    environment:
+      SELF_HOSTED: 'true'
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_NAME:-sure}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: ${REDIS_URL}
+    deploy:
+      replicas: 1
+  worker:
+    image: ghcr.io/we-promise/sure:latest
+    environment:
+      SELF_HOSTED: 'true'
+      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      POSTGRES_DB: ${DB_NAME:-sure}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: ${REDIS_URL}
+    deploy:
+      replicas: 1
+    command:
+    - bundle
+    - exec
+    - sidekiq
+    volumes:
+    - ${DATA}:/rails/storage

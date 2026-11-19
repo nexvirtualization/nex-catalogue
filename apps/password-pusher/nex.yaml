@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Password Pusher
+  summary: Share passwords and messages via expiring links
+  description: Single-node Password Pusher with persistent SQLite. Put an HTTPS reverse proxy in front
+    of the app and share links using that address. Keep the data folder and its generated secrets together
+    through upgrades.
+  category: security
+  website: https://pwpush.com
+  source: https://github.com/pglombardo/PasswordPusher
+  docs: https://docs.pwpush.com/docs/installation/
+  scalable: false
+  primary_service: password-pusher
+  architectures:
+  - amd64
+  web:
+    service: password-pusher
+    scheme: http
+    port: 5100
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5100.
+    DATA:
+      label: Password Pusher state
+      help: Select This host. Holds the SQLite database, generated keys and local uploads. Include this
+        folder in a stopped Nex backup.
+services:
+  password-pusher:
+    image: pglombardo/pwpush:latest
+    environment:
+      HTTP_PORT: '5100'
+      PWP__FILES__STORAGE: local
+    ports:
+    - ${PORT:-5100}:5100/tcp
+    volumes:
+    - ${DATA}:/opt/PasswordPusher/storage
+    deploy:
+      replicas: 1

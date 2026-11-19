@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ebook2audiobook
+  summary: Convert ebook files to narrated audio with local CPU models
+  description: Keep this processing interface on a trusted network. Import ebooks into the source folder
+    and keep room for model downloads, temporary conversion files and generated audio.
+  category: media
+  website: https://github.com/DrewThomasson/ebook2audiobook
+  source: https://github.com/DrewThomasson/ebook2audiobook
+  docs: https://github.com/DrewThomasson/ebook2audiobook
+  primary_service: ebook2audiobook
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 7860
+  options:
+    EBOOKS:
+      label: Source ebooks
+      help: Keep source ebooks in this managed folder between restarts.
+    AUDIO:
+      label: Generated audiobooks
+      help: Keep generated audiobooks in this managed folder between restarts.
+    MODELS:
+      label: TTS models
+      help: Keep tts models in this managed folder between restarts.
+    VOICES:
+      label: Voice assets
+      help: Keep voice assets in this managed folder between restarts.
+    TEMP:
+      label: Conversion workspace
+      help: Keep conversion workspace in this managed folder between restarts.
+    ENGINES:
+      label: TTS engine dependencies
+      help: Keep tts engine dependencies in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 7860.
+services:
+  ebook2audiobook:
+    image: docker.io/athomasson2/ebook2audiobook:cpu
+    volumes:
+    - ${EBOOKS}:/app/ebooks
+    - ${AUDIO}:/app/audiobooks
+    - ${MODELS}:/app/models
+    - ${VOICES}:/app/voices
+    - ${TEMP}:/app/tmp
+    - ${ENGINES}:/app/lib/classes/tts_engines/venvs
+    ports:
+    - ${PORT:-7860}:7860/tcp
+    deploy:
+      replicas: 1

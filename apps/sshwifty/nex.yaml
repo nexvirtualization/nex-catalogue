@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sshwifty
+  summary: Connect to existing SSH servers from a web browser
+  description: Use the shared password to access the browser connector, then connect to systems you are
+    authorized to use. Use HTTPS through a trusted reverse proxy for remote sessions.
+  category: networking
+  website: https://github.com/nirui/sshwifty
+  source: https://github.com/nirui/sshwifty
+  docs: https://github.com/nirui/sshwifty#readme
+  scalable: false
+  primary_service: sshwifty
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: sshwifty
+    scheme: http
+    port: 8182
+  options:
+    APP_PASSWORD:
+      label: Browser session password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8182.
+services:
+  sshwifty:
+    image: niruix/sshwifty:latest
+    environment:
+      SSHWIFTY_SHAREDKEY: ${APP_PASSWORD}
+    ports:
+    - ${PORT:-8182}:8182/tcp
+    deploy:
+      replicas: 1

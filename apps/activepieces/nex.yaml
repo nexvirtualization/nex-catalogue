@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Activepieces
+  summary: Create workflow automations with Activepieces
+  description: Provision PostgreSQL and Redis. Keep workflow editing available to trusted operators and finish
+    first-user setup.
+  category: development
+  website: https://www.activepieces.com
+  source: https://github.com/activepieces/activepieces
+  docs: https://www.activepieces.com/docs/install/options/docker-compose
+  primary_service: activepieces
+  post_install: Provision PostgreSQL and Redis. Keep workflow editing available to trusted operators and
+    finish first-user setup.
+  license: MIT License for Community Edition; commercial license for Enterprise features
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    SIGNING_SECRET:
+      label: Signing secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+services:
+  activepieces:
+    image: ghcr.io/activepieces/activepieces:latest
+    ports:
+    - ${PORT:-23571}:80/tcp
+    environment:
+      AP_FRONTEND_URL: ${PUBLIC_URL}
+      AP_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      AP_JWT_SECRET: ${SIGNING_SECRET}
+      AP_POSTGRES_HOST: ${DB_HOST}
+      AP_POSTGRES_DATABASE: ${DB_NAME:-activepieces}
+      AP_POSTGRES_PORT: ${DB_PORT:-5432}
+      AP_POSTGRES_USERNAME: ${DB_USER}
+      AP_POSTGRES_PASSWORD: ${DB_PASSWORD}
+      AP_REDIS_HOST: ${REDIS_HOST}
+      AP_REDIS_PORT: ${REDIS_PORT:-6379}
+      AP_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      AP_TELEMETRY_ENABLED: 'false'
+    deploy:
+      replicas: 1

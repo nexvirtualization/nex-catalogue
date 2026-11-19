@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Metabase
+  summary: Easy way for everyone in your company to ask questions and learn from data
+  description: Easy way for everyone in your company to ask questions and learn from data.
+  category: development
+  source: https://github.com/metabase/metabase
+  website: https://metabase.com/
+  docs: https://www.metabase.com/docs/latest/installation-and-operation/running-metabase-on-docker
+  primary_service: metabase
+  options:
+    DB_HOST:
+      label: Db host
+      help: Use the database app’s Nex connection name on the shared application network.
+    DB_PORT:
+      label: Db port
+    DB_NAME:
+      label: Db name
+    DB_USER:
+      label: Db user
+    DB_PASSWORD:
+      label: Db password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    ENCRYPTION_KEY:
+      label: Encryption key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 3000/tcp port
+      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a PostgreSQL metadata database with its own role. Finish the installer, then connect
+    your analytics data source. Back up the metadata database and encryption key.
+  web:
+    port: 3000
+services:
+  metabase:
+    image: docker.io/metabase/metabase:latest
+    deploy:
+      replicas: 1
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_HOST: ${DB_HOST}
+      MB_DB_PORT: ${DB_PORT:-5432}
+      MB_DB_DBNAME: ${DB_NAME:-metabase}
+      MB_DB_USER: ${DB_USER}
+      MB_DB_PASS: ${DB_PASSWORD}
+      MB_ENCRYPTION_SECRET_KEY: ${ENCRYPTION_KEY}
+    ports:
+    - ${PORT:-19806}:3000/tcp

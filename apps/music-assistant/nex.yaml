@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Music Assistant
+  summary: Music library controller for combining local libraries, streaming services, players, and multi-room
+    playback
+  description: Music library controller for combining local libraries, streaming services, players, and multi-room
+    playback.
+  category: media
+  source: https://github.com/music-assistant/server
+  website: https://music-assistant.io/
+  docs: https://www.music-assistant.io/installation/
+  primary_service: music-assistant
+  options:
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /data.
+    MEDIA:
+      label: Media folder
+      help: Choose the Nex-managed folder mounted at /media.
+    PORT:
+      label: Published 8095/tcp port
+      help: Host port for application listener 8095/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Complete setup and configure a media provider. Use a client-reachable primary network and manually
+    addressed players when multicast discovery is unavailable.
+  web:
+    port: 8095
+services:
+  music-assistant:
+    image: ghcr.io/music-assistant/server:2.10.12
+    deploy:
+      replicas: 1
+    environment:
+      XDG_CACHE_HOME: /data/.cache
+    volumes:
+    - ${DATA}:/data
+    - ${MEDIA}:/media:ro
+    ports:
+    - ${PORT:-19586}:8095/tcp

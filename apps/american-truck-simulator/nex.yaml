@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: American Truck Simulator
+  summary: Host a dedicated American Truck Simulator Convoy
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First startup downloads the server from Steam and uses the image’s default Convoy package. Search
+    the Convoy browser with the session search ID shown in the server logs. Upload a matching client
+    export to the managed folder for a custom Convoy package. Make a stopped backup before applying
+    game updates.
+  category: games
+  website: https://store.steampowered.com/app/270880/
+  source: https://github.com/LsHallo/ets2-dedicated-convoy-server
+  docs: https://github.com/LsHallo/ets2-dedicated-convoy-server#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - simulation
+    - convoy
+    - steam
+  options:
+    SERVER_NAME:
+      label: Convoy name
+      help: Name shown in the Convoy browser.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  american-truck-simulator:
+    image: ghcr.io/lshallo/ats-convoy-server:latest
+    environment:
+      ATS_SERVER_NAME: ${SERVER_NAME:-Nex Convoy}
+      ATS_SERVER_PASSWORD: ${JOIN_PASSWORD}
+      ATS_SERVER_UPDATE_ON_START: 'true'
+    expose:
+      - 27015/tcp
+      - 27015/udp
+      - 27016/tcp
+      - 27016/udp
+    volumes:
+      - ${DATA}:/home/steam/.local/share/American Truck Simulator
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

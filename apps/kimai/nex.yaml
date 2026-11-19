@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kimai
+  summary: Track staff time and billing in Kimai
+  description: Provision a MySQL database and supply its complete connection URL. Finish setup using the
+    configured administrator.
+  category: productivity
+  website: https://www.kimai.org/
+  source: https://github.com/kimai/kimai
+  docs: https://www.kimai.org/documentation/docker.html
+  primary_service: kimai
+  post_install: Provision a MySQL database and supply its complete connection URL. Finish setup using the
+    configured administrator.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8001
+  options:
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    APP_SECRET:
+      label: App secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    TRUSTED_HOSTS:
+      label: Trusted hosts
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8001 inside Nex.
+    DATA:
+      label: Kimai data
+      help: Managed directory mounted at /opt/kimai/var/data. Choose storage writable by the application.
+services:
+  kimai:
+    image: docker.io/kimai/kimai2:2.72.0
+    ports:
+    - ${PORT:-23479}:8001/tcp
+    volumes:
+    - ${DATA}:/opt/kimai/var/data
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      APP_SECRET: ${APP_SECRET}
+      ADMINMAIL: ${ADMIN_EMAIL}
+      ADMINPASS: ${ADMIN_PASSWORD}
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS}
+    deploy:
+      replicas: 1

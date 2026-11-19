@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Openfire
+  summary: Host an XMPP messaging server
+  description: Complete the first setup through the administration interface on a private network. Configure
+    the XMPP domain, database and administrator. Add a trusted certificate and connect clients to the
+    application DNS address on port 5222.
+  category: communication
+  website: https://www.igniterealtime.org/projects/openfire/
+  source: https://github.com/igniterealtime/Openfire
+  docs: https://github.com/igniterealtime/Openfire/blob/main/Dockerfile
+  scalable: false
+  primary_service: openfire
+  architectures:
+  - amd64
+  web:
+    service: openfire
+    scheme: http
+    port: 9090
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9090.
+    DATA:
+      label: Openfire data
+      help: Select This host. Stores configuration, embedded database, security files and plugins. Include
+        this folder in a stopped Nex backup.
+    LOGS:
+      label: Openfire logs
+      help: Select This host. Stores diagnostics and transaction logs. Include this folder in a stopped
+        Nex backup.
+services:
+  openfire:
+    image: ghcr.io/igniterealtime/openfire:latest
+    ports:
+    - ${PORT:-9090}:9090/tcp
+    expose:
+    - 5222/tcp
+    - 5269/tcp
+    volumes:
+    - ${DATA}:/var/lib/openfire
+    - ${LOGS}:/var/log/openfire
+    deploy:
+      replicas: 1

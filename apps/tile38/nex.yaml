@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tile38
+  summary: Query changing geospatial data and geofences
+  description: Connect compatible geospatial clients on a trusted network. Configure access controls
+    before sharing the service endpoint.
+  category: development
+  website: https://github.com/tidwall/tile38
+  source: https://github.com/tidwall/tile38
+  docs: https://github.com/tidwall/tile38
+  primary_service: tile38
+  scalable: false
+  license: MIT
+  options:
+    DATA:
+      label: Geospatial data and logs
+      help: Keep geospatial data and logs in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 9851.
+services:
+  tile38:
+    image: docker.io/tile38/tile38:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-9851}:9851/tcp
+    deploy:
+      replicas: 1

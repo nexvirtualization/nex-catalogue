@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: HandBrake
+  summary: Video transcoder with browser access through a community Docker container
+  description: Video transcoder with browser access through a community Docker container.
+  category: media
+  source: https://github.com/HandBrake/HandBrake
+  website: https://handbrake.fr/
+  docs: https://github.com/jlesage/docker-handbrake#quick-start
+  primary_service: handbrake
+  options:
+    UID:
+      label: Uid
+    GID:
+      label: Gid
+    TZ:
+      label: Tz
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    SOURCE:
+      label: Source folder
+      help: Choose the Nex-managed folder mounted at /storage.
+    OUTPUT:
+      label: Output folder
+      help: Choose the Nex-managed folder mounted at /output.
+    WATCH:
+      label: Watch folder
+      help: Choose the Nex-managed folder mounted at /watch.
+    PORT:
+      label: Published 5800/tcp port
+      help: Host port for application listener 5800/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Choose source and output volumes then open the browser interface. Keep host publishing disabled
+    or provide authenticated HTTPS for access outside a trusted network.
+  web:
+    port: 5800
+services:
+  handbrake:
+    image: docker.io/jlesage/handbrake:latest
+    deploy:
+      replicas: 1
+    environment:
+      USER_ID: ${UID:-1000}
+      GROUP_ID: ${GID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    volumes:
+    - ${CONFIG}:/config
+    - ${SOURCE}:/storage
+    - ${OUTPUT}:/output
+    - ${WATCH}:/watch
+    ports:
+    - ${PORT:-19786}:5800/tcp

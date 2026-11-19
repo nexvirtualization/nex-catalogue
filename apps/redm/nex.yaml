@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RedM
+  summary: Host a Red Dead Redemption 2 multiplayer roleplay server
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Create a Cfx.re server key before installing. The container installs the official Cfx.re server
+    artifacts on first boot and checks for updates on restart. Join at the app’s Primary address on
+    port 30120. Edit the managed server.cfg to install your preferred resources. Make a stopped backup
+    before applying game updates.
+  category: games
+  website: https://redm.gg/
+  source: https://github.com/ich777/docker-redm-server
+  docs: https://docs.fivem.net/docs/server-manual/setting-up-a-server/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - multiplayer
+  options:
+    SERVER_KEY:
+      label: Cfx.re server key
+      type: password
+      help: Create a server key in the Cfx.re Portal and paste it here.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  redm:
+    image: ghcr.io/ich777/redmserver:latest
+    environment:
+      SERVER_KEY: ${SERVER_KEY}
+      SRV_NAME: Nex-RedM
+      GAME_CONFIG: server.cfg
+      ENABLE_WEBCONSOLE: 'false'
+    expose:
+      - 30120/tcp
+      - 30120/udp
+      - 30110/tcp
+      - 30110/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

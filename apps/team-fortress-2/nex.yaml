@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: "Team Fortress 2"
+  summary: "Host class-based Team Fortress 2 matches"
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Select a registered primary
+    network that players can reach. In the in-game developer console use connect APP-IP:27015.
+    Keep the app on a trusted player network. First start downloads the server with SteamCMD,
+    and a Nex restart checks for updates. Back up the stopped server before updating. Treat
+    backups and server logs as private because they can contain Steam server credentials.
+  category: games
+  website: https://store.steampowered.com/app/440/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/tf2server/
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - multiplayer
+  options:
+    STEAM_TOKEN:
+      label: Steam game server login token
+      type: password
+      help: Create a separate 32-character token for this server with Steam app ID 440.
+    DATA:
+      label: Server data
+      help: Keeps the installed server and configuration. Include this folder in stopped backups.
+services:
+  team-fortress-2:
+    image: ghcr.io/gameservermanagers/gameserver:tf2
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        [[ "$$STEAM_TOKEN" =~ ^[[:xdigit:]]{32}$$ ]] || { echo 'Enter a valid Steam game server login token' >&2; exit 1; }
+        install -d /data/config-lgsm/tf2server
+        umask 077
+        printf 'gslt="%s"\n' "$$STEAM_TOKEN" > /data/config-lgsm/tf2server/secrets-tf2server.cfg
+        umask 022
+        exec /bin/bash /app/entrypoint.sh
+    environment:
+      STEAM_TOKEN: ${STEAM_TOKEN}
+      UPDATE_CHECK: "0"
+      UPDATE_ON_START: "true"
+    expose:
+      - "27015/udp"
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

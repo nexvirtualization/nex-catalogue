@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Shlink
+  summary: Manage short URLs through an authenticated API
+  description: Set the short hostname and put the API and redirects behind HTTPS. Import the initial API
+    key into a Shlink client. The Shlink API and redirects can be used without a separate web dashboard.
+  category: tools
+  website: https://shlink.io
+  source: https://github.com/shlinkio/shlink
+  docs: https://shlink.io/documentation/install-docker-image/
+  scalable: false
+  primary_service: shlink
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: shlink
+    scheme: http
+    port: 8080
+  options:
+    SHORT_DOMAIN:
+      label: Short Domain
+      help: DNS name for the short links. Enter a hostname without a scheme.
+    API_KEY:
+      label: Initial Shlink API key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8080.
+    DATA:
+      label: URL database
+      help: Select This host. Stores the SQLite database and locally generated runtime state. Include
+        this folder in a stopped Nex backup.
+services:
+  shlink:
+    image: shlinkio/shlink:latest
+    environment:
+      DEFAULT_DOMAIN: ${SHORT_DOMAIN}
+      IS_HTTPS_ENABLED: 'true'
+      INITIAL_API_KEY: ${API_KEY}
+    ports:
+    - ${PORT:-8414}:8080/tcp
+    volumes:
+    - ${DATA}:/etc/shlink/data
+    deploy:
+      replicas: 1

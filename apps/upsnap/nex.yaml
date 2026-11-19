@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: UpSnap
+  summary: Wake network devices and check their status
+  description: Select a registered client-reachable Primary network on the same layer-2 subnet as devices
+    to wake. Sign in to the UpSnap setup interface and add known devices with their MAC and IP addresses.
+    Broadcasts are confined to the attached LAN.
+  category: networking
+  website: https://github.com/seriousm4x/UpSnap
+  source: https://github.com/seriousm4x/UpSnap
+  docs: https://github.com/seriousm4x/UpSnap#readme
+  scalable: false
+  primary_service: upsnap
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: upsnap
+    scheme: http
+    port: 8090
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for Wake-on-LAN and status events.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8090.
+    DATA:
+      label: Device configuration
+      help: Select This host. Stores device addresses, schedules and accounts. Include this folder in
+        a stopped Nex backup.
+services:
+  upsnap:
+    image: seriousm4x/upsnap:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      UPSNAP_PING_PRIVILEGED: 'false'
+    ports:
+    - ${PORT:-8779}:8090/tcp
+    volumes:
+    - ${DATA}:/app/pb_data
+    deploy:
+      replicas: 1

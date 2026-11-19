@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'Operation: Harsh Doorstop'
+  summary: Host tactical multiplayer matches
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join on UDP 7777 or use the game browser with UDP 27005. Keep the RCON listener on TCP 7778 restricted
+    to administrators. First boot downloads the server through SteamCMD. Restarts check for updates.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/736590/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/ohdserver/
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - steam
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  operation-harsh-doorstop:
+    image: ghcr.io/gameservermanagers/gameserver:ohd
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 7777/udp
+      - 27005/udp
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

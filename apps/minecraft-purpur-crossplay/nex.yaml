@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Purpur Crossplay
+  summary: Play together from Java and Bedrock Edition
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Bedrock players use
+    the same address on port 19132. NetherNet uses TCP and UDP. Geyser bridges Bedrock connections
+    and Floodgate signs in Xbox-authenticated players. Restrict the network to your players and
+    follow Floodgate’s instructions if you enable an in-game allowlist. Make a stopped backup before
+    applying updates.
+  category: games
+  website: https://purpurmc.org/
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/misc/examples/#bedrock-compatible-server
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-purpur-crossplay:
+    image: ghcr.io/itzg/minecraft-server:latest
+    environment:
+      EULA: ${EULA}
+      TYPE: PURPUR
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      VERSION: '26.3'
+      PLUGINS: |
+        https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
+        https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+      JVM_OPTS: -DgeyserUdpPort=19132
+    expose:
+      - 25565/tcp
+      - 19132/tcp
+      - 19132/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

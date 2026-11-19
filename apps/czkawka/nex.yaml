@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Czkawka
+  summary: Find duplicate and unused files in selected folders
+  description: Use a trusted network or an authenticating proxy because the interface can modify files
+    in the scan folder. Choose read-only storage for inspection-only use.
+  category: tools
+  website: https://github.com/qarmin/czkawka
+  source: https://github.com/qarmin/czkawka
+  docs: https://github.com/jlesage/docker-czkawka
+  primary_service: czkawka
+  scalable: false
+  license: MIT and GPL-3.0-only; media under CC-BY-4.0
+  web:
+    port: 5800
+  options:
+    CONFIG:
+      label: Tool settings
+      help: Keep tool settings in this managed folder between restarts.
+    FILES:
+      label: Files to inspect
+      help: Keep files to inspect in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5800.
+services:
+  czkawka:
+    image: docker.io/jlesage/czkawka:latest
+    volumes:
+    - ${CONFIG}:/config
+    - ${FILES}:/storage
+    ports:
+    - ${PORT:-5800}:5800/tcp
+    deploy:
+      replicas: 1

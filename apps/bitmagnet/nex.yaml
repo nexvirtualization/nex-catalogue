@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: bitmagnet
+  summary: Index BitTorrent metadata and browse search results
+  description: Provision PostgreSQL for metadata and a Redis queue. Publish the DHT listener only where your
+    network permits the service.
+  category: downloads
+  website: https://bitmagnet.io
+  source: https://github.com/bitmagnet-io/bitmagnet
+  docs: https://bitmagnet.io/setup/
+  primary_service: bitmagnet
+  post_install: Provision PostgreSQL for metadata and a Redis queue. Publish the DHT listener only where
+    your network permits the service.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 3333
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_ADDRESS:
+      label: Redis address
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 3333 inside Nex.
+    DHT_UDP_PORT:
+      label: Published DHT UDP port
+      help: Host-published port for the internal 3334/udp endpoint.
+services:
+  bitmagnet:
+    image: ghcr.io/bitmagnet-io/bitmagnet:v0.10.1
+    ports:
+    - ${PORT:-23484}:3333/tcp
+    - ${DHT_UDP_PORT:-24484}:3334/udp
+    environment:
+      POSTGRES_HOST: ${DB_HOST}
+      POSTGRES_NAME: ${DB_NAME:-bitmagnet}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_ADDR: ${REDIS_ADDRESS}
+    command:
+    - worker
+    - run
+    - --keys=http_server
+    - --keys=queue_server
+    - --keys=dht_crawler
+    deploy:
+      replicas: 1

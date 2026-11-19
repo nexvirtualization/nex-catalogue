@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Bugsink
+  summary: Collect and inspect application errors
+  description: Provision a compatible PostgreSQL database. Use the client-facing base URL and configure
+    error reporters with your project DSN after signing in.
+  category: monitoring
+  website: https://www.bugsink.com/
+  source: https://github.com/bugsink/bugsink
+  docs: https://www.bugsink.com/docs/docker-install/
+  scalable: false
+  primary_service: bugsink
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: bugsink
+    scheme: http
+    port: 8000
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Email address for initial application sign-in.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    APP_SECRET:
+      label: Django signing secret
+      help: Enter a stable random secret with at least 50 characters.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+services:
+  bugsink:
+    image: bugsink/bugsink:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY: ${APP_SECRET}
+      CREATE_SUPERUSER: ${ADMIN_EMAIL}:${ADMIN_PASSWORD}
+      PORT: '8000'
+      BEHIND_HTTPS_PROXY: 'true'
+      BASE_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-8438}:8000/tcp
+    deploy:
+      replicas: 1

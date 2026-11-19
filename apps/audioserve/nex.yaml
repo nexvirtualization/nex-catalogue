@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Audioserve
+  summary: Stream audiobooks from your own organized folders
+  description: Select the audiobook library and sign in with the configured shared secret. Keep the
+    data folder in stopped backups.
+  category: media
+  website: https://github.com/izderadicka/audioserve
+  source: https://github.com/izderadicka/audioserve
+  docs: https://github.com/izderadicka/audioserve
+  primary_service: audioserve
+  scalable: false
+  license: MIT
+  architectures:
+  - amd64
+  web:
+    port: 3000
+  options:
+    SHARED_SECRET:
+      label: Audiobook shared secret
+      type: password
+      help: Use Nex Generate. Configure HTTPS for client access.
+    LIBRARY:
+      label: Audiobooks
+      help: Keep audiobooks in this managed folder between restarts.
+    DATA:
+      label: Playback state and cache
+      help: Keep playback state and cache in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  audioserve:
+    image: docker.io/izderadicka/audioserve:latest
+    command:
+    - /audiobooks
+    environment:
+      AUDIOSERVE_SHARED_SECRET: ${SHARED_SECRET}
+    volumes:
+    - ${LIBRARY}:/audiobooks
+    - ${DATA}:/home/audioserve/.audioserve
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Langflow
+  summary: Build and test model workflows visually
+  description: Set the initial superuser credentials and restrict remote access to users permitted to
+    build and run workflows. Configure model credentials after setup. The package keeps the configuration
+    and SQLite database on the selected host.
+  category: ai
+  website: https://www.langflow.org/
+  source: https://github.com/langflow-ai/langflow
+  docs: https://docs.langflow.org/deployment-docker
+  scalable: false
+  primary_service: langflow
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: langflow
+    scheme: http
+    port: 7860
+  options:
+    ADMIN_USERNAME:
+      label: Initial administrator name
+      help: Account created on first initialization.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7860.
+    DATA:
+      label: Langflow state
+      help: Select This host. Stores the local application database, data and settings. Include this folder
+        in a stopped Nex backup.
+services:
+  langflow:
+    image: langflowai/langflow:latest
+    environment:
+      LANGFLOW_CONFIG_DIR: /app/config
+      LANGFLOW_AUTO_LOGIN: 'false'
+      LANGFLOW_SUPERUSER: ${ADMIN_USERNAME:-admin}
+      LANGFLOW_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-8401}:7860/tcp
+    volumes:
+    - ${DATA}:/app/config
+    deploy:
+      replicas: 1

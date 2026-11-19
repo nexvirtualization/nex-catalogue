@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Frigate
+  summary: Record network cameras with local object detection
+  description: Use HTTPS on port 8971 and retrieve the initial password from the application log. Prepare
+    a config.yaml with camera streams. Bind the unauthenticated internal listener to loopback. This profile
+    uses CPU decoding and detection.
+  category: home-automation
+  website: https://frigate.video/
+  source: https://github.com/blakeblackshear/frigate
+  docs: https://docs.frigate.video/frigate/installation/
+  scalable: false
+  primary_service: frigate
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: frigate
+    scheme: https
+    port: 8971
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for video recordings.
+    RTSP_PASSWORD:
+      label: RTSP stream password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8971.
+    DATA:
+      label: Frigate configuration
+      help: Select This host. Stores config.yaml, local database and UI settings. Include this folder
+        in a stopped Nex backup.
+    RECORDINGS:
+      label: Camera recordings
+      help: Select This host. Stores snapshots and recordings. Include this folder in a stopped Nex backup.
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      FRIGATE_RTSP_PASSWORD: ${RTSP_PASSWORD}
+    ports:
+    - ${PORT:-8971}:8971/tcp
+    expose:
+    - 8554/tcp
+    - 8555/tcp
+    - 8555/udp
+    volumes:
+    - ${DATA}:/config
+    - ${RECORDINGS}:/media/frigate
+    tmpfs:
+    - /dev/shm:size=536870912
+    - /tmp/cache:size=1000000000
+    stop_grace_period: 30s
+    deploy:
+      replicas: 1

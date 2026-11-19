@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BookLogr
+  summary: Track books, reading progress and notes
+  description: Runs the BookLogr web interface and SQLite API behind a shared address. Use the same
+    public URL for the browser and the application's Web address option.
+  category: productivity
+  website: https://github.com/Mozzo1000/booklogr
+  source: https://github.com/Mozzo1000/booklogr
+  docs: https://github.com/Mozzo1000/booklogr/wiki/Install-with-Docker
+  license: Apache-2.0
+  architectures: [amd64, arm64]
+  primary_service: booklogr
+  web:
+    port: 80
+  options:
+    WEB_ADDRESS:
+      label: Web address
+      help: Required absolute browser URL, including scheme and port, without a path. Use the HTTPS
+        reverse-proxy address when exposing the app publicly.
+    AUTH_SECRET:
+      label: Signing secret
+      help: Enter a long, randomly generated value for session token signing. Keep it stable.
+      type: password
+    OWNER_EMAIL:
+      label: Initial account email
+      help: Email of the first local account. Public registration is disabled.
+    OWNER_PASSWORD:
+      label: Initial account password
+      help: Choose a strong unique password for the first local account.
+      type: password
+    DATA:
+      label: Database
+      help: Use a writable folder on This host for the SQLite database. Back up this folder.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when host publishing is enabled.
+services:
+  booklogr:
+    image: docker.io/library/caddy:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        caddy run --config - --adapter caddyfile <<'CADDYFILE'
+        {
+          auto_https off
+        }
+        :80 {
+          @api path /v1 /v1/*
+          reverse_proxy @api backend:5000
+          reverse_proxy web:80
+        }
+        CADDYFILE
+    ports:
+      - ${PORT:-23389}:80/tcp
+    deploy:
+      replicas: 1
+  web:
+    image: docker.io/mozzo/booklogr-web:v1.12.0
+    environment:
+      BL_API_ENDPOINT: ${WEB_ADDRESS}
+      BL_ALLOW_REGISTRATION: "false"
+      BL_DEMO_MODE: "false"
+    deploy:
+      replicas: 1
+  backend:
+    image: docker.io/mozzo/booklogr:v1.12.0
+    environment:
+      DATABASE_URL: sqlite:///books.db
+      AUTH_SECRET_KEY: ${AUTH_SECRET}
+      AUTH_ALLOW_REGISTRATION: "False"
+      AUTH_REQUIRE_VERIFICATION: "False"
+      AUTH_DEFAULT_USER: ${OWNER_EMAIL}
+      AUTH_DEFAULT_PASSWORD: ${OWNER_PASSWORD}
+    volumes:
+      - ${DATA}:/app/instance
+    deploy:
+      replicas: 1

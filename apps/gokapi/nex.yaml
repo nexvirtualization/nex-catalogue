@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gokapi
+  summary: Share files with expiring links and download limits
+  description: Complete the first-run wizard from a trusted network and set your public download URL.
+    Use HTTPS for public links, and set upload limits appropriate to your storage.
+  category: tools
+  website: https://github.com/Forceu/gokapi
+  source: https://github.com/Forceu/gokapi
+  docs: https://gokapi.readthedocs.io/en/latest/
+  scalable: false
+  primary_service: gokapi
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: gokapi
+    scheme: http
+    port: 53842
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 53842.
+    DATA:
+      label: Shared files
+      help: Select This host. Holds locally uploaded files. Include this folder in a stopped Nex backup.
+    CONFIG:
+      label: Share settings
+      help: Select This host. Holds the application database and configuration. Include this folder in
+        a stopped Nex backup.
+services:
+  gokapi:
+    image: f0rc3/gokapi:latest
+    ports:
+    - ${PORT:-53842}:53842/tcp
+    volumes:
+    - ${DATA}:/app/data
+    - ${CONFIG}:/app/config
+    deploy:
+      replicas: 1

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Left 4 Dead 2
+  summary: Run a co-op campaign server for your group
+  description: >-
+    Use an x86-64 host and choose This host for Server data. Select a registered primary network
+    that players can reach. In the in-game developer console use connect APP-IP:27015. Keep
+    the app on a trusted player network. On first start SteamCMD downloads the server, and a Nex
+    restart checks for game updates. Take a stopped backup before updating.
+  category: games
+  website: https://store.steampowered.com/app/550/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/l4d2server/
+  license: Proprietary game server
+  architectures: [amd64]
+  tags:
+    - steam
+    - co-op
+  options:
+    DATA:
+      label: Server data
+      help: Keeps the installed server and configuration. Include this folder in stopped backups.
+services:
+  left-4-dead-2:
+    image: ghcr.io/gameservermanagers/gameserver:l4d2
+    environment:
+      UPDATE_CHECK: "0"
+      UPDATE_ON_START: "true"
+    expose:
+      - "27015/udp"
+    volumes:
+      - ${DATA}:/data
+    healthcheck:
+      start_period: 25m
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

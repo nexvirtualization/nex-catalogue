@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Flyimg
+  summary: Resize and encode images through an HTTP service
+  description: Transform and optimize images on demand. This package requires a prepared Flyimg parameters.yml
+    so you can limit allowed image sources before the HTTP service starts.
+  category: development
+  website: https://flyimg.io
+  source: https://github.com/flyimg/flyimg
+  docs: https://docs.flyimg.io/install/
+  license: AGPL-3.0
+  primary_service: flyimg
+  architectures:
+  - amd64
+  - arm64
+  post_install: Put a complete Flyimg parameters.yml in the Configuration folder. Enable restricted_domains
+    and set whitelist_domains with hostnames you control. Keep the service accessible only to trusted callers.
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Prepared configuration
+      help: Read-only folder containing the upstream parameters.yml. Make the file readable by the container.
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  flyimg:
+    image: docker.io/flyimg/flyimg:latest
+    ports:
+    - ${PORT:-18121}:80/tcp
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - test -s /nex-config/parameters.yml; cp /nex-config/parameters.yml /var/www/html/config/parameters.yml;
+      exec docker-entrypoint /init
+    deploy:
+      replicas: 1

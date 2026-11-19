@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: BTCPay Server
+  summary: Process Bitcoin payments with a self-hosted checkout
+  description: Prepare PostgreSQL and a private NBXplorer service connected to Bitcoin Core on the selected
+    network. Mount the NBXplorer cookie, restrict direct access to the web port, and terminate HTTPS at a
+    trusted proxy. Verify chain synchronization before accepting payments.
+  category: finance
+  website: https://btcpayserver.org/
+  source: https://github.com/btcpayserver/btcpayserver
+  docs: https://github.com/btcpayserver/btcpayserver-docker/blob/master/docker-compose-generator/docker-fragments/btcpayserver.yml
+  primary_service: btcpay-server
+  post_install: Prepare PostgreSQL and a private NBXplorer service connected to Bitcoin Core on the selected
+    network. Mount the NBXplorer cookie, restrict direct access to the web port, and terminate HTTPS at a
+    trusted proxy. Verify chain synchronization before accepting payments.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 49392
+  options:
+    POSTGRES_CONNECTION:
+      label: PostgreSQL connection string
+      help: Use the format Host=postgres;Port=5432;Username=btcpay;Password=…;Database=btcpay.
+      type: password
+    BITCOIN_NETWORK:
+      label: Bitcoin network
+      help: Enter the deployment value described in the upstream setup guide.
+    NBXPLORER_URL:
+      label: Nbxplorer url
+      help: Enter the deployment value described in the upstream setup guide.
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 49392 inside Nex.
+    DATA:
+      label: Server data
+      help: Managed directory mounted at /datadir. Choose storage writable by the application.
+    PLUGINS:
+      label: Installed plugins
+      help: Managed directory mounted at /root/.btcpayserver/Plugins. Choose storage writable by the application.
+    EXPLORER_AUTH:
+      label: NBXplorer credential directory
+      help: Managed directory containing the matching private NBXplorer .cookie file.
+services:
+  btcpay-server:
+    image: docker.io/btcpayserver/btcpayserver:2.4.6
+    ports:
+    - ${PORT:-23583}:49392/tcp
+    volumes:
+    - ${DATA}:/datadir
+    - ${PLUGINS}:/root/.btcpayserver/Plugins
+    - ${EXPLORER_AUTH}:/nbxplorer:ro
+    environment:
+      BTCPAY_POSTGRES: ${POSTGRES_CONNECTION}
+      BTCPAY_NETWORK: ${BITCOIN_NETWORK:-mainnet}
+      BTCPAY_BIND: 0.0.0.0:49392
+      BTCPAY_CHAINS: btc
+      BTCPAY_BTCEXPLORERURL: ${NBXPLORER_URL}
+      BTCPAY_BTCEXPLORERCOOKIEFILE: /nbxplorer/.cookie
+      BTCPAY_XFORWARDEDPROTO: https
+      BTCPAY_DEBUGLOG: btcpay.log
+    deploy:
+      replicas: 1

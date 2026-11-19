@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TrailBase
+  summary: Create data APIs on a SQLite application backend
+  description: Check the startup logs for the initial administrator credentials, then set your own password.
+    Keep the admin endpoint on a trusted network.
+  category: development
+  website: https://github.com/trailbaseio/trailbase
+  source: https://github.com/trailbaseio/trailbase
+  docs: https://github.com/trailbaseio/trailbase
+  primary_service: trailbase
+  scalable: false
+  license: OSL-3.0
+  web:
+    port: 4000
+  options:
+    DATA:
+      label: TrailBase depot
+      help: Database, configuration and uploaded files.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4000.
+services:
+  trailbase:
+    image: docker.io/trailbase/trailbase:latest
+    volumes:
+    - ${DATA}:/app/traildepot
+    ports:
+    - ${PORT:-4000}:4000/tcp
+    deploy:
+      replicas: 1

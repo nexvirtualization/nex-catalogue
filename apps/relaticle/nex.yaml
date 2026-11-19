@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Relaticle
+  summary: Track relationships and customer records in a shared CRM
+  description: Provision PostgreSQL and Redis before starting. Use HTTPS and configure trusted hosts
+    and sign-in policies from the CRM.
+  category: management
+  website: https://github.com/relaticle/relaticle
+  source: https://github.com/relaticle/relaticle
+  docs: https://github.com/Relaticle/relaticle
+  primary_service: relaticle
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: PostgreSQL hostname
+      help: Reachable server for CRM data.
+    DB_DATABASE:
+      label: Database name
+      help: Prepared CRM database.
+    DB_USERNAME:
+      label: Database username
+      help: Dedicated database user.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Password of that database user.
+    REDIS_HOST:
+      label: Redis hostname
+      help: Reachable Redis-compatible host.
+    APP_KEY:
+      label: Laravel application key
+      type: password
+      help: Provide a Laravel key generated using upstream tools and retain it for restore.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    DATA:
+      label: CRM files
+      help: Keep crm files in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  relaticle:
+    image: ghcr.io/relaticle/relaticle:latest
+    environment:
+      APP_ENV: production
+      DB_CONNECTION: pgsql
+      DB_PORT: '5432'
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${PUBLIC_URL}
+    volumes:
+    - ${DATA}:/var/www/html/storage/app
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Stump
+  summary: Fast comics, manga and digital book server with OPDS support
+  description: Fast comics, manga and digital book server with OPDS support.
+  category: reading
+  source: https://github.com/stumpapp/stump
+  website: https://www.stumpapp.dev
+  docs: https://www.stumpapp.dev/installation/docker
+  primary_service: stump
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    BOOKS:
+      label: Books folder
+      help: Choose the Nex-managed folder mounted at /data.
+    PORT:
+      label: Published 10801/tcp port
+      help: Host port for application listener 10801/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Complete first-run setup in the browser, add Books as a library and use a stopped backup for
+    the database in Config.
+  web:
+    port: 10801
+services:
+  stump:
+    image: docker.io/aaronleopold/stump:latest
+    deploy:
+      replicas: 1
+    environment:
+      STUMP_PORT: '10801'
+    volumes:
+    - ${CONFIG}:/config
+    - ${BOOKS}:/data:ro
+    ports:
+    - ${PORT:-19940}:10801/tcp

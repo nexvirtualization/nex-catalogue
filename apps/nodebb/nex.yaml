@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NodeBB
+  summary: Run a forum with real-time conversation
+  description: Provision a supported PostgreSQL database before installation. The web installer saves
+    the configuration and initial administrator. Use the database application name and its internal port
+    for an existing Nex database.
+  category: communication
+  website: https://nodebb.org/
+  source: https://github.com/NodeBB/NodeBB
+  docs: https://docs.nodebb.org/installing/cloud/docker/
+  scalable: false
+  primary_service: nodebb
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: nodebb
+    scheme: http
+    port: 4567
+  works_with:
+  - postgresql
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 4567.
+    DATA:
+      label: Forum configuration
+      help: Select This host. Stores config.json and the application lock file. Include this folder in
+        a stopped Nex backup.
+    UPLOADS:
+      label: Forum uploads
+      help: Select This host. Stores files uploaded by users. Include this folder in a stopped Nex backup.
+services:
+  nodebb:
+    image: ghcr.io/nodebb/nodebb:latest
+    environment:
+      NODEBB_INIT_VERB: install
+    ports:
+    - ${PORT:-4567}:4567/tcp
+    volumes:
+    - ${DATA}:/opt/config
+    - ${UPLOADS}:/usr/src/app/public/uploads
+    deploy:
+      replicas: 1

@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Terraria TShock
+  summary: Host Terraria with TShock administration and plugins
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    First boot creates a Terraria world. Use a compatible PC client and join at the app’s Primary
+    address on TCP 7777. Follow the setup instructions printed in the server logs to claim in-game
+    administration. Stop the app before adding version-matched plugins. Make a stopped backup before
+    applying game updates.
+  category: games
+  website: https://tshock.co/
+  source: https://github.com/Pryaxis/TShock
+  docs: https://github.com/Pryaxis/TShock/blob/general-devel/docs/docker.md
+  license: GPL-3.0 mod and proprietary game server
+  architectures:
+    - amd64
+    - arm64
+  tags:
+    - sandbox
+    - mods
+  options:
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Worlds
+      help: Choose This host and include this folder in stopped backups.
+    CONFIG:
+      label: TShock configuration and logs
+      help: Choose This host and include this folder in stopped backups.
+    PLUGINS:
+      label: TShock plugins
+      help: Choose This host and include this folder in stopped backups.
+services:
+  terraria-tshock:
+    image: ghcr.io/pryaxis/tshock:stable
+    expose:
+      - 7777/tcp
+    volumes:
+      - ${DATA}:/worlds
+      - ${CONFIG}:/tshock
+      - ${PLUGINS}:/plugins
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    command:
+      - -ip
+      - 0.0.0.0
+      - -port
+      - '7777'
+      - -world
+      - /worlds/World.wld
+      - -worldname
+      - World
+      - -autocreate
+      - '2'
+      - -password
+      - ${JOIN_PASSWORD}
+      - -noupnp
+      - -rest-enabled
+      - 'false'

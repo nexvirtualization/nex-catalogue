@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Shaarli
+  summary: Save, tag and share links through a lightweight web UI
+  description: Set up an administrator from a trusted network. Change visibility and registration options
+    for the desired sharing model.
+  category: reading
+  website: https://github.com/shaarli/Shaarli
+  source: https://github.com/shaarli/Shaarli
+  docs: https://github.com/shaarli/Shaarli
+  primary_service: shaarli
+  scalable: false
+  license: AGPL-3.0-only
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Bookmarks and settings
+      help: Keep bookmarks and settings in this managed folder between restarts.
+    CACHE:
+      label: Cache
+      help: Keep cache in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  shaarli:
+    image: ghcr.io/shaarli/shaarli:latest
+    volumes:
+    - ${DATA}:/var/www/shaarli/data
+    - ${CACHE}:/var/www/shaarli/cache
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

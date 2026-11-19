@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenEMR
+  summary: Run a practice records and scheduling system
+  description: Provide a dedicated OpenEMR-compatible MariaDB instance and its bootstrap administrator
+    credential. Use the generated site password when signing in for the first time. Use a trusted HTTPS
+    endpoint and protect backups of both the database and the site files.
+  category: management
+  website: https://www.open-emr.org/
+  source: https://github.com/openemr/openemr
+  docs: https://github.com/openemr/openemr/tree/master/docker/production
+  scalable: false
+  primary_service: openemr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: openemr
+    scheme: https
+    port: 443
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Db Host
+      help: Host or Nex app DNS name for your dedicated MariaDB instance.
+    DB_NAME:
+      label: Db Name
+      help: Database name provisioned by OpenEMR.
+    DB_USER:
+      label: Db User
+      help: Database account for normal OpenEMR operations.
+    ADMIN_USERNAME:
+      label: Admin Username
+      help: First OpenEMR administrator username.
+    DB_BOOTSTRAP_PASSWORD:
+      label: MariaDB bootstrap password
+      help: Password of the initial administrator on the dedicated OpenEMR database server.
+      type: password
+    DB_PASSWORD:
+      label: OpenEMR database account password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 443.
+    DATA:
+      label: Sites and documents
+      help: Select This host. Stores site configuration, uploaded records and attachments. Include this
+        folder in a stopped Nex backup.
+    LOGS:
+      label: Application logs
+      help: Select This host. Stores logs that may contain sensitive operational information. Include
+        this folder in a stopped Nex backup.
+services:
+  openemr:
+    image: openemr/openemr:latest
+    environment:
+      MYSQL_HOST: ${DB_HOST}
+      MYSQL_ROOT_PASS: ${DB_BOOTSTRAP_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-openemr}
+      MYSQL_USER: ${DB_USER:-openemr}
+      MYSQL_PASS: ${DB_PASSWORD}
+      OE_USER: ${ADMIN_USERNAME:-admin}
+      OE_PASS: ${ADMIN_PASSWORD}
+    ports:
+    - ${PORT:-8898}:443/tcp
+    volumes:
+    - ${DATA}:/var/www/localhost/htdocs/openemr/sites
+    - ${LOGS}:/var/log
+    deploy:
+      replicas: 1

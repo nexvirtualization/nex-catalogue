@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/coollabsio/coolify/blob/HEAD/templates/compose/phpmyadmin.yaml
+x-nex:
+  name: phpMyAdmin
+  summary: Web database admin tool for browsing, editing, and managing MySQL and MariaDB servers
+  category: development
+  description: Web database admin tool for browsing, editing, and managing MySQL and MariaDB servers. Back
+    up the application folders together and keep them writable by the container.
+  source: https://github.com/phpmyadmin/phpmyadmin
+  website: https://www.phpmyadmin.net/
+  docs: https://www.phpmyadmin.net/
+  primary_service: phpmyadmin
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 80/tcp.
+  web:
+    port: 80
+  post_install: Use the target MySQL or MariaDB service’s Nex connection name. Sign in with its database credentials
+    and protect the endpoint behind HTTPS.
+services:
+  phpmyadmin:
+    image: lscr.io/linuxserver/phpmyadmin:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      TZ: Europe/Madrid
+      PMA_ARBITRARY: '1'
+    volumes:
+    - ${FOLDER_1}:/config
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-20080}:80/tcp

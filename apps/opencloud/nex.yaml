@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenCloud
+  summary: Sync and share files through an OpenCloud workspace
+  description: OpenCloud creates first-run identity configuration and serves a single-machine file collaboration
+    instance.
+  category: management
+  website: https://docs.opencloud.eu/
+  source: https://github.com/opencloud-eu/opencloud
+  docs: https://docs.opencloud.eu/docs/admin/getting-started/container/docker/
+  primary_service: opencloud
+  post_install: Put an HTTPS proxy in front of the app and make the public hostname reachable from both the
+    container and clients. Sign in as admin with the initial password and verify file upload.
+  license: Apache-2.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9200
+  options:
+    PUBLIC_URL:
+      label: Public HTTPS address
+      help: Full HTTPS URL reachable from clients and the application.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Choose a strong password before initializing OpenCloud.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9200 inside Nex.
+    CONFIG:
+      label: OpenCloud configuration
+      help: Managed directory mounted at /etc/opencloud. Choose storage writable by the application.
+    DATA:
+      label: Accounts and files
+      help: Managed directory mounted at /var/lib/opencloud. Choose storage writable by the application.
+services:
+  opencloud:
+    image: docker.io/opencloudeu/opencloud:latest
+    ports:
+    - ${PORT:-20223}:9200/tcp
+    volumes:
+    - ${CONFIG}:/etc/opencloud
+    - ${DATA}:/var/lib/opencloud
+    environment:
+      OC_URL: ${PUBLIC_URL}
+      INITIAL_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      OC_INSECURE: 'false'
+      PROXY_HTTP_ADDR: 0.0.0.0:9200
+      PROXY_TLS: 'false'
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - if [ ! -s /etc/opencloud/opencloud.yaml ]; then opencloud init; fi; exec opencloud server
+    deploy:
+      replicas: 1

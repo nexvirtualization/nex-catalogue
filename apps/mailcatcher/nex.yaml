@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MailCatcher
+  summary: Capture test email and inspect it in a browser
+  description: Point applications at the Nex application name on SMTP port 1025. MailCatcher holds captured
+    messages in memory and has no sign-in. Restrict both SMTP and web access to trusted developers.
+  category: development
+  website: https://mailcatcher.me/
+  source: https://github.com/sj26/mailcatcher
+  docs: https://mailcatcher.me/
+  scalable: false
+  primary_service: mailcatcher
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: mailcatcher
+    scheme: http
+    port: 1080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 1080.
+services:
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    ports:
+    - ${PORT:-1080}:1080/tcp
+    expose:
+    - 1025/tcp
+    deploy:
+      replicas: 1

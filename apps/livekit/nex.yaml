@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LiveKit
+  summary: Host room signaling and real-time audio and video
+  description: Prepare a managed folder containing livekit.yaml with production keys and RTC configuration.
+    Use a dedicated Primary network reachable by participants and set a client-reachable address in the
+    config. Terminate signaling TLS at an HTTPS proxy.
+  category: communication
+  website: https://livekit.com/
+  source: https://github.com/livekit/livekit
+  docs: https://docs.livekit.io/transport/self-hosting/deployment/
+  scalable: false
+  primary_service: livekit
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: livekit
+    scheme: http
+    port: 7880
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 7880.
+    DATA:
+      label: Prepared configuration
+      help: Select This host. Select a managed folder containing livekit.yaml. Configure the single-port
+        UDP setting and TCP fallback as documented upstream. Include this folder in a stopped Nex backup.
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    command:
+    - --config
+    - /settings/livekit.yaml
+    ports:
+    - ${PORT:-7880}:7880/tcp
+    expose:
+    - 7881/tcp
+    - 7882/udp
+    volumes:
+    - ${DATA}:/settings:ro
+    deploy:
+      replicas: 1

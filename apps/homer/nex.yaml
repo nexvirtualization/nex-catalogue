@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Homer
+  summary: Serve a customizable home-network links dashboard
+  description: Edit config.yml in the dashboard assets folder. Homer serves a static site and has no
+    built-in sign-in. Restrict access or use an authenticating reverse proxy.
+  category: management
+  website: https://github.com/homer-dashboard/homer
+  source: https://github.com/homer-dashboard/homer
+  docs: https://github.com/homer-dashboard/homer
+  primary_service: homer
+  scalable: false
+  web:
+    port: 8080
+  options:
+    ASSETS:
+      label: Dashboard assets
+      help: Homer configuration, icons and theme assets.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  homer:
+    image: docker.io/b4bz/homer:latest
+    volumes:
+    - ${ASSETS}:/www/assets
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

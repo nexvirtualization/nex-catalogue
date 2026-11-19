@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Watcharr
+  summary: Track shows and movies you have watched
+  description: Register your first user on a trusted network, then review registration settings before
+    sharing the service. Watcharr stores watch lists and local accounts on the selected host.
+  category: media
+  website: https://github.com/sbondCo/Watcharr
+  source: https://github.com/sbondCo/Watcharr
+  docs: https://github.com/sbondCo/Watcharr#readme
+  scalable: false
+  primary_service: watcharr
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: watcharr
+    scheme: http
+    port: 3080
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3080.
+    DATA:
+      label: Watch history
+      help: Select This host. Stores the local database and configuration. Include this folder in a stopped
+        Nex backup.
+services:
+  watcharr:
+    image: ghcr.io/sbondco/watcharr:latest
+    ports:
+    - ${PORT:-3080}:3080/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

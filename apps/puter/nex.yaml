@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Puter
+  summary: Run a private browser desktop with files and apps
+  description: Configure the client-facing address and sign in before exposing it. Keep the desktop
+    data folder in backups and use a trusted HTTPS endpoint.
+  category: tools
+  website: https://github.com/heyputer/puter
+  source: https://github.com/heyputer/puter
+  docs: https://github.com/HeyPuter/puter
+  primary_service: puter
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 4100
+  options:
+    CONFIG:
+      label: Puter configuration
+      help: Keep puter configuration in this managed folder between restarts.
+    DATA:
+      label: Desktop files and state
+      help: Keep desktop files and state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 4100.
+services:
+  puter:
+    image: ghcr.io/heyputer/puter:latest
+    volumes:
+    - ${CONFIG}:/etc/puter
+    - ${DATA}:/var/puter
+    ports:
+    - ${PORT:-4100}:4100/tcp
+    deploy:
+      replicas: 1

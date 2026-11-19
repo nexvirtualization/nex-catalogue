@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Lychee
+  summary: Manage and publish photo albums
+  description: Provision MariaDB first and enter a Laravel key for the app. Open Lychee on a trusted network
+    to run its installer and create the first administrator.
+  category: media
+  website: https://lycheeorg.github.io/
+  source: https://github.com/LycheeOrg/Lychee
+  docs: https://lycheeorg.dev/docs/installation/docker
+  scalable: false
+  primary_service: lychee
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: lychee
+    scheme: http
+    port: 8000
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is lychee.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    LARAVEL_KEY:
+      label: Laravel application key
+      help: 'Enter base64: followed by a base64-encoded random 32-byte key.'
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Photo albums
+      help: Select This host. Stores uploaded photos and thumbnails. Include this folder in a stopped
+        Nex backup.
+    TEMP_DATA:
+      label: Image processing state
+      help: Select This host. Stores local temporary application files. Include this folder in a stopped
+        Nex backup.
+services:
+  lychee:
+    image: ghcr.io/lycheeorg/lychee:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME:-lychee}
+      DB_CONNECTION: mysql
+      DB_PORT: '3306'
+      APP_URL: ${PUBLIC_URL}
+      APP_KEY: ${LARAVEL_KEY}
+    ports:
+    - ${PORT:-8373}:8000/tcp
+    volumes:
+    - ${DATA}:/app/public/uploads
+    - ${TEMP_DATA}:/app/storage/tmp
+    deploy:
+      replicas: 1

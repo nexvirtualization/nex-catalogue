@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Answer
+  summary: Run a community question-and-answer site
+  description: Complete the web installation wizard and choose the built-in SQLite database. Set the
+    public site URL to your actual client-facing endpoint.
+  category: communication
+  website: https://github.com/apache/answer
+  source: https://github.com/apache/answer
+  docs: https://answer.apache.org/docs/installation/
+  primary_service: apache-answer
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 80
+  options:
+    DATA:
+      label: Answer database and uploads
+      help: Forum posts, uploaded attachments and app configuration.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  apache-answer:
+    image: docker.io/apache/answer:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

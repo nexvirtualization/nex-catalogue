@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: One Time Secret
+  summary: Share a private message with a single-use link
+  description: Provide an existing Redis-compatible backend and publish the app behind an HTTPS reverse
+    proxy. Use the browser with the configured public hostname when creating secret links.
+  category: security
+  website: https://docs.onetimesecret.com
+  source: https://github.com/onetimesecret/onetimesecret
+  docs: https://docs.onetimesecret.com/en/self-hosting/
+  scalable: false
+  primary_service: one-time-secret
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: one-time-secret
+    scheme: http
+    port: 3000
+  works_with:
+  - valkey
+  options:
+    PUBLIC_HOST:
+      label: Public Host
+      help: Public DNS name for secret links, without a URL scheme.
+    CACHE_URL:
+      label: Redis connection string
+      help: Provide a complete Redis URL for the private backend.
+      type: password
+    APP_SECRET:
+      label: Application encryption secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 3000.
+services:
+  one-time-secret:
+    image: onetimesecret/onetimesecret:latest
+    environment:
+      REDIS_URL: ${CACHE_URL}
+      HOST: ${PUBLIC_HOST}
+      SSL: 'true'
+      RACK_ENV: production
+      SECRET: ${APP_SECRET}
+    ports:
+    - ${PORT:-8427}:3000/tcp
+    deploy:
+      replicas: 1

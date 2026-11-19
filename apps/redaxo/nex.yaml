@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: REDAXO
+  summary: Build and maintain sites with REDAXO CMS
+  description: Provision MySQL or MariaDB and use a trusted HTTPS URL. Open the administration console with
+    the account supplied at install.
+  category: development
+  website: https://www.redaxo.org
+  source: https://github.com/redaxo/core
+  docs: https://hub.docker.com/r/friendsofredaxo/redaxo
+  primary_service: redaxo
+  post_install: Provision MySQL or MariaDB and use a trusted HTTPS URL. Open the administration console with
+    the account supplied at install.
+  license: MIT
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    SITE_NAME:
+      label: Site name
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_EMAIL:
+      label: Admin email
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    ADMIN_USER:
+      label: Admin user
+      help: Enter the deployment value described in the upstream setup guide.
+    ADMIN_PASSWORD:
+      label: Admin password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Website files and configuration
+      help: Managed directory mounted at /var/www/html. Choose storage writable by the application.
+services:
+  redaxo:
+    image: docker.io/friendsofredaxo/redaxo:5
+    ports:
+    - ${PORT:-23560}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html
+    environment:
+      REDAXO_SERVER: ${PUBLIC_URL}
+      REDAXO_SERVERNAME: ${SITE_NAME:-REDAXO}
+      REDAXO_ERROR_EMAIL: ${ADMIN_EMAIL}
+      REDAXO_LANG: en_gb
+      REDAXO_TIMEZONE: UTC
+      REDAXO_DB_HOST: ${DB_HOST}
+      REDAXO_DB_NAME: ${DB_NAME:-redaxo}
+      REDAXO_DB_LOGIN: ${DB_USER}
+      REDAXO_DB_PASSWORD: ${DB_PASSWORD}
+      REDAXO_DB_CHARSET: utf8mb4
+      REDAXO_ADMIN_USER: ${ADMIN_USER:-admin}
+      REDAXO_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    deploy:
+      replicas: 1

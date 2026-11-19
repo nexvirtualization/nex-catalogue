@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Portainer CE
+  summary: Manage remote container environments from a web interface
+  description: Set up the administrator immediately on a trusted network. Add an existing remote Portainer
+    Agent or authorized remote Docker endpoint from the Environments screen. This profile has no access
+    to the local Docker engine.
+  category: management
+  website: https://www.portainer.io/
+  source: https://github.com/portainer/portainer
+  docs: https://docs.portainer.io/admin/environments/add/docker/agent
+  scalable: false
+  primary_service: portainer
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: portainer
+    scheme: https
+    port: 9443
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9443.
+    DATA:
+      label: Portainer state
+      help: Select This host. Stores remote environment credentials, users and preferences. Include this
+        folder in a stopped Nex backup.
+services:
+  portainer:
+    image: portainer/portainer-ce:lts
+    ports:
+    - ${PORT:-9443}:9443/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gogs
+  summary: Host and browse Git repositories
+  description: Complete first-run installation on a trusted network. Choose SQLite for this single-container
+    profile and set your public URL in Gogs.
+  category: development
+  website: https://github.com/gogs/gogs
+  source: https://github.com/gogs/gogs
+  docs: https://github.com/gogs/gogs/tree/main/docker
+  primary_service: gogs
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    DATA:
+      label: Repositories and Gogs state
+      help: Keep repositories and gogs state in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  gogs:
+    image: docker.io/gogs/gogs:latest
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

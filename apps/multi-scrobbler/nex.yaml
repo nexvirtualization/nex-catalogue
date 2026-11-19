@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: multi-scrobbler
+  summary: Send listening history across music services
+  description: Configure media sources and scrobbling accounts through supported configuration methods.
+    OAuth integrations may need a client-reachable callback URL. Keep the status interface on a trusted
+    network.
+  category: media
+  website: https://foxxmd.github.io/multi-scrobbler
+  source: https://github.com/FoxxMD/multi-scrobbler
+  docs: https://foxxmd.github.io/multi-scrobbler/
+  scalable: false
+  primary_service: multi-scrobbler
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: multi-scrobbler
+    scheme: http
+    port: 9078
+  options:
+    TZ:
+      label: Tz
+      help: IANA time zone for logs and timestamps.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9078.
+    DATA:
+      label: Scrobbling settings
+      help: Select This host. Stores integrations, account state, local configuration and backups. Include
+        this folder in a stopped Nex backup.
+services:
+  multi-scrobbler:
+    image: foxxmd/multi-scrobbler:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-9078}:9078/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

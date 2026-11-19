@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft CurseForge
+  summary: Install a Java Edition modpack from CurseForge
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Choose a server-
+    compatible modpack that supports Java 21 and use the same modpack release in every client. Use
+    your own CurseForge developer API key. Make a stopped backup before applying updates.
+  category: games
+  website: https://www.curseforge.com/minecraft/modpacks
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/mod-platforms/auto-curseforge/
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    CF_PACK:
+      label: CurseForge modpack URL
+      help: >-
+        Enter the modpack page or a specific primary modpack file URL. The primary file carries the
+        manifest needed to install the dedicated server.
+    CF_KEY:
+      label: CurseForge API key
+      type: password
+      help: >-
+        Use your own key from https://console.curseforge.com/.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-curseforge:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: AUTO_CURSEFORGE
+      MEMORY: 6G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      CF_PAGE_URL: ${CF_PACK}
+      CF_API_KEY: ${CF_KEY}
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 30m

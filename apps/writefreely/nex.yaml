@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: WriteFreely
+  summary: Publish a Markdown blog or writing community
+  description: Runs a standalone SQLite instance with dedicated storage for the configuration, database and keys.
+    Prepare config.ini in the State folder before installing. The app initializes a new SQLite instance on startup.
+  category: productivity
+  website: https://writefreely.org/
+  source: https://github.com/writefreely/writefreely
+  docs: https://writefreely.org/docs/latest/admin/config
+  license: AGPL-3.0-only
+  primary_service: writefreely
+  web:
+    port: 8080
+  options:
+    STATE:
+      label: State folder
+      help: Use a writable folder on This host with config.ini at its root. Configure the sqlite3 database
+        filename as /data/writefreely.db, leave keys_parent_dir at its default, and set server bind to
+        0.0.0.0 and port to 8080.
+    KEYS:
+      label: Encryption keys
+      help: Keep on This host and back up with State. Retain these keys when moving an existing installation.
+    PORT:
+      label: Web port
+      help: Host port for the listener on 8080 when host publishing is available.
+  post_install: >-
+    Disable open registration in config.ini until you are ready. Inside the container, run
+    `/go/cmd/writefreely/writefreely -c /data/config.ini --create-admin 'USERNAME:PASSWORD'`
+    with your own administrator credentials, then open the web interface.
+services:
+  writefreely:
+    image: ghcr.io/writefreely/writefreely:v0.17.1
+    working_dir: /go
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        if [ ! -r /data/config.ini ]; then
+          echo "Prepare /data/config.ini before starting WriteFreely" >&2
+          exit 1
+        fi
+        if [ ! -s /data/writefreely.db ]; then
+          if [ -z "$$(ls -A /go/keys | grep -v -e README.md -e .gitkeep || true)" ]; then
+            /go/cmd/writefreely/writefreely -c /data/config.ini --gen-keys
+          fi
+          /go/cmd/writefreely/writefreely -c /data/config.ini --init-db
+        fi
+        exec /go/cmd/writefreely/writefreely -c /data/config.ini
+    volumes:
+      - ${STATE}:/data
+      - ${KEYS}:/go/keys
+    ports:
+      - ${PORT:-19430}:8080/tcp
+    deploy:
+      replicas: 1

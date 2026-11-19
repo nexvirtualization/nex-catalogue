@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/coollabsio/coolify/blob/HEAD/templates/compose/transmission.yaml
+x-nex:
+  name: Transmission
+  summary: Fast, easy, free Bittorrent client
+  category: tools
+  description: Fast, easy, free Bittorrent client. Back up the application folders together and keep them writable
+    by the container.
+  source: https://github.com/transmission/transmission
+  website: https://transmissionbt.com/
+  docs: https://transmissionbt.com/
+  primary_service: transmission
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Downloads folder
+      help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
+    FOLDER_3:
+      label: Watch folder
+      help: Nex-managed folder mounted at /watch. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 9091/tcp.
+    RPC_USER:
+      label: RPC username
+    RPC_PASSWORD:
+      label: RPC password
+      type: password
+    PEER_TCP_PORT:
+      label: Published 51413/TCP peer port
+    PEER_UDP_PORT:
+      label: Published 51413/UDP peer port
+  web:
+    port: 9091
+  post_install: Sign in to the RPC web interface with the configured username and password. /downloads contains
+    transfers, and /watch accepts torrent files.
+services:
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    environment:
+      PUID: '1000'
+      PGID: '1000'
+      USER: ${RPC_USER:-admin}
+      PASS: ${RPC_PASSWORD}
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/downloads
+    - ${FOLDER_3}:/watch
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-19196}:9091/tcp
+    - ${PEER_TCP_PORT:-40197}:51413/tcp
+    - ${PEER_UDP_PORT:-40198}:51413/udp

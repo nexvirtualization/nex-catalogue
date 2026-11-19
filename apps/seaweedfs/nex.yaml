@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SeaweedFS
+  summary: Serve object storage from a single node
+  description: Single-process deployment with the S3 interface. Connect S3 clients at internal port 8333.
+    Back up the data folder before upgrades and keep the master, filer and volume endpoints on the private
+    network.
+  category: tools
+  website: https://github.com/seaweedfs/seaweedfs
+  source: https://github.com/seaweedfs/seaweedfs
+  docs: https://github.com/seaweedfs/seaweedfs#quick-start
+  scalable: false
+  primary_service: seaweedfs
+  architectures:
+  - amd64
+  - arm64
+  options:
+    S3_ACCESS_KEY:
+      label: S3 Access Key
+      help: Access key ID to give S3 clients.
+    S3_SECRET_KEY:
+      label: S3 secret key
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    S3_PORT:
+      label: S3 Port
+      help: Host-published S3 port. Use port 8333 inside Nex.
+    DATA:
+      label: Object store data
+      help: Select This host. Stores volume, index, filer and master state. Include this folder in a stopped
+        Nex backup.
+services:
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    environment:
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-nex}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+    command:
+    - server
+    - -s3
+    - -dir=/data
+    - -ip.bind=0.0.0.0
+    ports:
+    - ${S3_PORT:-8333}:8333/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

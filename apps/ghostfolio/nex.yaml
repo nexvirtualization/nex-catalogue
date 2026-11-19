@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ghostfolio
+  summary: Wealth management software to keep track of stocks, ETFs and cryptocurrencies
+  description: Wealth management software to keep track of stocks, ETFs and cryptocurrencies.
+  category: finance
+  source: https://github.com/ghostfolio/ghostfolio
+  website: https://ghostfol.io/
+  docs: https://github.com/ghostfolio/ghostfolio#self-hosting
+  primary_service: ghostfolio
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    REDIS_HOST:
+      label: Redis host
+    REDIS_PORT:
+      label: Redis port
+    REDIS_PASSWORD:
+      label: Redis password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    ACCESS_TOKEN_SALT:
+      label: Access token salt
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    JWT_SECRET:
+      label: Jwt secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 3333/tcp port
+      help: Host port for application listener 3333/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL and authenticated Redis. Store the first administrator access token securely.
+    Back up the database and keep the signing secrets.
+  web:
+    port: 3333
+services:
+  ghostfolio:
+    image: docker.io/ghostfolio/ghostfolio:latest
+    deploy:
+      replicas: 1
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ACCESS_TOKEN_SALT: ${ACCESS_TOKEN_SALT}
+      JWT_SECRET_KEY: ${JWT_SECRET}
+    ports:
+    - ${PORT:-19527}:3333/tcp

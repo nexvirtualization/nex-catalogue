@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Starbound
+  summary: Host a shared Starbound universe
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join from the Starbound multiplayer menu using the application’s Primary address and TCP 21025.
+    The server creates a universe on first boot. Stop the app before adding mods or configuring user
+    accounts in storage/starbound_server.config. First start downloads the dedicated server from Steam.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://store.steampowered.com/app/211820/
+  source: https://github.com/ich777/docker-steamcmd-server/tree/starbound
+  docs: https://github.com/ich777/docker-steamcmd-server/tree/starbound#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - sandbox
+    - co-op
+    - steam
+  options:
+    DATA:
+      label: Game files and saves
+      help: Choose This host and include this folder in stopped backups.
+    STEAMCMD:
+      label: SteamCMD cache
+      help: Choose This host and include this folder in stopped backups.
+services:
+  starbound:
+    image: ghcr.io/ich777/steamcmd:starbound
+    environment:
+      GAME_ID: '533830'
+      GAME_PARAMS: ''
+    expose:
+      - 21025/tcp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+      - ${STEAMCMD}:/serverdata/steamcmd
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

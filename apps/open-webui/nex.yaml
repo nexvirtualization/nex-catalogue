@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Open WebUI
+  summary: Provide a browser workspace for local and compatible hosted models
+  description: Create the first administrator before exposing the endpoint. Configure an Ollama or OpenAI-compatible
+    model endpoint reachable from the application network. Model inference runs on the configured provider.
+  category: ai
+  website: https://github.com/open-webui/open-webui
+  source: https://github.com/open-webui/open-webui
+  docs: https://docs.openwebui.com/getting-started/quick-start/
+  primary_service: open-webui
+  scalable: false
+  license: Open WebUI License
+  web:
+    port: 8080
+  options:
+    SIGNING_KEY:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and preserve the key across restores.
+    DATA:
+      label: Workspace data
+      help: Accounts, settings, chats and uploaded data.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.13.4
+    environment:
+      WEBUI_SECRET_KEY: ${SIGNING_KEY}
+    volumes:
+    - ${DATA}:/app/backend/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Nexus Repository
+  summary: Host and proxy software package repositories
+  description: Use admin with the generated password in the data folder at admin.password. Finish initial
+    setup on a trusted network and restrict anonymous access as needed. Configure repository-specific
+    endpoints before serving them externally.
+  category: development
+  website: https://www.sonatype.com/products/sonatype-nexus-repository
+  source: https://github.com/sonatype/nexus-public
+  docs: https://hub.docker.com/r/sonatype/nexus3
+  scalable: false
+  primary_service: nexus-repository
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: nexus-repository
+    scheme: http
+    port: 8081
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8081.
+    DATA:
+      label: Repository data
+      help: Select This host. Stores repository blobs, metadata, access configuration and the first administrator
+        password. Include this folder in a stopped Nex backup.
+services:
+  nexus-repository:
+    image: sonatype/nexus3:latest
+    environment:
+      NEXUS_SECURITY_RANDOMPASSWORD: 'true'
+    ports:
+    - ${PORT:-8151}:8081/tcp
+    volumes:
+    - ${DATA}:/nexus-data
+    deploy:
+      replicas: 1

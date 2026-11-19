@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MQTTX Web
+  summary: Test publish and subscribe operations from your browser
+  description: Use the web client to connect to an existing MQTT broker via WebSockets and inspect messages.
+    This package does not include a broker.
+  category: development
+  website: https://mqttx.app/
+  source: https://github.com/emqx/mqttx
+  docs: https://mqttx.app/docs/web
+  license: Apache-2.0
+  primary_service: mqttx-web
+  architectures:
+  - amd64
+  - arm64
+  post_install: Supply a broker WebSocket endpoint that your browser can reach. When serving the client over
+    HTTPS, use WSS for broker connections.
+  web:
+    port: 80
+  scale:
+  - mqttx-web
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+services:
+  mqttx-web:
+    image: docker.io/emqx/mqttx-web:latest
+    ports:
+    - ${PORT:-18116}:80/tcp
+    deploy:
+      replicas: 1

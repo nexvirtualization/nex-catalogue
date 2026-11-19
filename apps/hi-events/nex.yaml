@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Hi.Events
+  summary: Manage event listings, tickets and registrations
+  description: Provision PostgreSQL and Redis. Use an HTTPS address for the event page and add payment and
+    email providers before inviting attendees.
+  category: productivity
+  website: https://hi.events
+  source: https://github.com/HiEventsDev/hi.events
+  docs: https://hi.events/docs/self-hosting
+  primary_service: hi-events
+  post_install: Provision PostgreSQL and Redis. Use an HTTPS address for the event page and add payment and
+    email providers before inviting attendees.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 80
+  options:
+    PUBLIC_URL:
+      label: Public url
+      help: Full browser-facing URL, including scheme and any nonstandard port.
+    APP_KEY:
+      label: App key
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    JWT_SECRET:
+      label: Jwt secret
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    DATABASE_URL:
+      label: Database url
+      help: Connection URL for the database. Percent-encode special characters in credentials.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 80 inside Nex.
+    DATA:
+      label: Event uploads
+      help: Managed directory mounted at /app/backend/storage/app. Choose storage writable by the application.
+services:
+  hi-events:
+    image: docker.io/daveearley/hi.events-all-in-one:v2.2.0
+    ports:
+    - ${PORT:-23536}:80/tcp
+    volumes:
+    - ${DATA}:/app/backend/storage/app
+    environment:
+      VITE_FRONTEND_URL: ${PUBLIC_URL}
+      VITE_API_URL_CLIENT: ${PUBLIC_URL}/api
+      VITE_API_URL_SERVER: http://localhost:80/api
+      APP_FRONTEND_URL: ${PUBLIC_URL}
+      APP_CDN_URL: ${PUBLIC_URL}/storage
+      APP_KEY: ${APP_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      QUEUE_CONNECTION: redis
+      DB_CONNECTION: pgsql
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MAIL_MAILER: log
+      FILESYSTEM_PUBLIC_DISK: public
+      FILESYSTEM_PRIVATE_DISK: local
+    deploy:
+      replicas: 1

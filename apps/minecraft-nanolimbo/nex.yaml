@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft NanoLimbo
+  summary: Hold Java Edition players while a backend is unavailable
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Install NanoLimbo as a fallback backend for your Minecraft proxy. Use its Primary address
+    on TCP 25565 in the proxy and configure forwarding in settings.yml. Restrict direct access to
+    the proxy.
+  category: games
+  website: https://github.com/Nan1t/NanoLimbo
+  source: https://github.com/Nan1t/NanoLimbo
+  docs: https://github.com/Nan1t/NanoLimbo#player-info-forwarding
+  license: GPL-3.0
+  architectures: [amd64, arm64]
+  tags: [minecraft, proxy]
+  options:
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-nanolimbo:
+    image: ghcr.io/itzg/minecraft-server:java21
+    working_dir: /data
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        chown 1000:1000 /data
+        if [ ! -s /data/NanoLimbo.jar ]; then
+          curl -fsSL --retry 3 -o /data/.server.jar.new 'https://github.com/Nan1t/NanoLimbo/releases/download/v1.13.0/NanoLimbo.jar'
+          chown 1000:1000 /data/.server.jar.new
+          mv /data/.server.jar.new /data/NanoLimbo.jar
+        fi
+
+        if [ ! -f /data/settings.yml ]; then
+          curl -fsSL --retry 3 -o /data/.settings.yml.new 'https://raw.githubusercontent.com/Nan1t/NanoLimbo/v1.13.0/src/main/resources/settings.yml'
+          sed -i -e 's/^  ip: "localhost"$$/  ip: "0.0.0.0"/' -e 's/^  port: 65535$$/  port: 25565/' /data/.settings.yml.new
+          chown 1000:1000 /data/.settings.yml.new
+          mv /data/.settings.yml.new /data/settings.yml
+        fi
+
+        exec gosu 1000:1000 java -Xmx512M -jar /data/NanoLimbo.jar
+    healthcheck:
+      disable: true
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: 'Enemy Territory: Legacy'
+  summary: 'Host the community continuation of Wolfenstein: Enemy Territory'
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    In the ET: Legacy multiplayer browser, connect to the app’s Primary address on UDP 27960. Customize
+    the map rotation and rules in the persistent server configuration with the app stopped. Make a
+    stopped backup before applying game updates.
+  category: games
+  website: https://www.etlegacy.com/
+  source: https://github.com/GameServerManagers/docker-gameserver
+  docs: https://linuxgsm.com/servers/etlserver/
+  license: GPL-3.0-or-later engine and original game data
+  architectures:
+    - amd64
+  tags:
+    - fps
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  et-legacy:
+    image: ghcr.io/gameservermanagers/gameserver:etl
+    environment:
+      UPDATE_CHECK: '0'
+      UPDATE_ON_START: 'true'
+    expose:
+      - 27960/udp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Urban Terror
+  summary: Host the free standalone team shooter
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    The server downloads the standalone dedicated game on first boot. Enter the Primary address and
+    port 27960 in the client’s multiplayer browser. Stop the app before editing q3ut4/server.cfg.
+    Make a stopped backup before applying game updates.
+  category: games
+  website: https://www.urbanterror.info/
+  source: https://github.com/ich777/docker-urbanterror
+  docs: https://github.com/ich777/docker-urbanterror#readme
+  license: Freeware game data and GPL-licensed engine
+  architectures:
+    - amd64
+  tags:
+    - fps
+    - multiplayer
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  urban-terror:
+    image: ghcr.io/ich777/urbanterror:latest
+    environment:
+      DL_URL: https://www.urbanterror.info/downloads/software/urt/43/UrbanTerror43_ded.tar.gz
+      CONFIG_NAME: server.cfg
+      GAME_PORT: '27960'
+    expose:
+      - 27960/udp
+    volumes:
+      - ${DATA}:/urbanterror
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

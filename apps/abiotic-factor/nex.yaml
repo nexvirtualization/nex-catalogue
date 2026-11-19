@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Abiotic Factor
+  summary: Run a co-op survival server in the GATE research facility
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Use the game’s server browser or the app’s Primary address on UDP 7777. The Steam query port is
+    UDP 27015. SteamCMD installs the server on first boot and checks for updates on restart. Make
+    a stopped backup before applying game updates.
+  category: games
+  website: https://www.abioticfactor.com/
+  source: https://github.com/indifferentbroccoli/abiotic-factor-server-docker
+  docs: https://github.com/indifferentbroccoli/abiotic-factor-server-docker#readme
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - multiplayer
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: Name displayed in the game’s server browser.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Choose a password and share it with your players.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  abiotic-factor:
+    image: docker.io/indifferentbroccoli/abiotic-factor-server-docker:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Abiotic Factor}
+      SERVER_PASSWORD: ${JOIN_PASSWORD}
+      UPDATE_ON_START: 'true'
+    expose:
+      - 7777/udp
+      - 27015/udp
+    volumes:
+      - ${DATA}:/data/server-files
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 25m

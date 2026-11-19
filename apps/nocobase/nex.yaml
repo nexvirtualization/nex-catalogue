@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: NocoBase
+  summary: Build database-backed business forms and workflows
+  description: Use the single-node SQLite deployment. Open the server on a trusted network to create or
+    sign in to the initial administrator. Store the application key with your protected backups.
+  category: productivity
+  website: https://www.nocobase.com/
+  source: https://github.com/nocobase/nocobase
+  docs: https://docs.nocobase.com/welcome/getting-started/installation/docker-compose
+  scalable: false
+  primary_service: nocobase
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: nocobase
+    scheme: http
+    port: 80
+  options:
+    APP_SECRET:
+      label: Application signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: NocoBase state
+      help: Select This host. Stores application settings, SQLite data and uploads. Include this folder
+        in a stopped Nex backup.
+services:
+  nocobase:
+    image: nocobase/nocobase:latest
+    environment:
+      DB_DIALECT: sqlite
+      DB_STORAGE: /app/nocobase/storage/db/nocobase.sqlite
+      APP_KEY: ${APP_SECRET}
+    ports:
+    - ${PORT:-8436}:80/tcp
+    volumes:
+    - ${DATA}:/app/nocobase/storage
+    deploy:
+      replicas: 1

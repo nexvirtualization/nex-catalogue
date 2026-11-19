@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: TeamMapper
+  summary: Create shared mind maps with your team
+  description: Prepare a PostgreSQL database and keep the application on a trusted network or behind
+    an authenticating reverse proxy.
+  category: productivity
+  website: https://github.com/b310-digital/teammapper
+  source: https://github.com/b310-digital/teammapper
+  docs: https://github.com/b310-digital/teammapper
+  primary_service: teammapper
+  scalable: false
+  license: MIT
+  web:
+    port: 3000
+  options:
+    POSTGRES_HOST:
+      label: Database hostname
+      help: Reachable PostgreSQL server.
+    POSTGRES_DATABASE:
+      label: Database name
+      help: Prepared TeamMapper database.
+    POSTGRES_USER:
+      label: Database username
+      help: Dedicated application user.
+    POSTGRES_PASSWORD:
+      label: Database password
+      type: password
+      help: Password for that application account.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  teammapper:
+    image: ghcr.io/b310-digital/teammapper:latest
+    environment:
+      MODE: PROD
+      BINDING: 0.0.0.0
+      POSTGRES_PORT: '5432'
+      POSTGRES_SSL: 'false'
+      AI_ENABLED: 'false'
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

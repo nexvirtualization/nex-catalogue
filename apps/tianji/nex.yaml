@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Tianji
+  summary: Web analytics, server status, and uptime monitoring application
+  description: Web analytics, server status, and uptime monitoring application.
+  category: monitoring
+  source: https://github.com/msgbyte/tianji
+  website: https://tianji.dev/
+  docs: https://tianji.msgbyte.com/docs/install/docker-compose
+  primary_service: tianji
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    JWT_SECRET:
+      label: Jwt secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_URL:
+      label: Public url
+    PORT:
+      label: Published 12345/tcp port
+      help: Host port for application listener 12345/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision a PostgreSQL database using its own user. Sign in on a trusted network and replace
+    the upstream initial administrator password.
+  web:
+    port: 12345
+services:
+  tianji:
+    image: docker.io/moonrailgun/tianji:latest
+    deploy:
+      replicas: 1
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOW_REGISTER: 'false'
+      PUBLIC_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-19473}:12345/tcp

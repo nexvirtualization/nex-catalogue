@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rustrak
+  summary: Error tracking server compatible with Sentry SDKs, using 32 MB of memory at idle with SQLite storage
+  description: Error tracking server compatible with Sentry SDKs, using 32 MB of memory at idle with SQLite
+    storage.
+  category: monitoring
+  source: https://github.com/rustrak/rustrak
+  website: https://rustrak.github.io/rustrak/
+  docs: https://rustrak.dev/configuration/production
+  primary_service: rustrak
+  options:
+    SESSION_SECRET:
+      label: Session signing secret
+      type: password
+      help: Use at least 64 random characters and keep this value with your backups.
+    ADMIN_EMAIL:
+      label: Initial administrator email
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Choose a strong password for the initial administrator.
+    PUBLIC_URL:
+      label: Public URL
+      help: Set the full browser-facing URL so SDKs use a reachable endpoint.
+    DATA:
+      label: Application data
+      help: Stores the SQLite database and uploaded source maps. Keep on This host.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Use the administrator email and password to sign in. Clients must be able to reach the configured
+    public URL. Back up the data folder while the app is stopped.
+  web:
+    port: 8080
+services:
+  rustrak:
+    image: docker.io/rustrak/rustrak-server:latest
+    deploy:
+      replicas: 1
+    environment:
+      SESSION_SECRET_KEY: ${SESSION_SECRET}
+      CREATE_SUPERUSER: ${ADMIN_EMAIL}:${ADMIN_PASSWORD}
+      PUBLIC_URL: ${PUBLIC_URL}
+      RUSTRAK_TELEMETRY: 'off'
+      RUSTRAK_METRICS: 'off'
+    ports:
+    - ${PORT:-19471}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    stop_grace_period: 30s

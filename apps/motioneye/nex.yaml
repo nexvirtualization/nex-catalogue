@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: motionEye
+  summary: Configure and record streams from network cameras
+  description: This profile takes network camera URLs. Sign in as admin and set a password on a trusted
+    network before configuring cameras. This package does not attach local cameras.
+  category: home-automation
+  website: https://github.com/motioneye-project/motioneye
+  source: https://github.com/motioneye-project/motioneye
+  docs: https://github.com/motioneye-project/motioneye/wiki/Install-In-Docker
+  primary_service: motioneye
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 8765
+  options:
+    CONFIG:
+      label: Camera configuration
+      help: motionEye settings, camera URLs and credentials.
+    RECORDINGS:
+      label: Recordings
+      help: Motion clips and camera snapshots.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8765.
+services:
+  motioneye:
+    image: docker.io/motioneyeproject/motioneye:latest
+    volumes:
+    - ${CONFIG}:/etc/motioneye
+    - ${RECORDINGS}:/var/lib/motioneye
+    ports:
+    - ${PORT:-8765}:8765/tcp
+    deploy:
+      replicas: 1

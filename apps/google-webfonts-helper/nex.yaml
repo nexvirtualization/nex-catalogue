@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: google-webfonts-helper
+  summary: Hassle-Free Way to Self-Host Google Fonts
+  description: Hassle-Free Way to Self-Host Google Fonts. Get eot, ttf, svg, woff and woff2 files + CSS snippets.
+  category: development
+  source: https://github.com/majodev/google-webfonts-helper
+  website: https://github.com/majodev/google-webfonts-helper
+  docs: https://github.com/majodev/google-webfonts-helper#docker
+  primary_service: google-webfonts-helper
+  options:
+    GOOGLE_FONTS_API_KEY:
+      label: Google fonts api key
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Enable the Google Fonts Developer API for your key. Open the helper to download the font assets
+    and CSS for local hosting.
+  web:
+    port: 8080
+services:
+  google-webfonts-helper:
+    image: ghcr.io/majodev/google-webfonts-helper:latest
+    deploy:
+      replicas: 1
+    environment:
+      GOOGLE_FONTS_API_KEY: ${GOOGLE_FONTS_API_KEY}
+    ports:
+    - ${PORT:-19874}:8080/tcp

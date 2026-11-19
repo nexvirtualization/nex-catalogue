@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Ziit
+  summary: Track coding activity from compatible editors
+  description: Prepare PostgreSQL and configure the HTTPS dashboard URL. Set up the first account on
+    a trusted network before connecting editors.
+  category: development
+  website: https://github.com/0pandadev/ziit
+  source: https://github.com/0pandadev/ziit
+  docs: https://github.com/0pandadev/ziit
+  primary_service: ziit
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    BETTER_AUTH_SECRET:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    PUBLIC_URL:
+      label: Public web address
+      help: Full browser-facing URL, including scheme and any port.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  ziit:
+    image: ghcr.io/0pandadev/ziit:latest
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${PUBLIC_URL}
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

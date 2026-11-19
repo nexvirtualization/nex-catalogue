@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Pi-hole
+  summary: Block advertising domains across your home network
+  description: DNS filtering for your LAN. In Install, Network choose Primary network, a registered cluster VLAN
+    reachable by your clients, then Fixed with an unused address/prefix and Default gateway. Leave Also publish
+    ports on host addresses unchecked. Open http://APP-IP/admin/ and sign in with the generated Administrator password.
+    Set router/client DNS to APP-IP, port 53 over both TCP and UDP. The shared-network default alone cannot serve
+    LAN DNS. DNS listens on all app interfaces; attach only trusted client networks. DHCP and NTP serving are disabled.
+    On Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one copy
+    on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all
+    state folders before updates.
+  category: networking
+  website: https://pi-hole.net
+  source: https://github.com/pi-hole/pi-hole
+  license: EUPL-1.2
+  scalable: false
+  tags:
+  - dns
+  - ad-blocking
+  - privacy
+  options:
+    TZ:
+      label: Time zone
+      help: IANA time zone for logs, such as Etc/UTC.
+    PASSWORD:
+      label: Administrator password
+      help: Use Generate for a unique password for http://APP-IP/admin/. Password answers are held in deployment
+        settings and backup manifests; protect Nex access and the backup repository.
+      type: password
+    PORT:
+      label: Web port
+      help: Only the optional host management endpoint. On Network choose a registered cluster VLAN reachable by
+        your clients, Fixed address/prefix and Default gateway, and leave host publication off; use http://APP-IP/admin/
+        and APP-IP:53 for DNS instead.
+    CONFIG:
+      label: Pi-hole configuration
+      help: Keep Pi-hole configuration on This host. Nex creates its persistent /etc/pihole volume; no host directory
+        bootstrap is needed. Include this folder in a stopped Nex backup to preserve passwords, blocklists, settings
+        and databases.
+services:
+  pi-hole:
+    image: pihole/pihole:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      FTLCONF_webserver_api_password: ${PASSWORD}
+      FTLCONF_dns_listeningMode: ALL
+      FTLCONF_dhcp_active: 'false'
+      FTLCONF_ntp_ipv4_active: 'false'
+      FTLCONF_ntp_ipv6_active: 'false'
+    ports:
+    - ${PORT:-8083}:80/tcp
+    expose:
+    - 53/tcp
+    - 53/udp
+    volumes:
+    - ${CONFIG}:/etc/pihole
+    deploy:
+      replicas: 1

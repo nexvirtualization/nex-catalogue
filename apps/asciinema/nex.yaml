@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: asciinema
+  summary: Web app for hosting asciicasts
+  description: Web app for hosting asciicasts.
+  category: development
+  source: https://github.com/asciinema/asciinema-server
+  website: https://asciinema.org/
+  docs: https://docs.asciinema.org/manual/server/self-hosting/configuration/
+  primary_service: asciinema
+  options:
+    DATABASE_URL:
+      label: Database url
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    SESSION_SECRET:
+      label: Session secret
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    PUBLIC_HOST:
+      label: Public host
+    PUBLIC_SCHEME:
+      label: Public scheme
+    PUBLIC_PORT:
+      label: Public port
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /var/lib/asciinema.
+    PORT:
+      label: Published 4000/tcp port
+      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Provision PostgreSQL. Use a signing secret of at least 64 random characters. Start on a trusted
+    network, then register the first administrator using the login link printed in the app log.
+  web:
+    port: 4000
+services:
+  asciinema:
+    image: ghcr.io/asciinema/asciinema-server:latest
+    deploy:
+      replicas: 1
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SECRET_KEY_BASE: ${SESSION_SECRET}
+      URL_HOST: ${PUBLIC_HOST}
+      URL_SCHEME: ${PUBLIC_SCHEME:-https}
+      URL_PORT: ${PUBLIC_PORT:-443}
+    volumes:
+    - ${DATA}:/var/lib/asciinema
+    ports:
+    - ${PORT:-19955}:4000/tcp

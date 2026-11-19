@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Reitti
+  summary: Map and review your location history
+  description: Provision PostGIS and Redis. Open the site on a private HTTPS origin, replace the initial
+    administrator password, and connect location sources.
+  category: home-automation
+  website: https://www.dedicatedcode.com/projects/reitti
+  source: https://github.com/dedicatedcode/reitti
+  docs: https://www.dedicatedcode.com/projects/reitti/latest/infrastructure/docker-config/
+  primary_service: reitti
+  post_install: Provision PostGIS and Redis. Open the site on a private HTTPS origin, replace the initial
+    administrator password, and connect location sources.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 8080
+  options:
+    DB_HOST:
+      label: Db host
+      help: Hostname or Nex connection name of the database service.
+    DB_PORT:
+      label: Db port
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_NAME:
+      label: Db name
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_USER:
+      label: Db user
+      help: Enter the deployment value described in the upstream setup guide.
+    DB_PASSWORD:
+      label: Db password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    REDIS_HOST:
+      label: Redis host
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PORT:
+      label: Redis port
+      help: Enter the deployment value described in the upstream setup guide.
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use the credential or secret required by the upstream configuration.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+    DATA:
+      label: Location data and imports
+      help: Managed directory mounted at /data. Choose storage writable by the application.
+    TILE_DATA:
+      label: Map tile cache
+      help: Managed directory mounted at /var/cache/nginx. Choose storage writable by the tile cache.
+services:
+  reitti:
+    image: docker.io/dedicatedcode/reitti:5
+    ports:
+    - ${PORT:-23564}:8080/tcp
+    volumes:
+    - ${DATA}:/data
+    environment:
+      POSTGIS_HOST: ${DB_HOST}
+      POSTGIS_PORT: ${DB_PORT:-5432}
+      POSTGIS_DB: ${DB_NAME:-reittidb}
+      POSTGIS_USER: ${DB_USER}
+      POSTGIS_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      TILES_CACHE: http://tile-cache
+    deploy:
+      replicas: 1
+  tile-cache:
+    image: docker.io/dedicatedcode/reitti-tile-cache:5
+    volumes:
+    - ${TILE_DATA}:/var/cache/nginx
+    deploy:
+      replicas: 1

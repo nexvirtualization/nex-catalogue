@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Rotki
+  summary: Track digital assets with a private portfolio dashboard
+  description: Create a portfolio account, then add exchanges and wallets through the web UI. Keep the
+    direct web port private and use HTTPS for remote access. Enable automatic backups for the data and
+    logs you need.
+  category: finance
+  website: https://rotki.com/
+  source: https://github.com/rotki/rotki
+  docs: https://docs.rotki.com/
+  scalable: false
+  primary_service: rotki
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: rotki
+    scheme: http
+    port: 80
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Portfolio data
+      help: Select This host. Holds accounts, portfolio history and personal settings. Include this folder
+        in a stopped Nex backup.
+    LOGS:
+      label: Logs
+      help: Select This host. Stores diagnostic logs. Include this folder in a stopped Nex backup.
+services:
+  rotki:
+    image: rotki/rotki:latest
+    ports:
+    - ${PORT:-8168}:80/tcp
+    volumes:
+    - ${DATA}:/data
+    - ${LOGS}:/logs
+    deploy:
+      replicas: 1

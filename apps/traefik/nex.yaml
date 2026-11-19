@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Traefik
+  summary: HTTP reverse proxy and load balancer that makes deploying microservices easy
+  description: HTTP reverse proxy and load balancer that makes deploying microservices easy.
+  category: networking
+  source: https://github.com/traefik/traefik
+  website: https://traefik.io/
+  docs: https://doc.traefik.io/traefik/setup/docker/
+  primary_service: traefik
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /etc/traefik.
+    STATE:
+      label: State folder
+      help: Choose the Nex-managed folder mounted at /state.
+    PORT:
+      label: Published 80/tcp port
+      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
+        address.
+    PORT_2:
+      label: Published 443/tcp port
+      help: Host port for application listener 443/tcp. Leave host publishing off to use only the assigned app
+        address.
+  post_install: Place traefik.yml and any file-provider configuration in the Configuration folder. Route to
+    the Nex application names and listener ports of your backends. This package does not mount a Docker socket.
+services:
+  traefik:
+    image: docker.io/library/traefik:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/etc/traefik
+    - ${STATE}:/state
+    ports:
+    - ${PORT:-19852}:80/tcp
+    - ${PORT_2:-20852}:443/tcp

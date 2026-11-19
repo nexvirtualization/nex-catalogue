@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: AList
+  summary: Browse and share files from multiple storage providers
+  description: Add storage providers from the admin screen. Retrieve the randomly generated first administrator
+    password from the initial app logs and change it before adding storage credentials. Use a trusted
+    HTTPS proxy for remote access.
+  category: tools
+  website: https://alistgo.com/
+  source: https://github.com/alistgo/alist
+  docs: https://alistgo.com/guide/install/docker.html
+  scalable: false
+  primary_service: alist
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: alist
+    scheme: http
+    port: 5244
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 5244.
+    DATA:
+      label: Storage configuration
+      help: Select This host. Holds the database, provider credentials and configuration. Include this
+        folder in a stopped Nex backup.
+services:
+  alist:
+    image: xhofe/alist:latest
+    ports:
+    - ${PORT:-5244}:5244/tcp
+    volumes:
+    - ${DATA}:/opt/alist/data
+    deploy:
+      replicas: 1

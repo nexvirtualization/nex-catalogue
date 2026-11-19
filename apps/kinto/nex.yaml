@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Kinto
+  summary: Serve synchronized JSON records over an HTTP API
+  description: Provision a PostgreSQL database and restrict the API to trusted clients or an authenticating
+    HTTPS route. Configure client authorization and bucket permissions before sharing data.
+  category: development
+  website: https://kinto.readthedocs.org
+  source: https://github.com/Kinto/kinto
+  docs: https://github.com/Kinto/kinto#readme
+  scalable: false
+  primary_service: kinto
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: kinto
+    scheme: http
+    port: 8888
+  works_with:
+  - postgresql
+  options:
+    DATABASE_URL:
+      label: Database connection string
+      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
+        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      type: password
+    AUTH_SECRET:
+      label: User ID signing secret
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8888.
+services:
+  kinto:
+    image: kinto/kinto-server:latest
+    environment:
+      KINTO_STORAGE_URL: ${DATABASE_URL}
+      KINTO_CACHE_BACKEND: kinto.core.cache.memory
+      KINTO_STORAGE_BACKEND: kinto.core.storage.postgresql
+      KINTO_PERMISSION_BACKEND: kinto.core.permission.postgresql
+      KINTO_PERMISSION_URL: ${DATABASE_URL}
+      KINTO_USERID_HMAC_SECRET: ${AUTH_SECRET}
+    ports:
+    - ${PORT:-8911}:8888/tcp
+    deploy:
+      replicas: 1

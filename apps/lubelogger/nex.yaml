@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: LubeLogger
+  summary: Record vehicle maintenance, fuel and expenses
+  description: Use the built-in SQLite profile. Configure accounts and authentication before exposing
+    the endpoint. Include the database, configuration, uploads and key folders in a stopped backup.
+  category: management
+  website: https://github.com/hargata/lubelog
+  source: https://github.com/hargata/lubelog
+  docs: https://docs.lubelogger.com/Installation/Docker
+  primary_service: lubelogger
+  scalable: false
+  license: MIT
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Vehicle records
+      help: SQLite data and vehicle records.
+    CONFIG:
+      label: Configuration
+      help: Persistent application configuration.
+    DOCUMENTS:
+      label: Documents
+      help: Vehicle documents and receipts.
+    IMAGES:
+      label: Images
+      help: Uploaded vehicle images.
+    KEYS:
+      label: Data protection keys
+      help: Preserve these application keys across restores.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  lubelogger:
+    image: ghcr.io/hargata/lubelogger:latest
+    volumes:
+    - ${DATA}:/App/data
+    - ${CONFIG}:/App/config
+    - ${DOCUMENTS}:/App/wwwroot/documents
+    - ${IMAGES}:/App/wwwroot/images
+    - ${KEYS}:/root/.aspnet/DataProtection-Keys
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

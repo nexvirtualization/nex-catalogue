@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Gramps Web
+  summary: Build a genealogy tree with notes, photos and sources
+  description: Create the initial owner through the setup wizard and keep private records behind authentication.
+    Back up the genealogy database, user data and media together.
+  category: productivity
+  website: https://github.com/gramps-project/gramps-web-api
+  source: https://github.com/gramps-project/gramps-web-api
+  docs: https://www.grampsweb.org/Deployment/
+  primary_service: gramps-web
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 5000
+  options:
+    USERS:
+      label: Accounts
+      help: Keep accounts in this managed folder between restarts.
+    INDEX:
+      label: Search index
+      help: Keep search index in this managed folder between restarts.
+    THUMBS:
+      label: Image thumbnails
+      help: Keep image thumbnails in this managed folder between restarts.
+    CACHE:
+      label: Cache
+      help: Keep cache in this managed folder between restarts.
+    SECRET:
+      label: Application secrets
+      help: Keep application secrets in this managed folder between restarts.
+    DB:
+      label: Family trees
+      help: Keep family trees in this managed folder between restarts.
+    MEDIA:
+      label: Family media
+      help: Keep family media in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 5000.
+services:
+  gramps-web:
+    image: ghcr.io/gramps-project/grampsweb:latest
+    volumes:
+    - ${USERS}:/app/users
+    - ${INDEX}:/app/indexdir
+    - ${THUMBS}:/app/thumbnail_cache
+    - ${CACHE}:/app/cache
+    - ${SECRET}:/app/secret
+    - ${DB}:/root/.gramps/grampsdb
+    - ${MEDIA}:/app/media
+    ports:
+    - ${PORT:-5000}:5000/tcp
+    deploy:
+      replicas: 1

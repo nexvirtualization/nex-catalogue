@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Monica
+  summary: Keep notes about important relationships
+  description: Prepare a MariaDB or MySQL database and create the first account. Use the public server
+    URL when setting up HTTPS. Keep the Laravel application key safe and unchanged after installation.
+  category: productivity
+  website: https://beta.monicahq.com/
+  source: https://github.com/monicahq/monica
+  docs: https://hub.docker.com/_/monica
+  scalable: false
+  primary_service: monica
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: monica
+    scheme: http
+    port: 80
+  works_with:
+  - mariadb
+  options:
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared database service. It must be reachable on internal
+        port 3306.
+    DB_USER:
+      label: Database user
+      help: Create a dedicated non-root database user for this application.
+    DB_NAME:
+      label: Database name
+      help: Create a database owned by the configured user first. The default is monica.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    PUBLIC_URL:
+      label: Public web address
+      help: Full URL clients will open, including scheme and any non-default port.
+    LARAVEL_KEY:
+      label: Laravel application key
+      help: 'Enter base64: followed by a base64-encoded 32-byte random key.'
+      type: password
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 80.
+    DATA:
+      label: Monica storage
+      help: Select This host. Keeps application files, uploads, and logs. Include this folder in a stopped
+        Nex backup.
+services:
+  monica:
+    image: monica:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME:-monica}
+      APP_URL: ${PUBLIC_URL}
+      APP_KEY: ${LARAVEL_KEY}
+    ports:
+    - ${PORT:-8428}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/html/storage
+    deploy:
+      replicas: 1

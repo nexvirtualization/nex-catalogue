@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RabbitMQ
+  summary: Run an authenticated AMQP broker for workers and applications
+  description: >-
+    For other Nex apps, use this installation’s Name inside applications and internal port 5672. Use This
+    host for persistent data and choose one eligible host. Swarm can restart the process on that host. The
+    broker keeps the same Erlang node name across restarts.
+  category: development
+  website: https://www.rabbitmq.com/docs/configure
+  source: https://github.com/rabbitmq/rabbitmq-server
+  docs: https://www.rabbitmq.com/docs/configure
+  license: MPL-2.0
+  primary_service: rabbitmq
+  options:
+    PORT:
+      label: Published port
+      help: Keep host publishing off for access only through the Nex application network. If host publishing
+        is enabled, restrict the endpoint to trusted networks.
+    BROKER_USER:
+      label: Initial broker user
+      help: Creates an account on first startup. Use a dedicated username.
+    BROKER_PASSWORD:
+      label: Initial database password
+      help: Generate a strong password. To rotate an existing password, change it in the database.
+      type: password
+    DATA:
+      label: Persistent data
+      help: Choose This host and one eligible host. Back up the data before updating.
+services:
+  rabbitmq:
+    image: docker.io/library/rabbitmq:latest
+    ports:
+      - ${PORT:-5672}:5672/tcp
+    environment:
+      RABBITMQ_DEFAULT_USER: ${BROKER_USER:-broker}
+      RABBITMQ_DEFAULT_PASS: ${BROKER_PASSWORD}
+      RABBITMQ_NODENAME: rabbit@rabbitmq
+    volumes:
+      - ${DATA}:/var/lib/rabbitmq
+    hostname: rabbitmq
+    deploy:
+      replicas: 1

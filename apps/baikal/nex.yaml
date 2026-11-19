@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Baïkal
+  summary: Sync calendars and contacts with CalDAV and CardDAV
+  description: Complete Baïkal configuration and set the administrator password on a trusted network.
+    Use HTTPS for remote clients. Keep both storage folders in backups.
+  category: productivity
+  website: https://github.com/sabre-io/Baikal
+  source: https://github.com/sabre-io/Baikal
+  docs: https://github.com/aalmenar/docker-baikal
+  primary_service: baikal
+  scalable: false
+  license: GPL-3.0
+  web:
+    port: 80
+  options:
+    CONFIG:
+      label: Configuration
+      help: Baïkal configuration.
+    DATA:
+      label: Calendar and contact store
+      help: Baïkal SQLite data and local state.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 80.
+services:
+  baikal:
+    image: ghcr.io/aalmenar/baikal:0.13.0-nginx
+    volumes:
+    - ${CONFIG}:/var/www/baikal/config
+    - ${DATA}:/var/www/baikal/Specific
+    ports:
+    - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1

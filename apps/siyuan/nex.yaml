@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SiYuan
+  summary: Maintain linked notes and documents in a local workspace
+  description: Open the workspace and sign in with your access code. Use one copy and stop it before
+    backing up the workspace.
+  category: productivity
+  website: https://github.com/siyuan-note/siyuan
+  source: https://github.com/siyuan-note/siyuan
+  docs: https://github.com/siyuan-note/siyuan
+  primary_service: siyuan
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 6806
+  options:
+    ACCESS_CODE:
+      label: Workspace access code
+      type: password
+      help: Use Nex Generate or provide a strong sign-in code.
+    WORKSPACE:
+      label: SiYuan workspace
+      help: Documents, assets and configuration. The container user must be able to write to this folder.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 6806.
+services:
+  siyuan:
+    image: docker.io/b3log/siyuan:latest
+    command:
+    - serve
+    environment:
+      SIYUAN_WORKSPACE_PATH: /siyuan/workspace
+      SIYUAN_ACCESS_AUTH_CODE: ${ACCESS_CODE}
+    volumes:
+    - ${WORKSPACE}:/siyuan/workspace
+    ports:
+    - ${PORT:-6806}:6806/tcp
+    deploy:
+      replicas: 1

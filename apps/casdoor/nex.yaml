@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Casdoor
+  summary: Provide application sign-in and identity management
+  description: Complete initial administrative setup on an isolated network and change the upstream default
+    password before connecting identity providers. Configure the issuer to use a stable public HTTPS address.
+  category: security
+  website: https://casdoor.ai/
+  source: https://github.com/casdoor/casdoor
+  docs: https://casdoor.org/docs/basic/server-installation
+  scalable: false
+  primary_service: casdoor
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: casdoor
+    scheme: http
+    port: 8000
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Casdoor state
+      help: Select This host. Stores data files for the all-in-one deployment. Include this folder in
+        a stopped Nex backup.
+services:
+  casdoor:
+    image: casbin/casdoor-all-in-one:latest
+    environment:
+      RUNNING_IN_DOCKER: 'true'
+    ports:
+    - ${PORT:-8462}:8000/tcp
+    volumes:
+    - ${DATA}:/data
+    deploy:
+      replicas: 1

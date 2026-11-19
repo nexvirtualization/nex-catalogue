@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sharry
+  summary: Share files using resumable transfers
+  description: Prepare a PostgreSQL database and a managed folder containing sharry.conf before installation.
+    Configure base-url, the external database connection and the initial administrator according to upstream
+    guidance. Serve the client interface through HTTPS.
+  category: tools
+  website: https://github.com/eikek/sharry
+  source: https://github.com/eikek/sharry
+  docs: https://eikek.github.io/sharry/doc/
+  scalable: false
+  primary_service: sharry
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: sharry
+    scheme: http
+    port: 9090
+  works_with:
+  - postgresql
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 9090.
+    DATA:
+      label: Prepared Sharry configuration
+      help: Select This host. Select a folder containing sharry.conf. Configure the mount paths according
+        to the upstream manual. Include this folder in a stopped Nex backup.
+services:
+  sharry:
+    image: eikek0/sharry:latest
+    command:
+    - /settings/sharry.conf
+    ports:
+    - ${PORT:-8463}:9090/tcp
+    volumes:
+    - ${DATA}:/settings:ro
+    deploy:
+      replicas: 1

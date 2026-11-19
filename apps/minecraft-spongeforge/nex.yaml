@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft SpongeForge
+  summary: Run Minecraft Forge mods and Sponge plugins together
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Uses Minecraft 1.20.6,
+    Forge 50.0.22, and the Sponge API 11 release candidate. Install compatible versions of Forge and
+    any client-side mods. Make a stopped backup before applying updates.
+  category: games
+  website: https://www.spongepowered.org/
+  source: https://github.com/itzg/docker-minecraft-server
+  docs: https://docs.spongepowered.org/stable/en/server/getting-started/implementations/spongeforge.html
+  license: Minecraft EULA and upstream server license
+  architectures: [amd64, arm64]
+  tags: [minecraft, sandbox]
+  options:
+    EULA:
+      label: Accept the Minecraft EULA
+      type: bool
+      help: >-
+        Read https://www.minecraft.net/eula and turn this on to start the server.
+    PLAYERS:
+      label: Allowed Java players
+      help: >-
+        Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-spongeforge:
+    image: ghcr.io/itzg/minecraft-server:java21
+    environment:
+      EULA: ${EULA}
+      TYPE: FORGE
+      MEMORY: 3G
+      ENABLE_RCON: 'false'
+      ONLINE_MODE: 'true'
+      ENABLE_WHITELIST: 'true'
+      ENFORCE_WHITELIST: 'true'
+      EXISTING_WHITELIST_FILE: SYNCHRONIZE
+      WHITELIST: ${PLAYERS}
+      VERSION: 1.20.6
+      FORGE_VERSION: 50.0.22
+      MODS: https://repo.spongepowered.org/repository/maven-releases/org/spongepowered/spongeforge/1.20.6-50.0.22-11.0.1-RC1916/spongeforge-1.20.6-50.0.22-11.0.1-RC1916-universal.jar
+    expose:
+      - 25565/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1
+    healthcheck:
+      start_period: 15m

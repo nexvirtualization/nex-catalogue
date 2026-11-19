@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: gitbucket
+  summary: Host Git repositories, issues and code reviews
+  description: Sign in with the upstream administrator account on a trusted network and immediately
+    change its password. Enable SSH access from settings when needed.
+  category: development
+  website: https://github.com/gitbucket/gitbucket
+  source: https://github.com/gitbucket/gitbucket
+  docs: https://github.com/gitbucket/gitbucket
+  primary_service: gitbucket
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Repositories and application data
+      help: Keep repositories and application data in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+    SSH_PORT:
+      label: Git SSH port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 29418.
+services:
+  gitbucket:
+    image: ghcr.io/gitbucket/gitbucket:latest
+    volumes:
+    - ${DATA}:/gitbucket
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    - ${SSH_PORT:-29418}:29418/tcp
+    deploy:
+      replicas: 1

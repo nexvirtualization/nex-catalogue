@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: OpenSpeedTest
+  summary: Measure network throughput from a web browser
+  description: Run an upload and download test from a browser against this server. Results measure the connection
+    to the deployed Nex host or proxy.
+  category: networking
+  website: https://openspeedtest.com/
+  source: https://github.com/openspeedtest/Speed-Test
+  docs: https://github.com/openspeedtest/Speed-Test#install-docker-and-run-the-following-command
+  license: MIT
+  primary_service: openspeedtest
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the HTTP endpoint from the device you want to measure. To expose it over HTTPS, use a reverse
+    proxy that allows large uploads and avoids buffering test traffic.
+  web:
+    port: 3000
+  scale:
+  - openspeedtest
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+services:
+  openspeedtest:
+    image: docker.io/openspeedtest/latest:latest
+    ports:
+    - ${PORT:-18107}:3000/tcp
+    deploy:
+      replicas: 1

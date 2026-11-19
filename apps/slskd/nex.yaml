@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: slskd
+  summary: Access the Soulseek client through a web interface
+  description: slskd stores account preferences and transfer state in managed storage. The independent peer
+    endpoint listens on TCP 50300.
+  category: media
+  website: https://github.com/slskd/slskd
+  source: https://github.com/slskd/slskd
+  docs: https://github.com/slskd/slskd
+  primary_service: slskd
+  post_install: Configure your Soulseek account in the UI after signing in. Expose only the peer listener
+    to peers, and keep access to the administration UI restricted.
+  license: AGPL-3.0
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 5030
+  options:
+    USER:
+      label: Email or login name
+      help: Account identifier supplied to the application.
+    PASSWORD:
+      label: Account password
+      help: Choose a strong password for this deployment.
+      type: password
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 5030 inside Nex.
+    PEER_PORT:
+      label: Published Soulseek peer port
+      help: Host-published port for the internal 50300/tcp endpoint.
+    DATA:
+      label: Client configuration and transfers
+      help: Managed directory mounted at /app. Choose storage writable by the application.
+services:
+  slskd:
+    image: docker.io/slskd/slskd:latest
+    ports:
+    - ${PORT:-20272}:5030/tcp
+    - ${PEER_PORT:-21272}:50300/tcp
+    volumes:
+    - ${DATA}:/app
+    environment:
+      SLSKD_REMOTE_CONFIGURATION: 'true'
+      SLSKD_USERNAME: ${USER:-slskd}
+      SLSKD_PASSWORD: ${PASSWORD}
+    deploy:
+      replicas: 1

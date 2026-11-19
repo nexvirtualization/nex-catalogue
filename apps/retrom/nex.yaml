@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Retrom
+  summary: Private cloud game library distribution server + frontend/launcher
+  description: Private cloud game library distribution server + frontend/launcher.
+  category: games
+  source: https://github.com/JMBeresford/retrom
+  website: https://github.com/JMBeresford/retrom
+  docs: https://github.com/JMBeresford/retrom/wiki/Installation
+  primary_service: retrom
+  options:
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /app/config.
+    DATA:
+      label: Data folder
+      help: Choose the Nex-managed folder mounted at /app/data.
+    LIBRARY:
+      label: Library folder
+      help: Choose the Nex-managed folder mounted at /app/library.
+  post_install: Choose a client-reachable primary network. Open the app at /web or connect a desktop client.
+    Add /app/library as a content directory and back up Config and Data.
+  web:
+    port: 5101
+services:
+  retrom:
+    image: ghcr.io/jmberesford/retrom-service:latest
+    deploy:
+      replicas: 1
+    volumes:
+    - ${CONFIG}:/app/config
+    - ${DATA}:/app/data
+    - ${LIBRARY}:/app/library
+    expose:
+    - 5101/tcp

@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PairDrop
+  summary: Share files between browsers over WebRTC
+  description: Devices on the same network can discover one another and transfer files. The LinuxServer image
+    serves the upstream app. Use one copy so users reach the same signalling server.
+  category: tools
+  website: https://pairdrop.net/
+  source: https://github.com/schlagmichdoch/PairDrop
+  docs: https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md
+  license: GPL-3.0
+  primary_service: pairdrop
+  architectures:
+  - amd64
+  - arm64
+  post_install: Open the same PairDrop address on both devices. If using a proxy, configure HTTPS, WebSocket
+    forwarding and accurate X-Forwarded-For headers.
+  web:
+    port: 3000
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+services:
+  pairdrop:
+    image: lscr.io/linuxserver/pairdrop:latest
+    ports:
+    - ${PORT:-18104}:3000/tcp
+    environment:
+      RATE_LIMIT: 'true'
+      WS_FALLBACK: 'false'
+      DEBUG_MODE: 'false'
+    deploy:
+      replicas: 1

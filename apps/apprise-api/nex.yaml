@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Apprise API
+  summary: Deliver notifications over your network
+  description: This instance requires its administrator login. Use HTTPS when sending notification credentials
+    or messages. Configure downstream notification services from the application or the API.
+  category: tools
+  website: https://github.com/caronc/apprise-api
+  source: https://github.com/caronc/apprise-api
+  docs: https://docs.linuxserver.io/images/docker-apprise-api/
+  scalable: false
+  primary_service: apprise-api
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: apprise-api
+    scheme: http
+    port: 8000
+  options:
+    APP_USERNAME:
+      label: Administrator login
+      help: HTTP Basic Auth username for the service.
+    APP_PASSWORD:
+      label: Administrator password
+      help: Use Generate to create a unique secret for this installation.
+      type: password
+    PUID:
+      label: User ID
+      help: Numeric UID of the process accessing the configuration folder.
+    PGID:
+      label: Group ID
+      help: Numeric GID for the configuration folder.
+    TZ:
+      label: Time zone
+      help: IANA time zone for server logs.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8000.
+    DATA:
+      label: Notification routes
+      help: Select This host. Stores Apprise settings and notification destination configuration. Include
+        this folder in a stopped Nex backup.
+services:
+  apprise-api:
+    image: lscr.io/linuxserver/apprise-api:latest
+    environment:
+      APPRISE_AUTH_REQUIRED: 'yes'
+      APPRISE_USER: ${APP_USERNAME:-admin}
+      APPRISE_PASSWORD: ${APP_PASSWORD}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Etc/UTC}
+    ports:
+    - ${PORT:-8169}:8000/tcp
+    volumes:
+    - ${DATA}:/config
+    deploy:
+      replicas: 1

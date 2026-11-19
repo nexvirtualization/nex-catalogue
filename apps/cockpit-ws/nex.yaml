@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Cockpit WS
+  summary: Administer Linux systems through an SSH-backed web console
+  description: This standalone Web Service connects to remote systems over SSH. It does not mount the Nex
+    host filesystem or management sockets.
+  category: management
+  website: https://cockpit-project.org/
+  source: https://github.com/cockpit-project/cockpit
+  docs: https://cockpit-project.org/faq
+  primary_service: cockpit-ws
+  post_install: Open the HTTPS endpoint and use Connect To for a Linux host you administer. The remote Linux
+    system must permit SSH and have cockpit-bridge available.
+  license: GNU Lesser General Public License v2.1
+  architectures:
+  - amd64
+  - arm64
+  web:
+    port: 9090
+    scheme: https
+  options:
+    PORT:
+      label: Published HTTP port
+      help: Host-published port. The app listens on TCP port 9090 inside Nex.
+services:
+  cockpit-ws:
+    image: quay.io/cockpit/ws:latest
+    ports:
+    - ${PORT:-20254}:9090/tcp
+    deploy:
+      replicas: 1

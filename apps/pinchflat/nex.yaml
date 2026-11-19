@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Deployment reference: https://github.com/kieraneglin/pinchflat#readme
+x-nex:
+  name: Pinchflat
+  summary: Download YouTube content built using yt-dlp
+  category: downloads
+  description: Download YouTube content built using yt-dlp. Back up the application folders together and keep
+    them writable by the container.
+  source: https://github.com/kieraneglin/pinchflat
+  website: https://github.com/kieraneglin/pinchflat
+  docs: https://github.com/kieraneglin/pinchflat
+  primary_service: app
+  options:
+    FOLDER_1:
+      label: Config folder
+      help: Nex-managed folder mounted at /config. Select storage with suitable access permissions.
+    FOLDER_2:
+      label: Downloads folder
+      help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
+    PORT:
+      label: Published TCP port
+      help: Host port for the listener on 8945/tcp.
+  web:
+    port: 8945
+  post_install: Open the web UI and add sources you are authorized to download. Back up the config folder,
+    which stores the database.
+services:
+  app:
+    image: ghcr.io/kieraneglin/pinchflat:latest
+    environment:
+      TZ: America/New_York
+    volumes:
+    - ${FOLDER_1}:/config
+    - ${FOLDER_2}:/downloads
+    deploy:
+      replicas: 1
+    ports:
+    - ${PORT:-8945}:8945/tcp

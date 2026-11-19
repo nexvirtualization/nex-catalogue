@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Flagsmith
+  summary: Manage feature flags and remote application configuration
+  description: Provision a PostgreSQL database first. Keep the initial web onboarding on a trusted network
+    and set the browser-facing hostname.
+  category: development
+  website: https://github.com/flagsmith/flagsmith
+  source: https://github.com/flagsmith/flagsmith
+  docs: https://docs.flagsmith.com/deployment/hosting/locally-docker
+  primary_service: flagsmith
+  scalable: false
+  license: BSD-3-Clause
+  web:
+    port: 8000
+  options:
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Supply the full connection URL for a prepared database on a reachable network.
+    DJANGO_SECRET_KEY:
+      label: Application signing secret
+      type: password
+      help: Use Nex Generate and preserve this secret across upgrades and restores.
+    FLAGSMITH_DOMAIN:
+      label: Flagsmith hostname
+      help: Client-facing domain and optional port, without a scheme.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8000.
+services:
+  flagsmith:
+    image: docker.io/flagsmith/flagsmith:latest
+    environment:
+      USE_POSTGRES_FOR_ANALYTICS: 'true'
+      ENVIRONMENT: production
+      RUN_MIGRATIONS: 'true'
+      DATABASE_URL: ${DATABASE_URL}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      FLAGSMITH_DOMAIN: ${FLAGSMITH_DOMAIN}
+    ports:
+    - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Minecraft Limbo
+  summary: Hold Java Edition players in a standalone waiting world
+  description: >-
+    Keep the server folders on This host and choose a registered primary network that players can
+    reach. Configure the proxy to reach the app’s Primary address on TCP 30000. Configure player
+    forwarding and add a world schematic in the data folder. Restrict direct access to the proxy.
+  category: games
+  website: https://modrinth.com/mod/limbo-server
+  source: https://github.com/LOOHP/Limbo
+  docs: https://github.com/LOOHP/Limbo#starting-the-server
+  license: Apache-2.0
+  architectures: [amd64, arm64]
+  tags: [minecraft, proxy]
+  options:
+    DATA:
+      label: World, extensions and settings
+      help: >-
+        Choose This host and include this folder in stopped backups.
+services:
+  minecraft-limbo:
+    image: ghcr.io/itzg/minecraft-server:latest
+    working_dir: /data
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        chown 1000:1000 /data
+        if [ ! -s /data/Limbo.jar ]; then
+          curl -fsSL --retry 3 -o /data/.server.jar.new 'https://cdn.modrinth.com/data/gIDqs3gn/versions/t4FmKS67/Limbo-2026.0.3-ALPHA-26.3.jar'
+          chown 1000:1000 /data/.server.jar.new
+          mv /data/.server.jar.new /data/Limbo.jar
+        fi
+
+        exec gosu 1000:1000 java -Xmx1G -jar /data/Limbo.jar --nogui
+    healthcheck:
+      disable: true
+    expose:
+      - 30000/tcp
+    volumes:
+      - ${DATA}:/data
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

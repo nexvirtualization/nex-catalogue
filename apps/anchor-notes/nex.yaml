@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Anchor
+  summary: Organize notes and personal knowledge
+  description: Use the trusted local endpoint to create your account, then configure public HTTPS if
+    needed. The package uses its bundled database.
+  category: productivity
+  website: https://github.com/ZhFahim/anchor
+  source: https://github.com/ZhFahim/anchor
+  docs: https://github.com/ZhFahim/anchor
+  primary_service: anchor-notes
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 3000
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Full browser-facing address including the scheme.
+    JWT_SECRET:
+      label: Session signing key
+      type: password
+      help: Use Nex Generate and retain this value across restores.
+    DATA:
+      label: Anchor data and bookmarks
+      help: Keep anchor data and bookmarks in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  anchor-notes:
+    image: ghcr.io/zhfahim/anchor:latest
+    environment:
+      APP_URL: ${BASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      DATA_DIR: /data
+    volumes:
+    - ${DATA}:/data
+    ports:
+    - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

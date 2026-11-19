@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Euro Truck Simulator 2
+  summary: Host a password-protected Convoy session
+  description: >-
+    Run one copy on a selected x86-64 host and choose This host for Convoy data. In Network,
+    choose a cluster VLAN or routed private network with player reachability. First startup
+    downloads the server from Steam and uses the image's default Convoy package. Search the
+    Convoy browser with the session search ID shown in the server logs. The game and query
+    listeners use TCP and UDP 27015 and 27016 on the app's Primary address.
+  category: games
+  website: https://eurotrucksimulator2.com/
+  source: https://github.com/LsHallo/ets2-dedicated-convoy-server
+  docs: https://github.com/LsHallo/ets2-dedicated-convoy-server#readme
+  license: Proprietary game server (Apache-2.0 container)
+  architectures: [amd64]
+  tags: [simulation, convoy, steamcmd]
+  options:
+    SERVER_NAME:
+      label: Convoy name
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+    DATA:
+      label: Convoy settings and ban list
+      help: Choose This host. Back up this folder before restarting to apply game updates.
+services:
+  euro-truck-simulator-2:
+    image: ghcr.io/lshallo/ets2-convoy-server:latest
+    environment:
+      ETS_SERVER_NAME: ${SERVER_NAME:-Nex Convoy}
+      ETS_SERVER_PASSWORD: ${SERVER_PASSWORD}
+      ETS_SERVER_UPDATE_ON_START: "true"
+    expose:
+      - "27015/tcp"
+      - "27015/udp"
+      - "27016/tcp"
+      - "27016/udp"
+    volumes:
+      - "${DATA}:/home/steam/.local/share/Euro Truck Simulator 2"
+    stop_grace_period: 60s
+    deploy:
+      replicas: 1

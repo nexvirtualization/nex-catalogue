@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: FreshRSS
+  summary: Read and organize RSS feeds in your own reader
+  description: RSS feed reader with a built-in SQLite database and automatic feed refresh twice an hour. Complete
+    the web installer immediately and choose SQLite for a standalone installation. One copy only. In Nex, keep one
+    chosen host when using This host folders; local data has no automatic host failover.
+  category: reading
+  website: https://freshrss.org
+  source: https://github.com/FreshRSS/FreshRSS
+  license: AGPL-3.0
+  scalable: false
+  tags:
+  - rss
+  - feeds
+  - reader
+  options:
+    TZ:
+      label: Time zone
+      help: IANA time zone for the feed refresh scheduler, such as Etc/UTC.
+    PORT:
+      label: Web port
+      help: Published HTTP port. Finish the installer and create the administrator immediately on a trusted network;
+        choose SQLite as the database. With Network → Docker and host publishing enabled, use the chosen host web
+        port. On a registered VLAN or private Primary network with its own address, use that address and internal
+        port 80; host publishing is a separate switch.
+    DATA:
+      label: Accounts, feeds and database
+      help: Persistent /var/www/FreshRSS/data with settings, accounts and the SQLite database. The image uses www-data
+        (UID/GID 33) and needs write access. Prefer reliable storage on This host and back up this folder.
+    EXTENSIONS:
+      label: Extensions
+      help: Persistent /var/www/FreshRSS/extensions for optional trusted extensions. Must be writable by www-data
+        (UID/GID 33).
+  primary_service: freshrss
+services:
+  freshrss:
+    image: freshrss/freshrss:latest
+    environment:
+      TZ: ${TZ:-Etc/UTC}
+      CRON_MIN: 1,31
+    ports:
+    - ${PORT:-8086}:80/tcp
+    volumes:
+    - ${DATA}:/var/www/FreshRSS/data
+    - ${EXTENSIONS}:/var/www/FreshRSS/extensions
+    deploy:
+      replicas: 1

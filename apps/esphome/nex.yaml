@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ESPHome
+  summary: Builds and manages firmware configurations for ESP-based home automation devices
+  description: Builds and manages firmware configurations for ESP-based home automation devices.
+  category: home-automation
+  source: https://github.com/esphome/esphome
+  website: https://esphome.io/
+  docs: https://esphome.io/guides/getting_started_command_line/
+  primary_service: esphome
+  options:
+    DASHBOARD_USER:
+      label: Dashboard user
+    DASHBOARD_PASSWORD:
+      label: Dashboard password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    CONFIG:
+      label: Config folder
+      help: Choose the Nex-managed folder mounted at /config.
+    PORT:
+      label: Published 6052/tcp port
+      help: Host port for application listener 6052/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Connect to ESPHome devices by IP and use over-the-air updates. Hardware that needs first-time
+    serial flashing must be provisioned separately.
+  web:
+    port: 6052
+services:
+  esphome:
+    image: ghcr.io/esphome/esphome:latest
+    deploy:
+      replicas: 1
+    environment:
+      ESPHOME_DASHBOARD_USE_PING: 'true'
+      USERNAME: ${DASHBOARD_USER:-admin}
+      PASSWORD: ${DASHBOARD_PASSWORD}
+    volumes:
+    - ${CONFIG}:/config
+    ports:
+    - ${PORT:-19771}:6052/tcp

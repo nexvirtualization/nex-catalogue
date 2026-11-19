@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: MeTube
+  summary: Queue and manage video downloads from a browser
+  description: MeTube has no built-in login. Keep the endpoint on a trusted network or use an authenticating
+    HTTPS proxy. Choose a folder with adequate space for downloads and the persistent queue.
+  category: downloads
+  website: https://github.com/alexta69/metube
+  source: https://github.com/alexta69/metube
+  docs: https://github.com/alexta69/metube
+  primary_service: metube
+  scalable: false
+  license: AGPL-3.0
+  web:
+    port: 8081
+  options:
+    DOWNLOADS:
+      label: Downloads and queue
+      help: Downloaded files and MeTube queue state.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8081.
+services:
+  metube:
+    image: ghcr.io/alexta69/metube:latest
+    volumes:
+    - ${DOWNLOADS}:/downloads
+    ports:
+    - ${PORT:-8081}:8081/tcp
+    deploy:
+      replicas: 1

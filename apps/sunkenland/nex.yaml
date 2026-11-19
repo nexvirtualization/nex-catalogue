@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Sunkenland
+  summary: Host an imported Sunkenland survival world
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Create a world in Sunkenland and copy its entire WorldName~GUID folder into the managed Worlds
+    folder before starting the app. Enter the matching GUID and region in Nex. After startup, find
+    the server in the client’s Dedicated Servers list. Make a stopped backup before applying game
+    updates.
+  category: games
+  website: https://www.sunkenlandgame.com/
+  source: https://github.com/adrianhowchin/sunkenland
+  docs: https://www.sunkenlandgame.com/post/dedicated-server-user-manual
+  license: Proprietary game server
+  architectures:
+    - amd64
+  tags:
+    - survival
+    - co-op
+  options:
+    WORLD_GUID:
+      label: World GUID
+      help: Copy the UUID after the tilde in the world folder name.
+    REGION:
+      label: Server region
+      help: Use the region code from the Sunkenland dedicated-server manual.
+    JOIN_PASSWORD:
+      label: Join password
+      type: password
+      help: Use at most eight characters.
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  sunkenland:
+    image: docker.io/adrianhowchin/sunkenland:latest
+    environment:
+      dGUID: ${WORLD_GUID}
+      dREGION: ${REGION:-eu}
+      dPASSWORD: ${JOIN_PASSWORD}
+    expose:
+      - 27015/udp
+      - 27015/tcp
+    volumes:
+      - ${DATA}:/opt/sunkenland/Worlds
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

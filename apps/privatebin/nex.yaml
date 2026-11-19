@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: PrivateBin
+  summary: Share encrypted text pastes through your browser
+  description: Use an HTTPS proxy for client access. Content is encrypted in the browser. Set any network
+    access policy at the proxy.
+  category: tools
+  website: https://github.com/PrivateBin/PrivateBin
+  source: https://github.com/PrivateBin/PrivateBin
+  docs: https://github.com/PrivateBin/docker-nginx-fpm-alpine
+  primary_service: privatebin
+  scalable: false
+  license: Apache-2.0
+  web:
+    port: 8080
+  options:
+    DATA:
+      label: Encrypted pastes
+      help: Encrypted pastes and expiry metadata.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8080.
+services:
+  privatebin:
+    image: docker.io/privatebin/nginx-fpm-alpine:latest
+    volumes:
+    - ${DATA}:/srv/data
+    ports:
+    - ${PORT:-8080}:8080/tcp
+    deploy:
+      replicas: 1

@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: openHAB
+  summary: Vendor and technology agnostic software for home automation
+  description: Vendor and technology agnostic software for home automation.
+  category: home-automation
+  source: https://github.com/openhab/openhab-core
+  website: https://www.openhab.org
+  docs: https://www.openhab.org/docs/installation/docker.html
+  primary_service: openhab
+  options:
+    UID:
+      label: Uid
+    GID:
+      label: Gid
+    CONF:
+      label: Conf folder
+      help: Choose the Nex-managed folder mounted at /openhab/conf.
+    USERDATA:
+      label: Userdata folder
+      help: Choose the Nex-managed folder mounted at /openhab/userdata.
+    ADDONS:
+      label: Addons folder
+      help: Choose the Nex-managed folder mounted at /openhab/addons.
+    PORT:
+      label: Published 8080/tcp port
+      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Install on a primary network that can reach your devices. Configure devices explicitly by address.
+    Discovery and USB-dependent integrations are outside this package.
+  web:
+    port: 8080
+services:
+  openhab:
+    image: docker.io/openhab/openhab:latest
+    deploy:
+      replicas: 1
+    environment:
+      USER_ID: ${UID:-9001}
+      GROUP_ID: ${GID:-9001}
+      CRYPTO_POLICY: unlimited
+    volumes:
+    - ${CONF}:/openhab/conf
+    - ${USERDATA}:/openhab/userdata
+    - ${ADDONS}:/openhab/addons
+    ports:
+    - ${PORT:-19824}:8080/tcp

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: SnappyMail
+  summary: Read and send email from a browser
+  description: Configure IMAP and SMTP providers in the SnappyMail administration page before signing
+    in with a mailbox. Consult the upstream guide for the initial administrator password and reset it
+    before offering webmail. Use HTTPS for user sessions.
+  category: communication
+  website: https://github.com/the-djmaze/snappymail
+  source: https://github.com/the-djmaze/snappymail
+  docs: https://github.com/the-djmaze/snappymail/wiki/Installation-instructions
+  scalable: false
+  primary_service: snappymail
+  architectures:
+  - amd64
+  - arm64
+  web:
+    service: snappymail
+    scheme: http
+    port: 8888
+  options:
+    PORT:
+      label: Web port
+      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
+        the application address on port 8888.
+    DATA:
+      label: Webmail configuration
+      help: Select This host. Stores settings, configured mail domains and application state. Include
+        this folder in a stopped Nex backup.
+services:
+  snappymail:
+    image: djmaze/snappymail:latest
+    ports:
+    - ${PORT:-8129}:8888/tcp
+    volumes:
+    - ${DATA}:/var/lib/snappymail
+    deploy:
+      replicas: 1

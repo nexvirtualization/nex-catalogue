@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Barotrauma
+  summary: Host a private submarine campaign for your crew
+  description: >-
+    Choose one x86-64 host and a registered client-reachable primary network. Use direct connect
+    at APP-IP:27015 and enter the join password. The game uses UDP 27015 for players and UDP 27016
+    for queries. Set both Steam owner fields to manage the lobby and campaign in-game, or leave them
+    empty to start without an assigned owner. Take a stopped Nex backup
+    before redeploying the image to match a client update.
+  category: games
+  website: https://barotraumagame.com/
+  source: https://github.com/KagurazakaNyaa/barotrauma-docker
+  docs: https://barotraumagame.com/wiki/Hosting_a_Dedicated_Server
+  license: Proprietary
+  architectures: [amd64]
+  tags: [co-op, simulation, dedicated-server]
+  options:
+    SERVER_NAME:
+      label: Server name
+      help: This is the name players see in the lobby.
+    SERVER_PASSWORD:
+      label: Join password
+      type: password
+      help: Give this password to the players you invite.
+    OWNER_NAME:
+      label: Owner display name
+      help: Optional. With a SteamID64, use the owner's Steam display name without quotes or apostrophes.
+    OWNER_STEAM_ID:
+      label: Owner SteamID64
+      help: Optional. With an owner display name, enter the 17-digit Steam ID to grant in-game administrator permissions.
+    SERVER_DATA:
+      label: Campaigns and settings
+      help: Select This host and back up this folder. It contains config, saves, mods and added submarines.
+services:
+  barotrauma:
+    image: docker.io/kagurazakanyaa/barotrauma:latest
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-Nex Barotrauma}
+      PASSWORD: ${SERVER_PASSWORD}
+      OWNER_STEAMNAME: ${OWNER_NAME:-}
+      OWNER_STEAMID: ${OWNER_STEAM_ID:-}
+      IS_PUBLIC: 'false'
+      GAME_PORT: '27015'
+      QUERY_PORT: '27016'
+    expose: ['27015/udp', '27016/udp']
+    volumes:
+      - ${SERVER_DATA}:/data
+    stop_grace_period: 1m
+    deploy:
+      replicas: 1

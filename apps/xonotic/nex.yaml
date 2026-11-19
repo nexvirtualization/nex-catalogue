@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Xonotic
+  summary: Host an open-source arena shooter
+  description: >-
+    Keep the game folders on This host and choose a registered primary network that players can reach.
+    Join from Multiplayer using the app’s Primary address and UDP 26000. The first boot downloads
+    and extracts the upstream game. Customize the map rotation and rules in data/server.cfg with the
+    app stopped. Make a stopped backup before applying game updates.
+  category: games
+  website: https://xonotic.org/
+  source: https://github.com/ich777/docker-xonotic-server
+  docs: https://github.com/ich777/docker-xonotic-server#readme
+  license: GPL-3.0-or-later
+  architectures:
+    - amd64
+  tags:
+    - fps
+    - arena
+  options:
+    DATA:
+      label: Server data
+      help: Choose This host and include this folder in stopped backups.
+services:
+  xonotic:
+    image: ghcr.io/ich777/xonotic:latest
+    environment:
+      GAME_PARAMS: +port 26000
+    expose:
+      - 26000/udp
+    volumes:
+      - ${DATA}:/serverdata/serverfiles
+    stop_grace_period: 90s
+    deploy:
+      replicas: 1

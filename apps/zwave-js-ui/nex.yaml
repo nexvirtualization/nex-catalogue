@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Z-Wave JS UI
+  summary: Manage a Z-Wave controller through a web interface
+  description: Configure a supported network-attached controller using its TCP serial endpoint. Keep
+    the local controller port private and enable authentication in settings.
+  category: home-automation
+  website: https://github.com/zwave-js/zwave-js-ui
+  source: https://github.com/zwave-js/zwave-js-ui
+  docs: https://zwave-js.github.io/zwave-js-ui/#/getting-started/docker
+  primary_service: zwave-js-ui
+  scalable: false
+  license: MIT
+  web:
+    port: 8091
+  options:
+    DATA:
+      label: Controller settings and network keys
+      help: Keep controller settings and network keys in this managed folder between restarts.
+    PORT:
+      label: Web port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 8091.
+    ZWAVE_PORT:
+      label: Z-Wave JS API
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 3000.
+services:
+  zwave-js-ui:
+    image: docker.io/zwavejs/zwave-js-ui:latest
+    volumes:
+    - ${DATA}:/usr/src/app/store
+    ports:
+    - ${PORT:-8091}:8091/tcp
+    - ${ZWAVE_PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1

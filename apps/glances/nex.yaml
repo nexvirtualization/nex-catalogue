@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: Glances
+  summary: System monitoring app for checking CPU, memory, disks, containers, processes, and services
+  description: System monitoring app for checking CPU, memory, disks, containers, processes, and services.
+  category: monitoring
+  source: https://github.com/nicolargo/glances
+  website: http://nicolargo.github.io/glances
+  docs: https://glances.readthedocs.io/en/latest/docker.html
+  primary_service: glances
+  options:
+    PORT:
+      label: Published 61208/tcp port
+      help: Host port for application listener 61208/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: This unprivileged package reports the container environment. For host-wide reporting, install
+    a Glances instance on the host and connect to it separately.
+  web:
+    port: 61208
+services:
+  glances:
+    image: docker.io/nicolargo/glances:latest
+    deploy:
+      replicas: 1
+    environment:
+      GLANCES_OPT: -w
+    ports:
+    - ${PORT:-19767}:61208/tcp

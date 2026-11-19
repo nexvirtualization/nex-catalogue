@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: ntfy
+  summary: Send push notifications from scripts and services
+  description: >-
+    HTTP notification server with persistent messages, attachments and private topics. Anonymous
+    topic access is denied. Nex creates the initial administrator from your username and password. Use HTTPS for client
+    connections; browser Web Push and iOS instant push need additional upstream configuration.
+  category: communication
+  website: https://ntfy.sh
+  source: https://github.com/binwiederhier/ntfy
+  license: Apache-2.0
+  scalable: false
+  primary_service: ntfy
+  tags: [notifications, push, alerts]
+  options:
+    BASE_URL:
+      label: Public web address
+      help: Required full client-facing URL, including scheme and any port, for example https://notify.example.com. Needed to build notification attachment links.
+    ADMIN_USER:
+      label: Initial administrator
+      help: Administrator managed by Nex settings. Use letters, digits, underscores or hyphens. Changing this name removes the previous provisioned account at restart.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      type: password
+      help: Choose a strong password or use Nex Generate. Nex hashes it inside the container; saving a changed password and restarting updates this administrator.
+    PORT:
+      label: Web port
+      help: Host-published HTTP port; with a dedicated Primary network and host publishing off, connect to the app address on port 80. A reverse proxy must support long-lived streaming requests. Set Public web address to the client-facing URL.
+    DATA:
+      label: Messages and accounts
+      help: Message cache, user database and attachments at /data. Prefer This host for SQLite. Back up this folder and allow the container to write it.
+services:
+  ntfy:
+    image: docker.io/binwiederhier/ntfy:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - |
+        password_hash="$$(printf '%s\n%s\n' "$$NTFY_PASSWORD" "$$NTFY_PASSWORD" | ntfy user hash 2>/dev/null)"
+        export NTFY_AUTH_USERS="$$NEX_ADMIN_USER:$$password_hash:admin"
+        unset NTFY_PASSWORD NEX_ADMIN_USER password_hash
+        exec ntfy serve
+    environment:
+      NTFY_BASE_URL: "${BASE_URL}"
+      NEX_ADMIN_USER: "${ADMIN_USER:-admin}"
+      NTFY_PASSWORD: "${ADMIN_PASSWORD}"
+      NTFY_AUTH_FILE: /data/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      NTFY_ENABLE_LOGIN: "true"
+      NTFY_CACHE_FILE: /data/cache.db
+      NTFY_ATTACHMENT_CACHE_DIR: /data/attachments
+    ports:
+      - "${PORT:-8090}:80/tcp"
+    volumes:
+      - "${DATA}:/data"
+    deploy:
+      replicas: 1

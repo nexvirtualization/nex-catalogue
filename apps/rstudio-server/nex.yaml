@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: RStudio Server
+  summary: Web browser based IDE for R
+  description: Web browser based IDE for R.
+  category: development
+  source: https://github.com/rstudio/rstudio
+  website: https://www.rstudio.com/products/rstudio/#Server
+  docs: https://rocker-project.org/images/versioned/rstudio.html
+  primary_service: rstudio-server
+  options:
+    RSTUDIO_PASSWORD:
+      label: Rstudio password
+      type: password
+      help: Use a unique value and keep it with the application backups.
+    WORK:
+      label: Work folder
+      help: Choose the Nex-managed folder mounted at /home/rstudio.
+    PORT:
+      label: Published 8787/tcp port
+      help: Host port for application listener 8787/tcp. Leave host publishing off to use only the assigned
+        app address.
+  post_install: Sign in as rstudio using the configured password. Mount a writable Work folder for projects
+    and use HTTPS for remote access.
+  web:
+    port: 8787
+services:
+  rstudio-server:
+    image: docker.io/rocker/rstudio:latest
+    deploy:
+      replicas: 1
+    environment:
+      PASSWORD: ${RSTUDIO_PASSWORD}
+    volumes:
+    - ${WORK}:/home/rstudio
+    ports:
+    - ${PORT:-19977}:8787/tcp

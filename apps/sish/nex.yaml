@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+x-nex:
+  name: sish
+  summary: Offer SSH reverse tunnels for authorized users
+  description: Prepare authorized SSH public keys and persistent host keys. Keep the service operator-controlled
+    and route only your intended subdomains.
+  category: networking
+  website: https://github.com/antoniomika/sish
+  source: https://github.com/antoniomika/sish
+  docs: https://docs.ssi.sh/
+  primary_service: sish
+  scalable: false
+  license: MIT
+  options:
+    SISH_DOMAIN:
+      label: Tunnel base domain
+      help: Operator-controlled DNS domain for tunnel addresses.
+    DATA:
+      label: SSH host keys
+      help: Keep ssh host keys in this managed folder between restarts.
+    AUTH:
+      label: Authorized user keys
+      help: Keep authorized user keys in this managed folder between restarts.
+    PORT:
+      label: Service port
+      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
+        application address on port 2222.
+services:
+  sish:
+    image: docker.io/antoniomika/sish:latest
+    command:
+    - --ssh-address=:2222
+    - --authentication-keys-directory=/pubkeys
+    - --private-keys-directory=/keys
+    - --domain=${SISH_DOMAIN}
+    environment:
+      SISH_DOMAIN: ${SISH_DOMAIN}
+    volumes:
+    - ${DATA}:/keys
+    - ${AUTH}:/pubkeys
+    ports:
+    - ${PORT:-2222}:2222/tcp
+    deploy:
+      replicas: 1
