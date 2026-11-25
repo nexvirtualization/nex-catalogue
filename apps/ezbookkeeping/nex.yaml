@@ -19,9 +19,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /ezbookkeeping/storage.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Create your first account and keep the SQLite data folder and secret together in backups.
   web:
     port: 8080
@@ -38,4 +38,4 @@ services:
     volumes:
     - ${DATA}:/ezbookkeeping/storage
     ports:
-    - ${PORT:-19829}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

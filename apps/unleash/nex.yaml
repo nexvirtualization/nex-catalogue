@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 4242.
+      help: The app listens on TCP port 4242 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   unleash:
     image: unleashorg/unleash-server:latest
@@ -37,6 +37,6 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       DATABASE_SSL: 'false'
     ports:
-    - ${PORT:-8453}:4242/tcp
+    - ${PORT:-4242}:4242/tcp
     deploy:
       replicas: 1

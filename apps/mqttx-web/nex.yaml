@@ -21,12 +21,13 @@ x-nex:
   - mqttx-web
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   mqttx-web:
     image: docker.io/emqx/mqttx-web:latest
     ports:
-    - ${PORT:-18116}:80/tcp
+    - ${PORT:-80}:80/tcp
     deploy:
       replicas: 1

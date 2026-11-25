@@ -19,8 +19,9 @@ x-nex:
     port: 3000
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notes and checklists
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
@@ -34,7 +35,7 @@ services:
   jotty:
     image: ghcr.io/fccview/jotty:latest
     ports:
-    - ${PORT:-20224}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/app/data
     - ${CONFIG}:/app/config

@@ -4,29 +4,36 @@ x-nex:
   name: SilverBullet
   summary: Note-taking application optimized for people with a hacker mindset
   category: productivity
-  description: Note-taking application optimized for people with a hacker mindset. Back up the application
-    folders together and keep them writable by the container.
+  description: Note-taking application optimized for people with a hacker mindset. Keep the data folder
+    writable by SilverBullet and back it up in full, including notes, assets, and account settings.
   source: https://github.com/silverbulletmd/silverbullet
   website: https://silverbullet.md/
   docs: https://silverbullet.md/
   primary_service: silverbullet
   options:
     FOLDER_1:
-      label: Space folder
-      help: Nex-managed folder mounted at /space. Select storage with suitable access permissions.
+      label: SilverBullet data folder
+      help: Select an empty folder for a new server or reuse the entire existing SilverBullet data folder.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 3000/tcp.
+      label: TCP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     WEB_USER:
-      label: Space username
+      label: Legacy single-space username
+      help: For migration, use the username from the existing single-space install. Leave empty for admin.
     WEB_PASSWORD:
-      label: Space password
-      help: Choose a strong password without a colon.
+      label: Legacy single-space password
+      help: Use the existing password for migration. For a new server, enter a strong value here and set
+        the administrator password separately in SilverBullet setup.
       type: password
   web:
     port: 3000
-  post_install: Sign in with the configured username and password. The space folder contains all Markdown pages
-    and assets.
+  post_install: >-
+    For an empty data folder, open SilverBullet at /.setup/ while access is private. Create the
+    administrator account and finish setup. SilverBullet ignores the legacy credentials entered in Nex
+    for an empty folder. For an existing single-space install, back up the folder, open
+    /.setup/migrate/, sign in with the legacy credentials, and review the migration before confirming.
+    For an already configured server, sign in at /.dashboard with its existing account.
 services:
   silverbullet:
     image: ghcr.io/silverbulletmd/silverbullet:v2

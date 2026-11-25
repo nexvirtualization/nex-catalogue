@@ -24,8 +24,10 @@ x-nex:
       type: password
     ENCRYPTION_SECRET:
       label: Encryption secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes exactly 32 letters and digits. If Generate gives only 24 characters
+        (older Nex), paste the output of openssl rand -hex 16 instead.
       type: password
+      generate: {format: alnum, length: 32, max_length: 32}
     REDIS_URL:
       label: Redis url
       help: Enter the deployment value described in the upstream setup guide.
@@ -58,17 +60,19 @@ x-nex:
       label: From email
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     VIEWER_PORT:
-      label: Published viewer port
-      help: Host-published port for the internal 3001/tcp endpoint.
+      label: Viewer port
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   typebot:
     image: docker.io/library/caddy:latest
     ports:
-    - ${PORT:-23533}:3000/tcp
-    - ${VIEWER_PORT:-24533}:3001/tcp
+    - ${PORT:-3000}:3000/tcp
+    - ${VIEWER_PORT:-3001}:3001/tcp
     entrypoint:
     - /bin/sh
     command:

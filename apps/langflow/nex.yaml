@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7860.
+      help: The app listens on TCP port 7860 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Langflow state
       help: Select This host. Stores the local application database, data and settings. Include this folder
@@ -38,13 +38,13 @@ services:
   langflow:
     image: langflowai/langflow:latest
     environment:
-      LANGFLOW_CONFIG_DIR: /app/config
+      LANGFLOW_CONFIG_DIR: /app/langflow
       LANGFLOW_AUTO_LOGIN: 'false'
       LANGFLOW_SUPERUSER: ${ADMIN_USERNAME:-admin}
       LANGFLOW_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8401}:7860/tcp
+    - ${PORT:-7860}:7860/tcp
     volumes:
-    - ${DATA}:/app/config
+    - ${DATA}:/app/langflow
     deploy:
       replicas: 1

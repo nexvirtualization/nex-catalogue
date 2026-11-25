@@ -21,11 +21,12 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 20128.
+      help: The app listens on TCP port 20128 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
       label: Api Port
-      help: Host-published OpenAI-compatible API port.
+      help: The app listens on TCP port 20129 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Gateway configuration
       help: Select This host. Stores configured providers, API keys and settings. Include this folder

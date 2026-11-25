@@ -2,8 +2,9 @@
 x-nex:
   name: Puter
   summary: Run a private browser desktop with files and apps
-  description: Configure the client-facing address and sign in before exposing it. Keep the desktop
-    data folder in backups and use a trusted HTTPS endpoint.
+  description: Set the public domain before first start. Sign in as admin with the password printed in
+    the app log on first start, then change it. Keep the desktop data folder in backups and use a
+    trusted HTTPS endpoint.
   category: tools
   website: https://github.com/heyputer/puter
   source: https://github.com/heyputer/puter
@@ -14,23 +15,75 @@ x-nex:
   web:
     port: 4100
   options:
+    DOMAIN:
+      label: Public domain
+      help: Leave empty for puter.localhost. Domain name clients use to open Puter, without scheme or
+        port. Puter also serves apps and sites on subdomains of it, so point a wildcard DNS record at the
+        application address. Used on first start; edit config.json in the configuration folder to change
+        it later.
+    JWT_SECRET:
+      label: Session signing secret
+      type: password
+      help: Use Generate. Written to config.json on first start only; later changes have no effect.
+    URL_SECRET:
+      label: URL signing secret
+      type: password
+      help: Use Generate. Written to config.json on first start only; later changes have no effect.
     CONFIG:
       label: Puter configuration
-      help: Keep puter configuration in this managed folder between restarts.
+      help: Select This host. A starter config.json is written here on first start and is yours to edit
+        afterwards.
     DATA:
       label: Desktop files and state
-      help: Keep desktop files and state in this managed folder between restarts.
+      help: Select This host. Stores the database and desktop files. Include this folder in a stopped Nex
+        backup.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4100.
+      help: The app listens on TCP port 4100 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   puter:
     image: ghcr.io/heyputer/puter:latest
+    # The image runs as the node user, which cannot write Nex's root-owned folders, so this starts
+    # as root only to prepare them and then drops to node.
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /etc/puter/config.json ]; then
+        cat > /etc/puter/config.json <<CONFIG
+      {
+        "domain": "$$PUTER_DOMAIN",
+        "protocol": "http",
+        "jwt_secret_v2": "$$PUTER_JWT_SECRET",
+        "url_signature_secret": "$$PUTER_URL_SECRET",
+        "database": {"engine": "sqlite", "path": "/var/puter/puter-database.sqlite"},
+        "dynamo": {"path": "/var/puter/puter-ddb"},
+        "s3": {"localConfig": {"dataDir": "/var/puter/fauxqs-data", "s3StorageDir": "/var/puter/fauxqs-s3-data"}}
+      }
+      CONFIG
+      fi
+      chown node:node /etc/puter /etc/puter/config.json /var/puter
+      chmod 600 /etc/puter/config.json
+      cd /opt/puter
+      exec setpriv --reuid=node --regid=node --init-groups docker-entrypoint.sh \
+        node -r ./dist/src/backend/telemetry.js ./dist/src/backend/index.js
+    environment:
+      PUTER_DOMAIN: ${DOMAIN:-puter.localhost}
+      PUTER_JWT_SECRET: ${JWT_SECRET}
+      PUTER_URL_SECRET: ${URL_SECRET}
     volumes:
     - ${CONFIG}:/etc/puter
     - ${DATA}:/var/puter
     ports:
     - ${PORT:-4100}:4100/tcp
+    healthcheck:
+      # The image's own check resolves the public domain name, which does not resolve inside the container.
+      test: [CMD, wget, -q, -T, '3', -O, /dev/null, 'http://127.0.0.1:4100/']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5m
     deploy:
       replicas: 1

@@ -2,8 +2,10 @@
 x-nex:
   name: Bitpoll
   summary: Schedule meetings using participant availability polls
-  description: Select a folder containing the upstream settings.py. Set the database connection, allowed
-    hosts and application secret, and keep these settings on a trusted network.
+  description: Bitpoll starts with a working settings.py and a SQLite database, both kept in the settings folder.
+    Set the host names people use to reach it, the public URL and two secrets when installing. Edit settings.py
+    in that folder to change the database, mail or sign-in; Nex writes it only when it is missing. Keep it
+    on a trusted network.
   category: productivity
   website: https://github.com/fsinfuhh/Bitpoll
   source: https://github.com/fsinfuhh/Bitpoll
@@ -16,19 +18,74 @@ x-nex:
   web:
     port: 3009
   options:
+    ALLOWED_HOSTS:
+      label: Allowed host names
+      help: Comma-separated host names or addresses people type in the browser, such as polls.example.org,192.0.2.10.
+        Requests for any other name are refused.
+    PUBLIC_URL:
+      label: Public URL
+      help: Address people use to reach Bitpoll, such as https://polls.example.org or http://192.0.2.10:3009.
+        Used in links and to trust form posts from that origin.
+    SECRET_KEY:
+      label: Session signing secret
+      type: password
+      help: Use Generate for a unique secret and keep it across restarts and restores; changing it signs everyone
+        out.
+    ENCRYPTION_SECRET:
+      label: Field encryption secret
+      type: password
+      help: Use Generate for a unique secret. Nex derives the encryption key from it. Keep it across restarts and
+        restores; stored encrypted fields cannot be read after it changes.
     CONFIG:
-      label: Prepared Bitpoll settings
-      help: Keep prepared bitpoll settings in this managed folder between restarts.
+      label: Bitpoll settings and database
+      help: Keep settings.py and the SQLite database (db folder) in this managed folder between restarts. Nex
+        writes a default settings.py on first start and never overwrites yours.
     STATIC:
       label: Published static assets
       help: Keep published static assets in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3009.
+      help: The app listens on TCP port 3009 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bitpoll:
     image: ghcr.io/fsinfuhh/bitpoll:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /opt/config/settings.py ]; then
+        mkdir -p /opt/config/db
+        cat > /opt/config/settings.py <<'PY'
+      import base64
+      import hashlib
+      import os
+
+      SECRET_KEY = os.environ['BITPOLL_SECRET_KEY']
+      FIELD_ENCRYPTION_KEY = base64.urlsafe_b64encode(
+          hashlib.sha256(os.environ['BITPOLL_ENCRYPTION_SECRET'].encode()).digest()).decode()
+      DEBUG = False
+      ALLOWED_HOSTS = [h.strip() for h in os.environ['BITPOLL_ALLOWED_HOSTS'].split(',') if h.strip()]
+      BASE_URL = os.environ['BITPOLL_PUBLIC_URL']
+      CSRF_TRUSTED_ORIGINS = [BASE_URL]
+      HOME_URL = ''
+      EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+      DATABASES = {
+          'default': {
+              'ENGINE': 'django.db.backends.sqlite3',
+              'NAME': '/opt/config/db/bitpoll.sqlite3',
+          },
+      }
+      PY
+        touch /opt/config/db/bitpoll.sqlite3
+        chown -R www-data:www-data /opt/config/db
+      fi
+      exec /usr/local/bin/run
+    environment:
+      BITPOLL_ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      BITPOLL_PUBLIC_URL: ${PUBLIC_URL}
+      BITPOLL_SECRET_KEY: ${SECRET_KEY}
+      BITPOLL_ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
     volumes:
     - ${CONFIG}:/opt/config
     - ${STATIC}:/opt/static

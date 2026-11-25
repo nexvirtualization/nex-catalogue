@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8081.
+      help: The app listens on TCP port 8081 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Repository data
       help: Select This host. Stores repository blobs, metadata, access configuration and the first administrator
@@ -33,7 +33,7 @@ services:
     environment:
       NEXUS_SECURITY_RANDOMPASSWORD: 'true'
     ports:
-    - ${PORT:-8151}:8081/tcp
+    - ${PORT:-8081}:8081/tcp
     volumes:
     - ${DATA}:/nexus-data
     deploy:

@@ -2,9 +2,8 @@
 x-nex:
   name: ngIRCd
   summary: Host a lightweight Internet Relay Chat server
-  description: Connect an IRC client to internal port 6667 on the dedicated app address or to the host-published
-    IRC endpoint. The packaged listener is plaintext. Keep it on a trusted network and configure your
-    local IRC policy in the managed ngircd.conf file.
+  description: Connect an IRC client to internal port 6667 on the app address. The packaged listener is
+    plaintext. Keep it on a trusted network and configure your local IRC policy in the managed ngircd.conf file.
   category: communication
   website: https://ngircd.barton.de/
   source: https://github.com/ngircd/ngircd
@@ -26,7 +25,8 @@ x-nex:
       help: IANA time zone for logs.
     IRC_PORT:
       label: Irc Port
-      help: Plaintext IRC port when host publication is enabled.
+      help: The app listens on TCP port 6667 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: IRC configuration
       help: Select This host. Stores ngircd.conf and any configured server state. Include this folder

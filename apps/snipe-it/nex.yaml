@@ -12,7 +12,10 @@ x-nex:
     APP_KEY:
       label: App key
       type: password
-      help: Use a unique value and keep it with the application backups.
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead. Keep it with the application backups.'
     PUBLIC_URL:
       label: Public url
     DB_HOST:
@@ -31,9 +34,9 @@ x-nex:
       label: Storage folder
       help: Choose the Nex-managed folder mounted at /var/lib/snipeit.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a MySQL or MariaDB database. Generate the Laravel application key as described upstream,
     then complete the installer. Back up the database and Storage folder together.
   web:
@@ -57,4 +60,4 @@ services:
     volumes:
     - ${STORAGE}:/var/lib/snipeit
     ports:
-    - ${PORT:-19543}:80/tcp
+    - ${PORT:-80}:80/tcp

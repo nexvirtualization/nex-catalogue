@@ -25,15 +25,22 @@ x-nex:
     RTC_ADDRESS:
       label: Rtc Address
       help: Client-reachable IP address or DNS name announced for RTC.
-    HOST_USERS:
-      label: Authorized host accounts
-      help: Use the upstream HOST_USERS format, with at least one username, strong password and permitted
-        rooms.
+    HOST_USERNAME:
+      label: Host login username
+      help: Username that opens and manages rooms. Must not be admin, guest or username.
+    HOST_PASSWORD:
+      label: Host login password
       type: password
+      help: Password for the host login, 1 to 36 characters.
+    SIGNING_SECRET:
+      label: Session signing secret
+      type: password
+      help: Any long secret; Nex Generate works. MiroTalk's own signing key is derived from it. Keep it
+        across upgrades and restores.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3010.
+      help: The app listens on TCP port 3010 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   mirotalk-sfu:
     image: mirotalk/sfu:latest
@@ -47,7 +54,17 @@ services:
       SFU_SERVER: 'true'
       HOST_PROTECTED: 'true'
       HOST_USER_AUTH: 'true'
-      HOST_USERS: ${HOST_USERS}
+      HOST_USERNAME: ${HOST_USERNAME}
+      HOST_PASSWORD: ${HOST_PASSWORD}
+      SIGNING_SECRET: ${SIGNING_SECRET}
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - |
+      export JWT_SECRET="$$(printf %s "$$SIGNING_SECRET" | sha256sum | cut -d' ' -f1)"
+      export HOST_USERS="$$(node -e 'process.stdout.write(JSON.stringify([{username: process.env.HOST_USERNAME, password: process.env.HOST_PASSWORD, displayname: process.env.HOST_USERNAME, allowed_rooms: ["*"]}]))')"
+      exec docker-entrypoint.sh node app/src/Server.js
     ports:
     - ${PORT:-3010}:3010/tcp
     expose:

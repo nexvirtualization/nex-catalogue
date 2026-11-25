@@ -18,8 +18,9 @@ x-nex:
     port: 8000
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Prepared Scoold configuration
       help: Managed directory mounted at /nex-config. Choose storage readable by the application.
@@ -27,7 +28,7 @@ services:
   scoold:
     image: docker.io/erudikaltd/scoold:latest
     ports:
-    - ${PORT:-23504}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${CONFIG}:/nex-config:ro
     environment:

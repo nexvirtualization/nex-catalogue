@@ -40,11 +40,13 @@ x-nex:
       type: password
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret for this installation. NetBox needs 50 or more characters,
+        so Nex gives it this value repeated three times; a longer value you type works the same way.
       type: password
     API_TOKEN_SECRET:
       label: Api token secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret for this installation. NetBox needs 50 or more characters,
+        so Nex gives it this value repeated three times; a longer value you type works the same way.
       type: password
     USER:
       label: User
@@ -60,8 +62,9 @@ x-nex:
       label: Allowed hosts
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     MEDIA:
       label: NetBox uploads
       help: Managed directory mounted at /opt/netbox/netbox/media. Choose storage writable by the application.
@@ -69,7 +72,7 @@ services:
   netbox:
     image: docker.io/netboxcommunity/netbox:latest
     ports:
-    - ${PORT:-23511}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${MEDIA}:/opt/netbox/netbox/media
     environment:
@@ -83,8 +86,8 @@ services:
       REDIS_CACHE_HOST: ${REDIS_HOST}
       REDIS_CACHE_PASSWORD: ${REDIS_PASSWORD}
       REDIS_CACHE_DATABASE: '1'
-      SECRET_KEY: ${SIGNING_SECRET}
-      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}
+      SECRET_KEY: ${SIGNING_SECRET}${SIGNING_SECRET}${SIGNING_SECRET}
+      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}${API_TOKEN_SECRET}${API_TOKEN_SECRET}
       SKIP_SUPERUSER: 'false'
       SUPERUSER_NAME: ${USER:-admin}
       SUPERUSER_EMAIL: ${EMAIL}
@@ -105,8 +108,8 @@ services:
       REDIS_CACHE_HOST: ${REDIS_HOST}
       REDIS_CACHE_PASSWORD: ${REDIS_PASSWORD}
       REDIS_CACHE_DATABASE: '1'
-      SECRET_KEY: ${SIGNING_SECRET}
-      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}
+      SECRET_KEY: ${SIGNING_SECRET}${SIGNING_SECRET}${SIGNING_SECRET}
+      API_TOKEN_PEPPER_1: ${API_TOKEN_SECRET}${API_TOKEN_SECRET}${API_TOKEN_SECRET}
       SKIP_SUPERUSER: 'false'
       SUPERUSER_NAME: ${USER:-admin}
       SUPERUSER_EMAIL: ${EMAIL}
@@ -114,9 +117,17 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS}
     deploy:
       replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+    # Restart quickly, and wait for the web service to finish the first-start database migrations.
     command:
-    - /opt/netbox/venv/bin/python
-    - /opt/netbox/netbox/manage.py
-    - rqworker
+    - /bin/sh
+    - -ec
+    - |
+      until /opt/netbox/venv/bin/python /opt/netbox/netbox/manage.py migrate --check >/dev/null 2>&1; do
+        sleep 5
+      done
+      exec /opt/netbox/venv/bin/python /opt/netbox/netbox/manage.py rqworker
     volumes:
     - ${MEDIA}:/opt/netbox/netbox/media

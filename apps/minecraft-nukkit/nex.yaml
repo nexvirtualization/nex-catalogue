@@ -5,8 +5,8 @@ x-nex:
   description: >-
     Keep the server folders on This host and choose a registered primary network that players can
     reach. Use a Bedrock client compatible with the Cloudburst Nukkit build and connect to its
-    Primary address on UDP 19132. Edit server.properties to configure the allowlist. Make a stopped
-    backup before applying updates.
+    Primary address on port 19132. NetherNet uses TCP for signaling and UDP for WebRTC.
+    Edit server.properties to configure the allowlist. Make a stopped backup before applying updates.
   category: games
   website: https://cloudburstmc.org/
   source: https://github.com/CloudburstMC/Nukkit
@@ -21,7 +21,8 @@ x-nex:
         Choose This host and include this folder in stopped backups.
 services:
   minecraft-nukkit:
-    image: ghcr.io/itzg/minecraft-server:java17
+    # NetherNet's native library requires OpenSSL 3.
+    image: ghcr.io/itzg/minecraft-server:latest
     working_dir: /data
     entrypoint: [/bin/sh, -ec]
     command:
@@ -37,6 +38,7 @@ services:
     healthcheck:
       disable: true
     expose:
+      - 19132/tcp
       - 19132/udp
     volumes:
       - ${DATA}:/data

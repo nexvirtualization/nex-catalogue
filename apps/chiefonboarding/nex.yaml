@@ -33,8 +33,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   chiefonboarding:
     image: chiefonboarding/chiefonboarding:latest
@@ -43,6 +43,6 @@ services:
       SECRET_KEY: ${SESSION_SECRET}
       ALLOWED_HOSTS: ${PUBLIC_DOMAIN}
     ports:
-    - ${PORT:-8458}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     deploy:
       replicas: 1

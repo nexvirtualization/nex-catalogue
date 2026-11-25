@@ -28,7 +28,9 @@ x-nex:
     JOIN_PASSWORD:
       label: Join password
       type: password
-      help: Use at most eight characters.
+      generate: {format: alnum, length: 8, min_length: 1, max_length: 8}
+      help: Use at most eight characters. Generate makes eight. If Generate gives 24 characters (older Nex),
+        enter a shorter password yourself.
     DATA:
       label: Server data
       help: Choose This host and include this folder in stopped backups.

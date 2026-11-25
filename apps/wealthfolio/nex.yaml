@@ -2,15 +2,14 @@
 x-nex:
   name: Wealthfolio
   summary: Track investments and analyze portfolio performance
-  description: Wealthfolio runs as a browser service with SQLite data on Nex storage. A signing key and Argon2id
-    password hash secure access.
+  description: Wealthfolio runs as a browser service with SQLite data on Nex storage. Sign in with the
+    administrator password you set here; Nex stores only its Argon2id hash in the data folder.
   category: finance
   website: https://wealthfolio.app/
   source: https://github.com/wealthfolio/wealthfolio
   docs: https://github.com/wealthfolio/wealthfolio
   primary_service: wealthfolio
-  post_install: Use the specified origin at your HTTPS reverse proxy. Sign in with the plaintext password
-    represented by the configured hash.
+  post_install: Use the specified origin at your HTTPS reverse proxy. Sign in with the administrator password.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -20,18 +19,21 @@ x-nex:
   options:
     SECRET_KEY:
       label: Signing secret
-      help: Use a base64-encoded random 32-byte key.
+      help: Use Generate. Signs sign-in sessions. A base64 key of exactly 32 bytes is used as typed; any
+        other value is turned into one.
       type: password
-    PASSWORD_HASH:
-      label: Argon2id password hash
-      help: Paste an Argon2id PHC hash, including its dollar signs.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Use Generate or choose a strong password. It is hashed with Argon2id on start; changing it here
+        replaces the old password after a restart.
       type: password
     PUBLIC_ORIGIN:
       label: Browser origin
       help: Exact scheme and hostname for the origin that browsers use.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8088 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8088 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Portfolio database
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -39,14 +41,61 @@ services:
   wealthfolio:
     image: docker.io/wealthfolio/wealthfolio:latest
     ports:
-    - ${PORT:-20237}:8088/tcp
+    - ${PORT:-8088}:8088/tcp
     volumes:
     - ${DATA}:/data
     environment:
       WF_LISTEN_ADDR: 0.0.0.0:8088
       WF_DB_PATH: /data/wealthfolio.db
-      WF_SECRET_KEY: ${SECRET_KEY}
-      WF_AUTH_PASSWORD_HASH: ${PASSWORD_HASH}
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       WF_CORS_ALLOW_ORIGINS: ${PUBLIC_ORIGIN}
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R wealthfolio:wealthfolio /data
+      # The password-hash service writes the Argon2id hash for the current password.
+      want=$$(printf '%s:%s' "$$SECRET_KEY" "$$ADMIN_PASSWORD" | sha256sum | cut -c1-64)
+      until [ -s /data/.nex-password-hash ] && [ "$$(cat /data/.nex-password-key 2>/dev/null)" = "$$want" ]; do
+        echo 'Waiting for the administrator password hash'
+        sleep 2
+      done
+      WF_AUTH_PASSWORD_HASH=$$(cat /data/.nex-password-hash)
+      if [ "$$(printf '%s' "$$SECRET_KEY" | base64 -d 2>/dev/null | wc -c)" -eq 32 ]; then
+        WF_SECRET_KEY=$$SECRET_KEY
+      else
+        WF_SECRET_KEY=$$(printf '%s' "$$SECRET_KEY" | sha256sum | cut -c1-64 | xxd -r -p | base64)
+      fi
+      export WF_AUTH_PASSWORD_HASH WF_SECRET_KEY
+      unset SECRET_KEY ADMIN_PASSWORD
+      exec su -p wealthfolio -s /bin/sh -c 'exec /usr/local/bin/wealthfolio-server'
+    deploy:
+      replicas: 1
+  # Wealthfolio accepts only an Argon2id hash. This helper hashes the administrator password with the
+  # Authelia tool and writes it to the data folder once Wealthfolio has made the folder writable.
+  password-hash:
+    image: docker.io/authelia/authelia:latest
+    user: 1000:1000
+    volumes:
+    - ${DATA}:/data
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      until [ -w /data ]; do sleep 2; done
+      want=$$(printf '%s:%s' "$$SECRET_KEY" "$$ADMIN_PASSWORD" | sha256sum | cut -c1-64)
+      if [ "$$(cat /data/.nex-password-key 2>/dev/null)" != "$$want" ]; then
+        authelia crypto hash generate argon2 --password "$$ADMIN_PASSWORD" | sed -n 's/^Digest: //p' > /data/.nex-password-hash.new
+        test -s /data/.nex-password-hash.new
+        chmod 600 /data/.nex-password-hash.new
+        mv /data/.nex-password-hash.new /data/.nex-password-hash
+        printf '%s\n' "$$want" > /data/.nex-password-key
+      fi
+      exec sleep infinity
     deploy:
       replicas: 1

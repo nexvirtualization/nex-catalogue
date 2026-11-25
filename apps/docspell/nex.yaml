@@ -14,7 +14,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host port for the Docspell HTTP listener on 7880, when host publishing is available.
+      help: The app listens on TCP port 7880 on its default Docker network. Nex does not publish it on host
+        addresses.
     PUBLIC_URL:
       label: Public browser URL
       help: The full URL operators see in the browser. Include HTTPS when using a proxy.
@@ -56,8 +57,20 @@ services:
       DOCSPELL_SERVER_FULL__TEXT__SEARCH_ENABLED: "true"
       DOCSPELL_SERVER_FULL__TEXT__SEARCH_BACKEND: postgresql
       DOCSPELL_SERVER_FULL__TEXT__SEARCH_POSTGRESQL_USE__DEFAULT__CONNECTION: "true"
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      hp=$${DOCSPELL_SERVER_BACKEND_JDBC_URL#*://}
+      hp=$${hp%%/*}
+      case "$$hp" in *:*) host=$${hp%%:*}; port=$${hp##*:} ;; *) host=$$hp; port=5432 ;; esac
+      until (echo > /dev/tcp/$$host/$$port) 2>/dev/null; do
+        echo "Waiting for PostgreSQL at $$host:$$port"
+        sleep 3
+      done
+      exec /opt/docspell-restserver/bin/docspell-restserver
     ports:
-      - ${PORT:-19961}:7880/tcp
+      - ${PORT:-7880}:7880/tcp
     deploy:
       replicas: 1
   joex:
@@ -71,5 +84,17 @@ services:
       DOCSPELL_JOEX_FULL__TEXT__SEARCH_ENABLED: "true"
       DOCSPELL_JOEX_FULL__TEXT__SEARCH_BACKEND: postgresql
       DOCSPELL_JOEX_FULL__TEXT__SEARCH_POSTGRESQL_USE__DEFAULT__CONNECTION: "true"
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      hp=$${DOCSPELL_JOEX_JDBC_URL#*://}
+      hp=$${hp%%/*}
+      case "$$hp" in *:*) host=$${hp%%:*}; port=$${hp##*:} ;; *) host=$$hp; port=5432 ;; esac
+      until (echo > /dev/tcp/$$host/$$port) 2>/dev/null; do
+        echo "Waiting for PostgreSQL at $$host:$$port"
+        sleep 3
+      done
+      exec /opt/joex-entrypoint.sh
     deploy:
       replicas: 1

@@ -34,8 +34,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Note attachments
       help: Select This host. Stores uploaded images and attachments. Include this folder in a stopped
@@ -50,7 +50,7 @@ services:
       CMD_SESSION_SECRET: ${SESSION_SECRET}
       CMD_ALLOW_ANONYMOUS: 'false'
     ports:
-    - ${PORT:-8404}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/hedgedoc/public/uploads
     deploy:

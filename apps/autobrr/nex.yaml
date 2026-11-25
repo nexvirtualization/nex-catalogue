@@ -27,8 +27,8 @@ x-nex:
       help: IANA time zone for logs and scheduled events.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7474.
+      help: The app listens on TCP port 7474 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: autobrr configuration
       help: Select This host. Holds the SQLite database, application configuration and indexer credentials.

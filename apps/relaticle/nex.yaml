@@ -33,7 +33,10 @@ x-nex:
     APP_KEY:
       label: Laravel application key
       type: password
-      help: Provide a Laravel key generated using upstream tools and retain it for restore.
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead. Preserve this key for restore.'
     PUBLIC_URL:
       label: Public web address
       help: Full browser-facing URL, including scheme and any port.
@@ -42,8 +45,8 @@ x-nex:
       help: Keep crm files in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   relaticle:
     image: ghcr.io/relaticle/relaticle:latest

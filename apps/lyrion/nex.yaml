@@ -21,21 +21,21 @@ x-nex:
       label: Playlists folder
       help: Choose the Nex-managed folder mounted at /playlist.
     PORT:
-      label: Published 9000/tcp port
-      help: Host port for application listener 9000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 9000/tcp
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 9090/tcp port
-      help: Host port for application listener 9090/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 9090/tcp
+      help: The app listens on TCP port 9090 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published 3483/tcp port
-      help: Host port for application listener 3483/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3483/tcp
+      help: The app listens on TCP port 3483 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_4:
-      label: Published 3483/udp port
-      help: Host port for application listener 3483/udp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3483/udp
+      help: The app listens on UDP port 3483 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Connect players to the app address and choose /music as the library folder. For default player
     discovery and control ports, use a client-reachable dedicated primary network.
   web:
@@ -52,7 +52,7 @@ services:
     - ${MUSIC}:/music:ro
     - ${PLAYLISTS}:/playlist
     ports:
-    - ${PORT:-19822}:9000/tcp
-    - ${PORT_2:-20822}:9090/tcp
-    - ${PORT_3:-21822}:3483/tcp
+    - ${PORT:-9000}:9000/tcp
+    - ${PORT_2:-9090}:9090/tcp
+    - ${PORT_3:-3483}:3483/tcp
     - ${PORT_4:-22822}:3483/udp

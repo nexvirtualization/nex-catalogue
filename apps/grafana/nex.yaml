@@ -2,14 +2,13 @@
 x-nex:
   name: Grafana
   summary: Visualize metrics and logs in custom dashboards
-  description: Grafana OSS dashboards and alerts with SQLite. Keep the shared application network for the default
-    host endpoint, open Summary, Network, Host-published endpoints after installation and sign in with the initial
-    administrator credentials. For HTTPS in Nginx Proxy Manager use this installation's Name inside applications
-    and internal port 3000; the selected host port is not the upstream port. Add your own Prometheus, Loki or other
-    data sources; no host metrics collector is included. Initial credentials apply only to a fresh database. On
-    Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one copy on
-    that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all state
-    folders before updates.
+  description: Grafana OSS dashboards and alerts with SQLite. Open it on port 3000 at the app address shown in
+    Summary, Network and sign in with the initial administrator credentials. For HTTPS in Nginx Proxy Manager
+    use this installation's Name inside applications and internal port 3000. Add your own Prometheus, Loki or
+    other data sources; no host metrics collector is included. Initial credentials apply only to a fresh
+    database. On Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This
+    keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy
+    option and select all state folders before updates.
   category: monitoring
   website: https://grafana.com/oss/grafana/
   source: https://github.com/grafana/grafana
@@ -31,8 +30,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Default host HTTP endpoint is port 3002. Nginx Proxy Manager uses this installation's Nex Name inside
-        applications and internal port 3000. With an own primary address and publishing off, use APP-IP:3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Dashboards and database
       help: Keep Dashboards and database on This host. Nex creates a named volume initialized from the image; its
@@ -47,7 +46,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: 'false'
       GF_AUTH_ANONYMOUS_ENABLED: 'false'
     ports:
-    - ${PORT:-3002}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/var/lib/grafana
     deploy:

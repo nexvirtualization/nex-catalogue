@@ -2,59 +2,80 @@
 x-nex:
   name: wildduck
   summary: Serve mailboxes over IMAP, POP3, and the WildDuck API
-  description: Provision MongoDB and Redis, add the certificate and key to Mail TLS files, and protect the
-    management API. Connect separate SMTP delivery and submission services if you need a full mail stack.
+  description: >-
+    Provision MongoDB and Redis and give their addresses below. A self-signed certificate for the mail
+    domain is created in Mail TLS files on first start when no certificate is there; replace it with
+    your own fullchain.pem and privkey.pem and restart for mail clients to trust it. Protect the
+    management API with its access token. Connect separate SMTP delivery and submission services if
+    you need a full mail stack.
   category: communication
   website: https://wildduck.email/
   source: https://github.com/zone-eu/wildduck
   docs: https://docs.wildduck.email/docs/getting-started/installation/
   primary_service: wildduck
-  post_install: Provision MongoDB and Redis, add the certificate and key to Mail TLS files, and protect the
-    management API. Connect separate SMTP delivery and submission services if you need a full mail stack.
+  post_install: >-
+    To use your own certificate, replace fullchain.pem and privkey.pem in Mail TLS files and restart.
+    Keep the API access token private. Connect separate SMTP delivery and submission services if you
+    need a full mail stack.
   license: EUPL-1.2
   architectures:
   - amd64
   - arm64
   options:
     MONGO_URI:
-      label: Mongo uri
-      help: Use the credential or secret required by the upstream configuration.
+      label: MongoDB connection URL
+      help: Address of your MongoDB database, for example mongodb://user:password@host:27017/wildduck. It
+        contains the password, so keep it private.
       type: password
     REDIS_URL:
-      label: Redis url
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Redis connection URL
+      help: Address of your Redis server, for example redis://host:6379/3.
     MAIL_DOMAIN:
       label: Mail domain
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Domain of the mailboxes, also the IMAP and POP3 server name and the name on the generated certificate.
     API_TOKEN:
-      label: Api token
-      help: Use the credential or secret required by the upstream configuration.
+      label: API access token
+      help: Token that management API requests must send. Use Generate.
       type: password
     TOTP_SECRET:
-      label: Totp secret
-      help: Use the credential or secret required by the upstream configuration.
+      label: Two-factor secret
+      help: Encrypts the stored two-factor seeds. Use Generate. Changing it later invalidates enrolled two-factor setups.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     IMAP_PORT:
-      label: Published IMAP TLS port
-      help: Host-published port for the internal 9993/tcp endpoint.
+      label: IMAP TLS port
+      help: The app listens on TCP port 9993 on its default Docker network. Nex does not publish it on host
+        addresses.
     POP_PORT:
-      label: Published POP3 TLS port
-      help: Host-published port for the internal 9995/tcp endpoint.
+      label: POP3 TLS port
+      help: The app listens on TCP port 9995 on its default Docker network. Nex does not publish it on host
+        addresses.
     TLS_FILES:
       label: Mail TLS files
-      help: Place fullchain.pem and privkey.pem in this directory and restrict access to the key.
+      help: Holds fullchain.pem and privkey.pem. A self-signed pair is created here on first start if both are missing; replace it with your own and restrict access to the key.
 services:
   wildduck:
     image: ghcr.io/zone-eu/wildduck:latest
     ports:
-    - ${PORT:-23505}:8080/tcp
-    - ${IMAP_PORT:-24505}:9993/tcp
-    - ${POP_PORT:-25505}:9995/tcp
+    - ${PORT:-8080}:8080/tcp
+    - ${IMAP_PORT:-9993}:9993/tcp
+    - ${POP_PORT:-9995}:9995/tcp
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -e /certificates/fullchain.pem ] && [ ! -e /certificates/privkey.pem ]; then
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+          -subj "/CN=$$APPCONF_emailDomain" -addext "subjectAltName=DNS:$$APPCONF_emailDomain" \
+          -keyout /certificates/privkey.pem -out /certificates/fullchain.pem
+        chmod 600 /certificates/privkey.pem
+      fi
+      exec node /wildduck/server.js --config=/wildduck/config/default.toml
     volumes:
-    - ${TLS_FILES}:/certificates:ro
+    - ${TLS_FILES}:/certificates
     environment:
       APPCONF_dbs_mongo: ${MONGO_URI}
       APPCONF_dbs_redis: ${REDIS_URL}

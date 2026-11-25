@@ -14,9 +14,9 @@ x-nex:
   primary_service: rabbitmq
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 5672 on its default Docker network. Nex does not publish it on host
+        addresses.
     BROKER_USER:
       label: Initial broker user
       help: Creates an account on first startup. Use a dedicated username.

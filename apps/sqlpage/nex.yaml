@@ -13,9 +13,9 @@ x-nex:
       label: Site folder
       help: Choose the Nex-managed folder mounted at /var/www.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Place the SQLPage site files in the Site folder. Use an index.sql file for the home page. Back
     up the site together with any local SQLite data.
   web:
@@ -28,4 +28,4 @@ services:
     volumes:
     - ${SITE}:/var/www
     ports:
-    - ${PORT:-19627}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

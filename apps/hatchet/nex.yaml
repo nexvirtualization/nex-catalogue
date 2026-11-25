@@ -4,6 +4,9 @@ x-nex:
   summary: Run queued workflows with worker orchestration
   description: Provision the PostgreSQL database first. This Lite profile is for lower-volume deployments.
     Sign in on a trusted network with the upstream initial account and immediately replace its password.
+    Worker connections use TLS. The first start writes a self-signed certificate to the configuration
+    folder. Copy certs/ca.cert from that folder to each worker and point HATCHET_CLIENT_TLS_ROOT_CA_FILE
+    at it, with HATCHET_CLIENT_TLS_SERVER_NAME set to the host in the worker-facing address.
   category: development
   website: https://github.com/hatchet-dev/hatchet
   source: https://github.com/hatchet-dev/hatchet
@@ -18,26 +21,65 @@ x-nex:
       label: PostgreSQL connection URL
       type: password
       help: Supply the full connection URL for a prepared database on a reachable network.
+    PUBLIC_DOMAIN:
+      label: Public domain
+      help: Bare hostname browsers use, without scheme or port, for example hatchet.example.com.
+    COOKIE_SECRET:
+      label: Cookie signing secret
+      type: password
+      help: Use Generate. Hatchet's two cookie signing keys are derived from this value, so keep it across
+        upgrades and restores or every browser session is signed out.
     SERVER_GRPC_BROADCAST_ADDRESS:
       label: Worker-facing gRPC address
-      help: Hostname and port reachable from configured workers.
+      help: Hostname or IP address and port reachable from configured workers, for example hatchet.example.com:7077.
+        The self-signed worker certificate is issued for this host on first start. To reissue it after
+        changing the host, remove the certs folder from the configuration folder and restart. Leave empty
+        for localhost:7077, which only suits workers on the same host.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     GRPC_PORT:
       label: Worker API gRPC port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7077.
+      help: The app listens on TCP port 7077 on its default Docker network. Nex does not publish it on host
+        addresses.
+    CONFIG:
+      label: Server configuration and certificates
+      help: Managed directory mounted at /config. Keeps the generated encryption keys and the worker TLS
+        certificate, so include it in backups. Choose storage writable by the application.
 services:
   hatchet:
     image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      host="$${SERVER_GRPC_BROADCAST_ADDRESS%:*}"
+      case "$$host" in *[!0-9.]*) san="DNS:$$host" ;; *) san="IP:$$host" ;; esac
+      if [ ! -s /config/certs/cluster.pem ] || [ ! -s /config/certs/cluster.key ]; then
+        mkdir -p /config/certs
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$$host" -addext "subjectAltName=$$san" \
+          -keyout /config/certs/cluster.key -out /config/certs/cluster.pem
+        cp /config/certs/cluster.pem /config/certs/ca.cert
+      fi
+      export SERVER_TLS_SERVER_NAME="$$host"
+      export SERVER_AUTH_COOKIE_SECRETS="$$(printf '%s-1' "$$COOKIE_SECRET" | sha256sum | cut -c1-32) $$(printf '%s-2' "$$COOKIE_SECRET" | sha256sum | cut -c1-32)"
+      exec ./entrypoint.sh
     environment:
       SERVER_GRPC_BIND_ADDRESS: 0.0.0.0
+      SERVER_GRPC_PORT: '7077'
+      SERVER_TLS_STRATEGY: tls
+      SERVER_TLS_CERT_FILE: /config/certs/cluster.pem
+      SERVER_TLS_KEY_FILE: /config/certs/cluster.key
+      SERVER_TLS_ROOT_CA_FILE: /config/certs/ca.cert
       DATABASE_URL: ${DATABASE_URL}
-      SERVER_GRPC_BROADCAST_ADDRESS: ${SERVER_GRPC_BROADCAST_ADDRESS}
+      SERVER_GRPC_BROADCAST_ADDRESS: ${SERVER_GRPC_BROADCAST_ADDRESS:-localhost:7077}
+      SERVER_AUTH_COOKIE_DOMAIN: ${PUBLIC_DOMAIN}
+      COOKIE_SECRET: ${COOKIE_SECRET}
     ports:
     - ${PORT:-8888}:8888/tcp
     - ${GRPC_PORT:-7077}:7077/tcp
+    volumes:
+    - ${CONFIG}:/config
     deploy:
       replicas: 1

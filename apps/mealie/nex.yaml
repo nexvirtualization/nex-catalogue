@@ -28,7 +28,8 @@ x-nex:
       help: IANA time zone name for meal plans and scheduled jobs, such as Etc/UTC.
     PORT:
       label: Web port
-      help: Host-published HTTP port. With a dedicated Primary network and host publishing off, use the app address on port 9000 and update Public web address. Change the initial administrator password immediately.
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses. Change the initial administrator password immediately.
     DATA:
       label: Recipes and settings
       help: SQLite database, images and backups at /app/data. Select This host; SQLite on a network share can corrupt data. Back up this folder.
@@ -42,7 +43,7 @@ services:
       PGID: "${PGID:-1000}"
       TZ: "${TZ:-Etc/UTC}"
     ports:
-      - "${PORT:-9925}:9000/tcp"
+      - "${PORT:-9000}:9000/tcp"
     volumes:
       - "${DATA}:/app/data"
     deploy:

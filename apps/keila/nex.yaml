@@ -2,7 +2,8 @@
 x-nex:
   name: Keila
   summary: Reliable and easy-to-use newsletter tool (alternative to Mailchimp and Sendinblue)
-  description: Reliable and easy-to-use newsletter tool (alternative to Mailchimp and Sendinblue).
+  description: Newsletter tool, an alternative to Mailchimp and Sendinblue. Needs a prepared PostgreSQL database
+    and an SMTP relay that accepts STARTTLS on port 587 for system emails.
   category: communication
   source: https://github.com/pentacent/keila
   website: https://www.keila.io
@@ -15,10 +16,26 @@ x-nex:
       help: Use a unique value and keep it with the application backups.
     PUBLIC_HOST:
       label: Public host
+    SMTP_HOST:
+      label: SMTP host
+      help: Hostname of the outbound mail relay for system emails. Port 587 with STARTTLS is used.
+    SMTP_USER:
+      label: SMTP user
+      help: Login name for the mail relay.
+    SMTP_PASSWORD:
+      label: SMTP password
+      type: password
+      help: Password for the SMTP user, as issued by your mail provider.
+    FROM_EMAIL:
+      label: System sender email
+      help: Sender address for system emails such as sign-up confirmations.
     SECRET_KEY:
       label: Secret key
       type: password
-      help: Use a unique value and keep it with the application backups.
+      generate: {format: alnum, length: 64, min_length: 64}
+      help: Use Generate, which makes 64 letters and digits. It must be at least 64 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Keep it with
+        the application backups.
     ADMIN_EMAIL:
       label: Admin email
     ADMIN_PASSWORD:
@@ -29,9 +46,9 @@ x-nex:
       label: Uploads folder
       help: Choose the Nex-managed folder mounted at /opt/app/uploads.
     PORT:
-      label: Published 4000/tcp port
-      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 4000/tcp
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and configure an outbound mail provider. Sign in with the initial administrator
     and retain the database and uploads in backups.
   web:
@@ -45,9 +62,16 @@ services:
       DB_URL: ${DATABASE_URL}
       URL_HOST: ${PUBLIC_HOST}
       SECRET_KEY_BASE: ${SECRET_KEY}
+      MAILER_TYPE: smtp
+      MAILER_SMTP_HOST: ${SMTP_HOST}
+      MAILER_SMTP_PORT: '587'
+      MAILER_ENABLE_STARTTLS: 'true'
+      MAILER_SMTP_USER: ${SMTP_USER}
+      MAILER_SMTP_PASSWORD: ${SMTP_PASSWORD}
+      MAILER_SMTP_FROM_EMAIL: ${FROM_EMAIL}
       KEILA_USER: ${ADMIN_EMAIL}
       KEILA_PASSWORD: ${ADMIN_PASSWORD}
     volumes:
     - ${UPLOADS}:/opt/app/uploads
     ports:
-    - ${PORT:-19964}:4000/tcp
+    - ${PORT:-4000}:4000/tcp

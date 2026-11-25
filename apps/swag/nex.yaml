@@ -28,13 +28,13 @@ x-nex:
       label: Config folder
       help: Choose the Nex-managed folder mounted at /config.
     PORT:
-      label: Published 443/tcp port
-      help: Host port for application listener 443/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 443/tcp
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Point DNS at the app address and make the selected ACME validation reachable. Configure proxy
     destinations with Nex application DNS names.
 services:
@@ -53,5 +53,5 @@ services:
     volumes:
     - ${CONFIG}:/config
     ports:
-    - ${PORT:-19923}:443/tcp
-    - ${PORT_2:-20923}:80/tcp
+    - ${PORT:-443}:443/tcp
+    - ${PORT_2:-80}:80/tcp

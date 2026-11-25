@@ -37,12 +37,15 @@ x-nex:
       type: password
     APP_SECRET:
       label: Django signing secret
-      help: Enter a stable random secret with at least 50 characters.
+      help: Use Generate, which makes 50 letters and digits. It must be at least 50 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Keep it
+        stable.
       type: password
+      generate: {format: alnum, length: 50, min_length: 50}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bugsink:
     image: bugsink/bugsink:latest
@@ -54,6 +57,6 @@ services:
       BEHIND_HTTPS_PROXY: 'true'
       BASE_URL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-8438}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     deploy:
       replicas: 1

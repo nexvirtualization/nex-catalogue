@@ -13,17 +13,18 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /var/globaleaks.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 8443/tcp port
-      help: Host port for application listener 8443/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8443/tcp
+      help: The app listens on TCP port 8443 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Complete the initial wizard and confirm the documented initial privacy and HTTPS settings before
     accepting submissions. The upstream image is for AMD64.
   web:
-    port: 8080
+    scheme: https
+    port: 8443
   architectures:
   - amd64
 services:
@@ -34,5 +35,5 @@ services:
     volumes:
     - ${DATA}:/var/globaleaks
     ports:
-    - ${PORT:-19993}:8080/tcp
-    - ${PORT_2:-20993}:8443/tcp
+    - ${PORT:-8080}:8080/tcp
+    - ${PORT_2:-8443}:8443/tcp

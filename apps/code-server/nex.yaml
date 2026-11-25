@@ -20,8 +20,9 @@ x-nex:
       label: Projects folder
       help: Nex-managed folder mounted at /projects. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8443/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8443 on its default Docker network. Nex does not publish it on host
+        addresses.
     PASSWORD:
       label: Editor password
       type: password

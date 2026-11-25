@@ -26,8 +26,9 @@ x-nex:
       help: Use a base64-encoded random 32-byte key and keep it with your backup.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 1411 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 1411 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Identities and configuration
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
@@ -35,7 +36,7 @@ services:
   pocket-id:
     image: ghcr.io/pocket-id/pocket-id:latest
     ports:
-    - ${PORT:-20234}:1411/tcp
+    - ${PORT:-1411}:1411/tcp
     volumes:
     - ${DATA}:/app/data
     environment:

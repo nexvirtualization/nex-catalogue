@@ -2,27 +2,38 @@
 x-nex:
   name: Garage
   summary: Serve a single-node S3-compatible object store
-  description: Prepare garage.toml in the managed configuration folder before startup. Follow the upstream
-    single-node guide and set metadata_dir to /metadata and data_dir to /objects. Configure the S3 API
-    to bind on port 3900, then initialize the node layout and create bucket credentials with the Garage
-    CLI. Keep the management API private.
+  description: Starts a single-node Garage and writes a default garage.toml into the configuration folder
+    on first start, so no file needs preparing. Edit that file to customise Garage; it is never
+    overwritten. The S3 API listens on port 3900; cluster RPC stays inside the container and there is
+    no admin API. After the first start, assign the node a layout and create bucket keys.
   category: tools
   website: https://garagehq.deuxfleurs.fr/
   source: https://github.com/deuxfleurs-org/garage
   docs: https://garagehq.deuxfleurs.fr/documentation/quick-start/
   scalable: false
   primary_service: garage
+  post_install: 'Open a console in the garage container and run /garage status, then /garage layout assign
+    -z dc1 -c 1G NODE_ID and /garage layout apply --version 1. Create keys and buckets with /garage key
+    create and /garage bucket create.'
   architectures:
   - amd64
   - arm64
   options:
     S3_PORT:
       label: S3 Port
-      help: Host-published S3 API port. Use the app name and port 3900 for internal clients.
+      help: The app listens on TCP port 3900 on its default Docker network. Nex does not publish it on host
+        addresses. Use the app name and port 3900 for internal clients.
+    RPC_SECRET:
+      label: Cluster secret
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Keep it unchanged for the life of the
+        node.
+      type: password
+      generate: {format: hex, length: 64}
     CONFIG:
-      label: Prepared Garage configuration
-      help: Select This host. Select a managed folder containing garage.toml. Include this folder in a
-        stopped Nex backup.
+      label: Garage configuration
+      help: Select This host. Holds garage.toml, which is created with working defaults when missing.
+        Include this folder in a stopped Nex backup.
     METADATA:
       label: Garage metadata
       help: Select This host. Stores node identity, journals and bucket metadata. Include this folder
@@ -33,7 +44,10 @@ x-nex:
 services:
   garage:
     image: dxflrs/garage:v2.0.0
+    environment:
+      GARAGE_RPC_SECRET: ${RPC_SECRET}
     command:
+    - /garage
     - -c
     - /settings/garage.toml
     - server
@@ -43,5 +57,32 @@ services:
     - ${CONFIG}:/settings:ro
     - ${METADATA}:/metadata
     - ${OBJECTS}:/objects
+    deploy:
+      replicas: 1
+  # The Garage image has no shell, so this helper writes the default configuration. Garage retries
+  # until the file exists.
+  config-init:
+    image: docker.io/library/busybox:latest
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /settings/garage.toml ]; then
+        cat > /settings/garage.toml <<'TOML'
+      metadata_dir = "/metadata"
+      data_dir = "/objects"
+      db_engine = "lmdb"
+      replication_factor = 1
+      rpc_bind_addr = "127.0.0.1:3901"
+      rpc_public_addr = "127.0.0.1:3901"
+
+      [s3_api]
+      s3_region = "garage"
+      api_bind_addr = "[::]:3900"
+      TOML
+      fi
+      exec sleep infinity
+    volumes:
+    - ${CONFIG}:/settings
     deploy:
       replicas: 1

@@ -11,14 +11,22 @@ x-nex:
   primary_service: app
   options:
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8080/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     SIGNING_KEY:
       label: Hex signing key
       type: password
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Use a different value for the salt.
     SIGNING_SALT:
       label: Hex signing salt
       type: password
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Use a different value from the signing
+        key.
   post_install: Use separate 64-character hexadecimal strings for the signing key and salt. Sign image requests
     with those values.
 services:
@@ -27,7 +35,7 @@ services:
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-19541}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       IMGPROXY_KEY: ${SIGNING_KEY}
       IMGPROXY_SALT: ${SIGNING_SALT}

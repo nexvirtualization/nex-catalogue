@@ -19,9 +19,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /opt/traggo/data.
     PORT:
-      label: Published 3030/tcp port
-      help: Host port for application listener 3030/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3030/tcp
+      help: The app listens on TCP port 3030 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Sign in with the initial account and configure your tracking tags. Back up the Data folder while
     stopped.
   web:
@@ -37,4 +37,4 @@ services:
     volumes:
     - ${DATA}:/opt/traggo/data
     ports:
-    - ${PORT:-19580}:3030/tcp
+    - ${PORT:-3030}:3030/tcp

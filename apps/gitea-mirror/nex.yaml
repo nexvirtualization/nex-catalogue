@@ -29,8 +29,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 4321.
+      help: The app listens on TCP port 4321 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Mirror state
       help: Select This host. Stores the SQLite database and synchronization settings. Include this folder
@@ -46,7 +46,7 @@ services:
       PORT: '4321'
       DATABASE_URL: file:data/gitea-mirror.db
     ports:
-    - ${PORT:-8391}:4321/tcp
+    - ${PORT:-4321}:4321/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

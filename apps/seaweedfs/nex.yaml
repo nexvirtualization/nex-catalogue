@@ -24,7 +24,8 @@ x-nex:
       type: password
     S3_PORT:
       label: S3 Port
-      help: Host-published S3 port. Use port 8333 inside Nex.
+      help: The app listens on TCP port 8333 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Object store data
       help: Select This host. Stores volume, index, filer and master state. Include this folder in a stopped

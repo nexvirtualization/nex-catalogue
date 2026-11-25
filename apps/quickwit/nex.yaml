@@ -17,12 +17,12 @@ x-nex:
       help: Keep quickwit indexes and metadata in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7280.
+      help: The app listens on TCP port 7280 on its default Docker network. Nex does not publish it on host
+        addresses.
     GRPC_PORT:
       label: Quickwit gRPC endpoint
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7281.
+      help: The app listens on TCP port 7281 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   quickwit:
     image: docker.io/quickwit/quickwit:latest

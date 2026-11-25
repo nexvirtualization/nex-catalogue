@@ -21,11 +21,12 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     STREAM_PORT:
       label: Stream Port
-      help: Host-published streaming port for trusted clients.
+      help: The app listens on TCP port 11470 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Streaming state
       help: Select This host. Stores server preferences and locally cached streaming data. Include this
@@ -34,7 +35,7 @@ services:
   stremio:
     image: tsaridas/stremio-docker:latest
     ports:
-    - ${PORT:-8801}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     - ${STREAM_PORT:-11470}:11470/tcp
     volumes:
     - ${DATA}:/root/.stremio-server

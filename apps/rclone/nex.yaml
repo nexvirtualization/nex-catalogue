@@ -23,9 +23,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /data.
     PORT:
-      label: Published 5572/tcp port
-      help: Host port for application listener 5572/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 5572/tcp
+      help: The app listens on TCP port 5572 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Connect with rclone rc using the app address, port 5572, and the configured credentials.
     Use an HTTPS reverse proxy for access outside your trusted network.
 services:
@@ -40,7 +40,7 @@ services:
     - ${CONFIG}:/config/rclone
     - ${DATA}:/data
     ports:
-    - ${PORT:-19957}:5572/tcp
+    - ${PORT:-5572}:5572/tcp
     command:
     - rcd
     - --rc-addr=:5572

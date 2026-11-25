@@ -16,13 +16,13 @@ x-nex:
     port: 8080
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   adminer:
     image: docker.io/library/adminer:latest
     ports:
-      - ${PORT:-8087}:8080/tcp
+      - ${PORT:-8080}:8080/tcp
     deploy:
       replicas: 1

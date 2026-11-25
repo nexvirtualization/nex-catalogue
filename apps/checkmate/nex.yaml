@@ -18,6 +18,10 @@ x-nex:
     scheme: http
     port: 52345
   options:
+    PUBLIC_URL:
+      label: Public web origin
+      help: Full browser-facing URL for the Checkmate dashboard, starting with http:// or https://
+        (for example https://status.example.com).
     MONGO_URL:
       label: Database connection string
       help: Provide a complete authenticated MongoDB URI with database name and a percent-encoded password.
@@ -29,12 +33,13 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 52345.
+      help: The app listens on TCP port 52345 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   checkmate:
     image: ghcr.io/bluewave-labs/checkmate:latest
     environment:
+      CLIENT_HOST: ${PUBLIC_URL}
       DB_CONNECTION_STRING: ${MONGO_URL}
       JWT_SECRET: ${APP_SECRET}
     ports:

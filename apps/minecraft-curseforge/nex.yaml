@@ -27,13 +27,15 @@ x-nex:
     CF_PACK:
       label: CurseForge modpack URL
       help: >-
-        Enter the modpack page or a specific primary modpack file URL. The primary file carries the
+        Enter the modpack page or a specific primary modpack file URL, for example
+        https://www.curseforge.com/minecraft/modpacks/all-the-mods-10. The primary file carries the
         manifest needed to install the dedicated server.
     CF_KEY:
       label: CurseForge API key
       type: password
       help: >-
-        Use your own key from https://console.curseforge.com/.
+        Use your own key from https://console.curseforge.com/. A valid key starts with $2a$10$ and
+        is pasted exactly as shown.
     DATA:
       label: World, extensions and settings
       help: >-

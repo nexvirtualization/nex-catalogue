@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8082.
+      help: The app listens on TCP port 8082 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Device database
       help: Select This host. Stores locations, users and device state. Include this folder in a stopped
@@ -38,7 +38,7 @@ services:
   traccar:
     image: traccar/traccar:latest
     ports:
-    - ${PORT:-8448}:8082/tcp
+    - ${PORT:-8082}:8082/tcp
     expose:
     - 5055/tcp
     volumes:

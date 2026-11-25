@@ -21,13 +21,14 @@ x-nex:
   - plantuml-server
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   plantuml-server:
     image: docker.io/plantuml/plantuml-server:latest
     ports:
-    - ${PORT:-18131}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       PLANTUML_SECURITY_PROFILE: SANDBOX
     deploy:

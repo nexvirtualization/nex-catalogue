@@ -2,15 +2,20 @@
 x-nex:
   name: Invidious
   summary: Browse videos through the Invidious web interface
-  description: Provision PostgreSQL with the Invidious schema and configure a compatible Invidious Companion.
-    Place config.yml in Configuration with both connection settings and expose the browser endpoint via HTTPS.
+  description: >-
+    Invidious needs an empty, reachable PostgreSQL database; it creates its own tables on first start.
+    Enter the database URL and a generated secret in the install form and the app starts with a built-in
+    configuration, so no config file is needed. Video playback also needs an Invidious Companion: enter its
+    internal address and 16-character key to enable it. Expose the browser endpoint through an HTTPS
+    reverse proxy and set the public domain.
   category: media
   website: https://github.com/iv-org/invidious
   source: https://github.com/iv-org/invidious
   docs: https://docs.invidious.io/installation/
   primary_service: invidious
-  post_install: Provision PostgreSQL with the Invidious schema and configure a compatible Invidious Companion.
-    Place config.yml in Configuration with both connection settings and expose the browser endpoint via HTTPS.
+  post_install: >-
+    Without a Companion address the site loads and searches work, but videos will not play. Run an
+    Invidious Companion, then edit this app to add its address and key.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -19,17 +24,62 @@ x-nex:
     port: 3000
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
-    CONFIG:
-      label: Prepared Invidious configuration
-      help: Managed directory mounted at /invidious/config. Choose storage readable by the application.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
+    DATABASE_URL:
+      label: PostgreSQL connection URL
+      type: password
+      help: Full URL of an empty PostgreSQL database, such as postgres://user:password@host:5432/invidious.
+    HMAC_KEY:
+      label: Signing key
+      type: password
+      help: Use Generate once and keep it. Changing it signs users out and breaks existing links.
+    PUBLIC_DOMAIN:
+      label: Public domain
+      help: Domain people use to reach Invidious, such as videos.example.com. Leave empty until it is known.
+    COMPANION_URL:
+      label: Companion address
+      help: Internal address of an Invidious Companion, such as http://companion:8282/companion. Leave empty
+        to run without video playback.
+    COMPANION_KEY:
+      label: Companion key
+      type: password
+      generate: {format: alnum, length: 16, max_length: 16}
+      help: Exactly 16 letters and digits, identical to the key configured in the Companion. Generate makes
+        16. If Generate gives only 24 characters (older Nex), paste the output of openssl rand -hex 8 instead.
+        Required with a Companion address.
 services:
   invidious:
     image: quay.io/invidious/invidious:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      cfg="database_url: $$DATABASE_URL
+      check_tables: true
+      hmac_key: \"$$HMAC_KEY\"
+      port: 3000
+      host_binding: 0.0.0.0"
+      if [ -n "$$PUBLIC_DOMAIN" ]; then
+        cfg="$$cfg
+      domain: $$PUBLIC_DOMAIN"
+      fi
+      if [ -n "$$COMPANION_URL" ]; then
+        cfg="$$cfg
+      invidious_companion:
+        - private_url: \"$$COMPANION_URL\"
+      invidious_companion_key: \"$$COMPANION_KEY\""
+      fi
+      export INVIDIOUS_CONFIG="$$cfg"
+      exec /sbin/tini -- /invidious/invidious
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      HMAC_KEY: ${HMAC_KEY}
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:-}
+      COMPANION_URL: ${COMPANION_URL:-}
+      COMPANION_KEY: ${COMPANION_KEY:-}
     ports:
-    - ${PORT:-23481}:3000/tcp
-    volumes:
-    - ${CONFIG}:/invidious/config:ro
+    - ${PORT:-3000}:3000/tcp
     deploy:
       replicas: 1

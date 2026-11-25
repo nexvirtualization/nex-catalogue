@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Assistant workspace
       help: Select This host. Contains configuration, files, memory and local customization. Include this
@@ -41,7 +41,7 @@ services:
       AUTH_LOGIN: ${APP_LOGIN:-admin}
       AUTH_PASSWORD: ${APP_PASSWORD}
     ports:
-    - ${PORT:-8126}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/a0/usr
     deploy:

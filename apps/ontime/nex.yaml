@@ -2,9 +2,8 @@
 x-nex:
   name: Ontime
   summary: Coordinate event rundowns, timers and cues
-  description: Open the rundown editor on a trusted network. To use external OSC controllers, connect
-    to UDP 8888 on the application network or use the host-published OSC port. Configure output destinations
-    through Ontime.
+  description: Open the rundown editor on a trusted network. To use external OSC controllers, connect to UDP
+    8888 on the app address. Configure output destinations through Ontime.
   category: productivity
   website: https://www.getontime.no/
   source: https://github.com/cpvalente/ontime
@@ -24,11 +23,12 @@ x-nex:
       help: IANA time zone for local rundown and event times.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 4001.
+      help: The app listens on TCP port 4001 on its default Docker network. Nex does not publish it on host
+        addresses.
     OSC_PORT:
       label: Osc Port
-      help: OSC input port for controllers when host publication is enabled.
+      help: The app listens on UDP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Project and event state
       help: Select This host. Stores event rundowns, settings and backups. Include this folder in a stopped

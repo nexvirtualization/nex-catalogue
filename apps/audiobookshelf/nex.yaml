@@ -19,9 +19,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port. Finish first-run administrator setup immediately on a trusted network. With Network
-        → Docker and host publishing enabled, use the chosen host web port. On a registered VLAN or private Primary
-        network with its own address, use that address and internal port 80; host publishing is a separate switch.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. Finish first-run administrator setup immediately on a trusted network.
     CONFIG:
       label: Settings and database
       help: 'Persistent /config. Choose This host: the SQLite database requires local storage. Must be writable
@@ -42,7 +41,7 @@ services:
   audiobookshelf:
     image: ghcr.io/advplyr/audiobookshelf:latest
     ports:
-    - ${PORT:-13378}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${CONFIG}:/config
     - ${METADATA}:/metadata

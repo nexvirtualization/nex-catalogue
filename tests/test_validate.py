@@ -74,6 +74,37 @@ class CataloguePolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'primary app network'):
             self.check_package(metadata, {'ports': ['7777:7777/udp']})
 
+    def test_options_use_only_keys_core_reads(self):
+        service = {'environment': {'MODE': '${MODE:-fast}'}}
+        option = {'label': 'Mode', 'help': 'Leave empty for fast.', 'type': 'text'}
+        self.assertEqual(self.check_package({'options': {'MODE': option}}, service), 1)
+        self.assertEqual(self.check_package({'options': {'MODE': 'Mode'}}, service), 1)
+        for extra in ({'default': 'fast'}, {'required': False}):
+            with self.subTest(extra=extra), self.assertRaisesRegex(AssertionError, 'Core ignores option keys'):
+                self.check_package({'options': {'MODE': {**option, **extra}}}, service)
+
+    def test_password_generate_formats_follow_core(self):
+        service = {'environment': {'KEY': '${KEY}'}}
+        def option(generate, kind='password'):
+            return {'options': {'KEY': {'label': 'Key', 'type': kind, 'generate': generate}}}
+        for generate in ({'format': 'hex', 'length': 64}, {'format': 'alnum', 'length': 32, 'max_length': 32},
+                         {'format': 'password', 'length': 20, 'min_length': 12},
+                         {'format': 'base64', 'bytes': 32, 'prefix': 'base64:'},
+                         {'format': 'base64url', 'prefix': 'k4.local.'}, {'format': 'uuid'}):
+            with self.subTest(generate=generate):
+                self.assertEqual(self.check_package(option(generate), service), 1)
+        for generate in ({'format': 'words'}, 'hex', {'format': 'hex', 'bytes': 32},
+                         {'format': 'base64', 'length': 44}, {'format': 'alnum', 'length': 4},
+                         {'format': 'alnum', 'length': 20, 'min_length': 30}, {'format': 'base64', 'bytes': 8},
+                         {'format': 'hex', 'prefix': 'two words'}, {'format': 'uuid', 'length': 36},
+                         {'format': 'alnum', 'length': 20, 'max_length': 600}):
+            with self.subTest(generate=generate), self.assertRaises(AssertionError):
+                self.check_package(option(generate), service)
+        with self.assertRaisesRegex(AssertionError, 'type: password'):
+            self.check_package(option({'format': 'hex'}, 'text'), service)
+        with self.assertRaisesRegex(AssertionError, 'takes no'):
+            self.check_package(option({'format': 'hex'}), {'environment': {'KEY': '${KEY:-changeme}'}})
+
     def test_steamcmd_bootstrap_matches_reviewed_copy(self):
         command = ['/bin/bash', '-ec', f'{STEAMCMD_BOOTSTRAP}\n\nnex_steamcmd_update 1234 linux']
         self.assertEqual(self.check_package({'category': 'games'}, {'command': command}), 1)

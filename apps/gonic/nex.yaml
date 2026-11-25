@@ -15,10 +15,13 @@ x-nex:
     MUSIC:
       label: Music folder
       help: Choose the Nex-managed folder mounted at /music.
+    PLAYLISTS:
+      label: Playlists folder
+      help: Choose a writable Nex-managed folder for gonic to store playlists.
     PORT:
-      label: Published 4747/tcp port
-      help: Host port for application listener 4747/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 4747/tcp
+      help: The app listens on TCP port 4747 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Mount your music folder as a Nex share and scan it in the administration UI. Replace the upstream
     initial administrator credentials before remote access.
   web:
@@ -31,8 +34,10 @@ services:
     environment:
       GONIC_MUSIC_PATH: /music
       GONIC_DB_PATH: /data/gonic.db
+      GONIC_LISTEN_ADDR: '0.0.0.0:4747'
     volumes:
     - ${DATA}:/data
     - ${MUSIC}:/music:ro
+    - ${PLAYLISTS}:/playlists
     ports:
-    - ${PORT:-19945}:4747/tcp
+    - ${PORT:-4747}:4747/tcp

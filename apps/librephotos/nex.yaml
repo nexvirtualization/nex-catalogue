@@ -2,8 +2,10 @@
 x-nex:
   name: LibrePhotos
   summary: Index a private photo collection and create albums
-  description: Select the photo library, create the initial administrator on a trusted network and start
-    a scan. The unified image uses its embedded database and supports CPU-based processing.
+  description: For a new install, create a dedicated database on a reachable PostgreSQL 15 or newer
+    server and give the LibrePhotos user ownership of that database. Enter its host, port, name,
+    user and password in the install form. After startup, open LibrePhotos on a trusted network to
+    create the first administrator and scan the photo library.
   category: media
   website: https://github.com/LibrePhotos/librephotos
   source: https://github.com/LibrePhotos/librephotos
@@ -18,8 +20,8 @@ x-nex:
       label: Photo library
       help: Keep photo library in this managed folder between restarts.
     DATA:
-      label: Persistent photo metadata
-      help: Keep persistent photo metadata in this managed folder between restarts.
+      label: Protected media
+      help: Keep thumbnails and other generated media in this managed folder between restarts.
     LOGS:
       label: Application logs
       help: Keep application logs in this managed folder between restarts.
@@ -28,11 +30,36 @@ x-nex:
       help: Keep model cache in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8001.
+      help: The app listens on TCP port 8001 on its default Docker network. Nex does not publish it on host
+        addresses.
+    DB_HOST:
+      label: Database host
+      help: Address of the PostgreSQL server. Use the database app connection name on a Nex app network.
+    DB_PORT:
+      label: Database port
+      help: TCP port of the PostgreSQL server. Leave empty for 5432.
+    DB_NAME:
+      label: Database name
+      help: Dedicated database owned by the LibrePhotos user.
+    DB_USER:
+      label: Database user
+      help: Owner of the dedicated database.
+    DB_PASS:
+      label: Database password
+      type: password
+      help: Password for the database user.
 services:
   librephotos:
     image: docker.io/reallibrephotos/librephotos-unified:latest
+    environment:
+      SERVE_FRONTEND: "true"
+      # The frontend-serving settings otherwise default to SQLite.
+      DB_BACKEND: postgresql
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
     volumes:
     - ${PHOTOS}:/data
     - ${DATA}:/protected_media

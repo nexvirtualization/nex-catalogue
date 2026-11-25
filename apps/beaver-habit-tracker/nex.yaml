@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Habit data
       help: Select This host. Holds habit files and local account data. Include this folder in a stopped
@@ -29,10 +29,17 @@ x-nex:
 services:
   beaver-habit-tracker:
     image: daya0576/beaverhabits:latest
+    user: "0:0"
+    entrypoint: [/bin/sh, -ec]
+    command:
+    - |
+      chown -h nobody:nogroup /app/.user
+      exec setpriv --reuid=nobody --regid=nogroup --clear-groups --no-new-privs sh /app/start.sh prd
     environment:
       HABITS_STORAGE: USER_DISK
+      GUNICORN_CMD_ARGS: --control-socket /tmp/gunicorn.ctl
     ports:
-    - ${PORT:-8108}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/.user
     deploy:

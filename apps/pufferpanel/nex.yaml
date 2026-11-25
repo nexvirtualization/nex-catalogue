@@ -24,6 +24,9 @@ services:
     image: docker.io/pufferpanel/pufferpanel:latest
     deploy:
       replicas: 1
+    environment:
+      # A non-empty docker.root stops the image's startup probe for a Docker socket; game servers run as processes.
+      PUFFER_DOCKER_ROOT: /var/lib/pufferpanel
     volumes:
     - ${CONFIG}:/etc/pufferpanel
     - ${DATA}:/var/lib/pufferpanel

@@ -17,8 +17,8 @@ x-nex:
       help: Keep log data and indexes in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3100.
+      help: The app listens on TCP port 3100 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   loki:
     image: docker.io/grafana/loki:latest

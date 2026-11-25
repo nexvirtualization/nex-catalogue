@@ -2,14 +2,14 @@
 x-nex:
   name: Cloudreve
   summary: Manage and share files with Cloudreve
-  description: Provision PostgreSQL and Redis. Keep both reachable from Nex and complete first-run sign-in
+  description: Provision PostgreSQL. A private Redis-compatible cache runs with the app. Complete first-run sign-in
     on a trusted network.
   category: management
   website: https://cloudreve.org/
   source: https://github.com/cloudreve/cloudreve
   docs: https://docs.cloudreve.org/en/overview/deploy/docker
   primary_service: cloudreve
-  post_install: Provision PostgreSQL and Redis. Keep both reachable from Nex and complete first-run sign-in
+  post_install: Provision PostgreSQL. A private Redis-compatible cache runs with the app. Complete first-run sign-in
     on a trusted network.
   license: GPL-3.0
   architectures:
@@ -34,24 +34,23 @@ x-nex:
     DB_PORT:
       label: Db port
       help: Enter the deployment value described in the upstream setup guide.
-    REDIS_ADDRESS:
-      label: Redis address
-      help: Enter the deployment value described in the upstream setup guide.
-    REDIS_PASSWORD:
-      label: Redis password
-      help: Use the credential or secret required by the upstream configuration.
-      type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5212 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5212 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Cloudreve application data
       help: Managed directory mounted at /cloudreve/data. Choose storage writable by the application.
 services:
   cloudreve:
     image: docker.io/cloudreve/cloudreve:latest
+    # Cloudreve stops when Redis is not there yet, so wait for the cache before starting.
+    entrypoint:
+    - sh
+    - -c
+    - until nc -z redis 6379; do sleep 1; done; exec sh ./entrypoint.sh
     ports:
-    - ${PORT:-23480}:5212/tcp
+    - ${PORT:-5212}:5212/tcp
     volumes:
     - ${DATA}:/cloudreve/data
     environment:
@@ -61,7 +60,10 @@ services:
       CR_CONF_Database.Password: ${DB_PASSWORD}
       CR_CONF_Database.Name: ${DB_NAME:-cloudreve}
       CR_CONF_Database.Port: ${DB_PORT:-5432}
-      CR_CONF_Redis.Server: ${REDIS_ADDRESS}
-      CR_CONF_Redis.Password: ${REDIS_PASSWORD}
+      CR_CONF_Redis.Server: redis:6379
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/valkey/valkey:latest
     deploy:
       replicas: 1

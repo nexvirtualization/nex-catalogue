@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Webmail configuration
       help: Select This host. Stores settings, configured mail domains and application state. Include
@@ -31,7 +31,7 @@ services:
   snappymail:
     image: djmaze/snappymail:latest
     ports:
-    - ${PORT:-8129}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     volumes:
     - ${DATA}:/var/lib/snappymail
     deploy:

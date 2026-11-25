@@ -23,7 +23,8 @@ x-nex:
       help: Choose This host and include this folder in stopped backups.
     LICENSE_KEY:
       label: Cfx.re registration key
-      help: Create your key at https://portal.cfx.re/servers/registration-keys.
+      help: Create your key at https://portal.cfx.re/servers/registration-keys and paste it exactly as shown,
+        including the cfxk_ prefix. The server refuses any other value.
       type: password
 services:
   fivem:

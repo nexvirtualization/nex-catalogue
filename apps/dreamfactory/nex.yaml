@@ -18,8 +18,10 @@ x-nex:
     APP_KEY:
       label: Laravel encryption key
       type: password
-      help: 'Use base64: followed by the Base64 encoding of 32 random bytes. Preserve this key when
-        recreating the instance.'
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead. Preserve this key when recreating the instance.'
     ADMIN_EMAIL:
       label: Administrator email
       help: Email address for the initial DreamFactory administrator.
@@ -29,24 +31,24 @@ x-nex:
       help: Use a unique password with at least 16 characters.
     HTTPS_HEADER:
       label: TLS proxy setting
-      help: Set on if a reverse proxy terminates HTTPS, or off for direct HTTP.
+      help: Enter on if a reverse proxy terminates HTTPS, or off (the default) for direct HTTP.
     DATA:
       label: DreamFactory storage
       help: Keep dreamfactory storage in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   dreamfactory:
     image: docker.io/dreamfactorysoftware/df-docker:latest
     environment:
-      DB_CONNECTION: sqlite
+      DB_DRIVER: sqlite
       DB_DATABASE: /opt/dreamfactory/storage/databases/dreamfactory.sqlite
       APP_KEY: ${APP_KEY}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      HTTPS_HEADER: ${HTTPS_HEADER}
+      HTTPS_HEADER: "${HTTPS_HEADER:-off}"
     volumes:
     - ${DATA}:/opt/dreamfactory/storage
     ports:

@@ -39,8 +39,8 @@ x-nex:
       help: Address of the model provider, using the upstream LLM_HOST format.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7000.
+      help: The app listens on TCP port 7000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Workspace state
       help: Select This host. Stores conversations, account state and uploaded workspace files. Include
@@ -61,7 +61,7 @@ services:
       CHROMADB_PORT: ${VECTOR_PORT:-8000}
       LLM_HOST: ${MODEL_HOST}
     ports:
-    - ${PORT:-8922}:7000/tcp
+    - ${PORT:-7000}:7000/tcp
     volumes:
     - ${DATA}:/app/data
     - ${LOGS}:/app/logs

@@ -50,19 +50,22 @@ x-nex:
       type: password
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Enter a random 32-byte key as described in the upstream installation instructions.
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: hex, length: 64}
     QUEUE_SECRET:
       label: Job queue dashboard password
       help: Use Generate to create a unique secret for this installation.
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 4018.
+      help: The app listens on TCP port 4018 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
       label: Api Port
-      help: Host-published Chartbrew API port.
+      help: The app listens on TCP port 4019 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   chartbrew:
     image: razvanilin/chartbrew:latest
@@ -84,7 +87,7 @@ services:
       VITE_APP_CLIENT_PORT: '4018'
       VITE_APP_API_HOST: ${API_URL}
     ports:
-    - ${PORT:-8442}:4018/tcp
+    - ${PORT:-4018}:4018/tcp
     - ${API_PORT:-4019}:4019/tcp
     deploy:
       replicas: 1

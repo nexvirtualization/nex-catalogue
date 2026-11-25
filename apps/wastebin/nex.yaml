@@ -22,11 +22,12 @@ x-nex:
       help: Use Nex Generate. Retain this value across restores.
     DATA:
       label: Paste database
-      help: Keep paste database in this managed folder between restarts.
+      help: Managed folder for the paste database (state.db). A small helper service makes it writable by
+        the application user (UID 10001) on every start.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8088.
+      help: The app listens on TCP port 8088 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   wastebin:
     image: docker.io/quxfoo/wastebin:latest
@@ -38,5 +39,22 @@ services:
     - ${DATA}:/data
     ports:
     - ${PORT:-8088}:8088/tcp
+    deploy:
+      replicas: 1
+      # Retry quickly: wastebin may start before the helper below has made /data writable on first start.
+      restart_policy:
+        condition: any
+        delay: 1s
+  # The wastebin image has no shell, so this helper hands the data folder to the app user and waits.
+  data-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R 10001:10001 /data
+      exec tail -f /dev/null
+    volumes:
+    - ${DATA}:/data
     deploy:
       replicas: 1

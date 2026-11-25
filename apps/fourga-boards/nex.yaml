@@ -31,8 +31,9 @@ x-nex:
       label: Redis url
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 1337 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 1337 on its default Docker network. Nex does not publish it on host
+        addresses.
     AVATARS:
       label: User avatars
       help: Managed directory mounted at /app/public/user-avatars. Choose storage writable by the application.
@@ -47,7 +48,7 @@ services:
   fourga-boards:
     image: ghcr.io/rargames/4gaboards:latest
     ports:
-    - ${PORT:-23509}:1337/tcp
+    - ${PORT:-1337}:1337/tcp
     volumes:
     - ${AVATARS}:/app/public/user-avatars
     - ${BACKGROUNDS}:/app/public/project-background-images

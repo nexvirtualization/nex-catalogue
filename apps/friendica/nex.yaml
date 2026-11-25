@@ -13,9 +13,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /var/www/html.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a MySQL or MariaDB database and keep the site on a trusted network during installation.
     Complete the web installer, then register the administrator address selected during setup.
   web:
@@ -28,4 +28,4 @@ services:
     volumes:
     - ${DATA}:/var/www/html
     ports:
-    - ${PORT:-19988}:80/tcp
+    - ${PORT:-80}:80/tcp

@@ -25,8 +25,9 @@ x-nex:
       help: Token required to register new users.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 6167 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 6167 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Conduit database
       help: Managed directory mounted at /var/lib/matrix-conduit. Choose storage writable by the application.
@@ -34,7 +35,7 @@ services:
   matrix-conduit:
     image: registry.gitlab.com/famedly/conduit/matrix-conduit:latest
     ports:
-    - ${PORT:-20247}:6167/tcp
+    - ${PORT:-6167}:6167/tcp
     volumes:
     - ${DATA}:/var/lib/matrix-conduit
     environment:

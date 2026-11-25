@@ -30,9 +30,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 3333/tcp port
-      help: Host port for application listener 3333/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3333/tcp
+      help: The app listens on TCP port 3333 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and authenticated Redis. Store the first administrator access token securely.
     Back up the database and keep the signing secrets.
   web:
@@ -50,4 +50,4 @@ services:
       ACCESS_TOKEN_SALT: ${ACCESS_TOKEN_SALT}
       JWT_SECRET_KEY: ${JWT_SECRET}
     ports:
-    - ${PORT:-19527}:3333/tcp
+    - ${PORT:-3333}:3333/tcp

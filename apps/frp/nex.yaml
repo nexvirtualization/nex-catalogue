@@ -2,7 +2,8 @@
 x-nex:
   name: Frp
   summary: FRP forwards traffic to services behind NAT or a firewall
-  description: FRP forwards traffic to services behind NAT or a firewall.
+  description: FRP server (frps) that forwards traffic to services behind NAT or a firewall. Requires a
+    prepared frps.toml with authentication and TLS for trusted clients.
   category: networking
   source: https://github.com/fatedier/frp
   website: https://gofrp.org/en/
@@ -11,13 +12,14 @@ x-nex:
   options:
     CONFIG:
       label: Config folder
-      help: Choose the Nex-managed folder mounted at /nex-config.
+      help: Choose a folder containing a readable frps.toml at its top level. An empty folder prevents startup.
     PORT:
-      label: Published 7000/tcp port
-      help: Host port for application listener 7000/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Prepare frps.toml in Configuration. Configure authentication and TLS for trusted clients. Use
-    a dedicated app address or separate proxy configuration for the extra listener ports you define.
+      label: Port 7000/tcp
+      help: The app listens on TCP port 7000 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Prepare frps.toml with bindPort = 7000, authentication and TLS. Validate it with frps verify -c frps.toml.
+    If the folder was created during install, upload the file under Files → Config folder, then restart FRP.
+    Use a dedicated app address or separate proxy configuration for any extra listener ports.
 services:
   frp:
     image: ghcr.io/fatedier/frps:v0.71.0
@@ -26,7 +28,7 @@ services:
     volumes:
     - ${CONFIG}:/nex-config:ro
     ports:
-    - ${PORT:-19921}:7000/tcp
+    - ${PORT:-7000}:7000/tcp
     command:
     - -c
     - /nex-config/frps.toml

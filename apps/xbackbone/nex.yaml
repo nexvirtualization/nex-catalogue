@@ -29,8 +29,8 @@ x-nex:
       help: IANA time zone for uploads and server logs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: XBackBone data
       help: Select This host. Holds settings, the SQLite database and uploaded files. Include this folder
@@ -43,7 +43,7 @@ services:
       PGID: ${PGID:-1000}
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8175}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/config
     deploy:

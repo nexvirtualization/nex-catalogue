@@ -39,8 +39,8 @@ x-nex:
       help: Full URL clients will open, including scheme and any non-default port.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Flarum state
       help: Select This host. Stores extensions, assets and local application configuration. Include this
@@ -55,7 +55,7 @@ services:
       DB_NAME: ${DB_NAME:-flarum}
       FLARUM_BASE_URL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-8434}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/data
     deploy:

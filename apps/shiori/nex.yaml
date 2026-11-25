@@ -2,8 +2,17 @@
 x-nex:
   name: Shiori
   summary: Store bookmarks and archive web pages
-  description: Set your own administrator credentials at first sign-in. Keep the archive folder in stopped
-    SQLite backups.
+  description: |-
+    For a fresh install, set your own administrator credentials at first sign-in and open Shiori at its
+    private Primary network address on port 8080. The bookmark archive folder holds the SQLite database
+    and archived pages; include it in stopped backups.
+
+    Older installs of this app kept their data inside the container at /shiori, not in the archive
+    folder, so Stop, Restart, Update or Remove loses it. Before any of those, block user writes and
+    copy /shiori/. out of the running container with docker cp -a, including the database, its -wal,
+    -shm and -journal files and all archived pages. Check a copy with SQLite PRAGMA integrity_check.
+    Then install a separate Shiori, stop it, restore the export into its archive folder with the same
+    file ownership, start it and check bookmarks and archived pages before retiring the old install.
   category: reading
   website: https://github.com/go-shiori/shiori
   source: https://github.com/go-shiori/shiori
@@ -17,16 +26,17 @@ x-nex:
     DATA:
       label: Bookmark archive
       help: Shiori database, cached pages and site assets.
-    PORT:
-      label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+    SHIORI_HTTP_SECRET_KEY:
+      label: Session signing key
+      type: password
+      help: Use Generate for a unique key. Keep the same key to preserve signed-in sessions.
 services:
   shiori:
     image: ghcr.io/go-shiori/shiori:latest
+    environment:
+      SHIORI_DIR: /srv/shiori
+      SHIORI_HTTP_SECRET_KEY: ${SHIORI_HTTP_SECRET_KEY}
     volumes:
     - ${DATA}:/srv/shiori
-    ports:
-    - ${PORT:-8080}:8080/tcp
     deploy:
       replicas: 1

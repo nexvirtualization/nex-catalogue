@@ -26,8 +26,9 @@ x-nex:
       help: Strong initial administrator password.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Application settings
       help: Managed directory mounted at /configs. Choose storage writable by the application.
@@ -38,7 +39,7 @@ services:
   stirling-pdf:
     image: docker.io/stirlingtools/stirling-pdf:latest
     ports:
-    - ${PORT:-20187}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${CONFIG}:/configs
     - ${TESSDATA}:/usr/share/tessdata

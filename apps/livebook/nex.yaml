@@ -23,12 +23,12 @@ x-nex:
       help: Keep notebooks in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     IFRAME_PORT:
       label: Notebook assets and iframe port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8081.
+      help: The app listens on TCP port 8081 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   livebook:
     image: ghcr.io/livebook-dev/livebook:latest

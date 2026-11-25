@@ -21,8 +21,9 @@ x-nex:
       label: Home Assistant URL
       help: HTTP or HTTPS address of a reachable Home Assistant installation.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5050 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5050 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Dashboards and settings
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
@@ -30,7 +31,7 @@ services:
   ha-fusion:
     image: ghcr.io/matt8707/ha-fusion:latest
     ports:
-    - ${PORT:-20183}:5050/tcp
+    - ${PORT:-5050}:5050/tcp
     volumes:
     - ${DATA}:/app/data
     environment:

@@ -27,8 +27,8 @@ x-nex:
       help: Use Nex Generate and retain the value across restores.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5173.
+      help: The app listens on TCP port 5173 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   kaneo:
     image: ghcr.io/usekaneo/kaneo:latest

@@ -2,8 +2,13 @@
 x-nex:
   name: gathio
   summary: Publish event pages and coordinate attendance
-  description: Prepare the Gathio configuration with a reachable MongoDB instance and your public address.
-    Protect the administrative configuration and use HTTPS for shared events.
+  description: >-
+    Event pages and attendance for small groups. Enter a reachable MongoDB connection URL and your public
+    address in the install form. On first start gathio writes a default config.toml (federation on, no
+    email service, events deleted 7 days after they end) into the configuration folder and never overwrites
+    an existing file; edit it to add an email service, static pages or other settings. The database URL
+    and other form values are passed as environment variables, not written to the file. Use HTTPS for
+    shared events and keep the configuration folder private.
   category: productivity
   website: https://github.com/lowercasename/gathio
   source: https://github.com/lowercasename/gathio
@@ -14,19 +19,59 @@ x-nex:
   web:
     port: 3000
   options:
+    MONGO_URL:
+      label: MongoDB connection URL
+      type: password
+      help: Full URL of a reachable MongoDB database, such as mongodb://user:password@host:27017/gathio.
+    DOMAIN:
+      label: Public address
+      help: Domain people use to reach gathio, such as events.example.com, with :port if it is not 80 or 443.
+        Used in links and federation.
+    CONTACT_EMAIL:
+      label: Contact email
+      help: Address shown as the instance contact. Leave empty for contact@example.com.
+    SITE_NAME:
+      label: Site name
+      help: Name shown on the front page. Leave empty for gathio.
     CONFIG:
-      label: Prepared event configuration
-      help: Keep prepared event configuration in this managed folder between restarts.
+      label: Configuration folder
+      help: Holds config.toml. A default is written on first start if none is present; edit it freely.
     IMAGES:
       label: Event images
       help: Keep event images in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   gathio:
     image: ghcr.io/lowercasename/gathio:latest
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f config/config.toml ]; then
+        cat > config/config.toml <<'TOML'
+      [general]
+      domain = "$${GATHIO_DOMAIN}"
+      port = "3000"
+      email = "$${GATHIO_EMAIL}"
+      site_name = "$${GATHIO_SITE_NAME}"
+      is_federated = true
+      delete_after_days = 7
+      mail_service = "none"
+      creator_email_addresses = []
+
+      [database]
+      mongodb_url = "$${GATHIO_MONGODB_URL}"
+      TOML
+      fi
+      exec npm run start
+    environment:
+      GATHIO_MONGODB_URL: ${MONGO_URL}
+      GATHIO_DOMAIN: ${DOMAIN}
+      GATHIO_EMAIL: ${CONTACT_EMAIL:-contact@example.com}
+      GATHIO_SITE_NAME: ${SITE_NAME:-gathio}
     volumes:
     - ${CONFIG}:/app/config
     - ${IMAGES}:/app/public/events

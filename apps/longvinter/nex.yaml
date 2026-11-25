@@ -5,8 +5,8 @@ x-nex:
   description: >-
     Keep the game folders on This host and choose a registered primary network that players can reach.
     Join through the Longvinter server browser. Game traffic uses UDP 7777. The image fetches the Uuvana
-    dedicated server through SteamCMD on first start and checks for updates on restart. Make a stopped
-    backup before applying game updates.
+    dedicated server through SteamCMD on first start (about 2 GB) and checks for updates on restart.
+    Make a stopped backup before applying game updates.
   category: games
   website: https://store.steampowered.com/app/1635450/
   source: https://github.com/kimzuni/longvinter-docker-server
@@ -27,6 +27,26 @@ x-nex:
 services:
   longvinter:
     image: ghcr.io/kimzuni/longvinter-docker-server:latest
+    # The image forces SteamCMD to 64-bit, which Steam rejects for this app ("Failed to install app ...
+    # Missing configuration"), and Steam also refuses the first anonymous install now and then. Drop that
+    # option and retry the install up to four times.
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |
+      cat > /usr/local/bin/steamcmd-retry <<'WRAP'
+      #!/bin/bash
+      for try in 1 2 3 4; do
+        /home/steam/steamcmd/steamcmd.sh "$$@" && [ -e "$${DATA_DIR:-/data}/LongvinterServer.sh" ] && exit 0
+        sleep 10
+      done
+      exit 1
+      WRAP
+      chmod 755 /usr/local/bin/steamcmd-retry
+      steamcmd=/home/steam/steamcmd/steamcmd.sh
+      sed -i -e 's/ +@sSteamCmdForcePlatformBitness 64//' \
+        -e "s#$$steamcmd#/usr/local/bin/steamcmd-retry#" /home/steam/server/helper_install.sh
+      exec /home/steam/server/init.sh
     environment:
       PUID: '1000'
       PGID: '1000'

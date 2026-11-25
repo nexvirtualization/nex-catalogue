@@ -2,12 +2,14 @@
 x-nex:
   name: NocoBase
   summary: Build database-backed business forms and workflows
-  description: Use the single-node SQLite deployment. Open the server on a trusted network to create or
-    sign in to the initial administrator. Store the application key with your protected backups.
+  description: Install PostgreSQL separately and create a dedicated database owned by a dedicated
+    non-superuser login. Sign in with the configured initial administrator email and password.
+    If you have a SQLite deployment, keep a stopped backup and install this package separately.
+    Skip the in-place update. SQLite data is not migrated.
   category: productivity
   website: https://www.nocobase.com/
   source: https://github.com/nocobase/nocobase
-  docs: https://docs.nocobase.com/welcome/getting-started/installation/docker-compose
+  docs: https://nocode.docs.nocobase.com/nocobase-cli/installation/docker-compose
   scalable: false
   primary_service: nocobase
   architectures:
@@ -17,28 +19,61 @@ x-nex:
     service: nocobase
     scheme: http
     port: 80
+  works_with:
+  - postgresql
   options:
+    DB_HOST:
+      label: PostgreSQL host
+      help: Use the PostgreSQL installation's Name inside applications. Keep the database on the
+        private application network on internal port 5432.
+    DB_NAME:
+      label: PostgreSQL database
+      help: Create an empty database owned by the dedicated login before installing NocoBase.
+        Leave empty for nocobase.
+    DB_USER:
+      label: PostgreSQL login
+      help: Use the dedicated database owner with permission to create tables in its database.
+    DB_PASSWORD:
+      label: PostgreSQL password
+      help: Enter the password for the dedicated database login.
+      type: password
     APP_SECRET:
-      label: Application signing secret
-      help: Use Generate to create a unique secret for this installation.
+      label: Application signing key
+      help: Use Generate for a new installation. Keep the same key for recovery and protect it
+        with your backups.
+      type: password
+    ADMIN_EMAIL:
+      label: Initial administrator email
+      help: Enter the email to use for the administrator account created on first startup.
+    ADMIN_PASSWORD:
+      label: Initial administrator password
+      help: Use Generate for the administrator account created on first startup. Change its
+        password in NocoBase after installation.
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: NocoBase state
-      help: Select This host. Stores application settings, SQLite data and uploads. Include this folder
-        in a stopped Nex backup.
+      help: Select This host for local files and uploads. Stop NocoBase before backing up this folder
+        and the separate database with PostgreSQL tools compatible with the server version. Restore
+        both backups from the same stopped period before starting with the original signing key.
 services:
   nocobase:
     image: nocobase/nocobase:latest
     environment:
-      DB_DIALECT: sqlite
-      DB_STORAGE: /app/nocobase/storage/db/nocobase.sqlite
+      DB_DIALECT: postgres
+      DB_HOST: ${DB_HOST}
+      DB_PORT: '5432'
+      DB_DATABASE: ${DB_NAME:-nocobase}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       APP_KEY: ${APP_SECRET}
+      INIT_ROOT_EMAIL: ${ADMIN_EMAIL}
+      INIT_ROOT_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8436}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/app/nocobase/storage
     deploy:

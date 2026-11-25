@@ -20,9 +20,11 @@ x-nex:
   options:
     LARAVEL_KEY:
       label: Laravel application key
-      help: 'Enter base64: followed by a base64-encoded random 32-byte key. Nex Generate does not add
-        the prefix.'
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead.'
       type: password
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
     PUID:
       label: Puid
       help: Numeric UID of the application process.
@@ -34,8 +36,8 @@ x-nex:
       help: Cron expression controlling speed test frequency.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Speed test history
       help: Select This host. Stores the SQLite database and web configuration. Include this folder in
@@ -50,7 +52,7 @@ services:
       PGID: ${PGID:-1000}
       SPEEDTEST_SCHEDULE: ${TEST_SCHEDULE:-30 * * * *}
     ports:
-    - ${PORT:-8412}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/config
     deploy:

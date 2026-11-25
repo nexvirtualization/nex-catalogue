@@ -34,16 +34,19 @@ x-nex:
       type: password
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 16 instead. Keep it with your database backups.
       type: password
+      generate: {format: hex, length: 32}
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   infisical:
     image: docker.io/infisical/infisical:latest
     ports:
-    - ${PORT:-23526}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       SITE_URL: ${PUBLIC_URL}
       DB_CONNECTION_URI: ${DATABASE_URL}

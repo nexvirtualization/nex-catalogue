@@ -15,14 +15,17 @@ x-nex:
     OPENSEARCH_INITIAL_ADMIN_PASSWORD:
       label: Initial admin password
       type: password
-      help: Use a strong password that meets OpenSearch complexity requirements.
+      generate: {format: password, length: 24, min_length: 8}
+      help: Use Generate, which makes 24 characters with upper- and lower-case letters, a digit and a symbol,
+        as OpenSearch requires. If Generate gives letters and digits only (older Nex), add a symbol such as !
+        to the end. A password you type needs at least 8 characters with all four kinds.
     DATA:
       label: Search indexes and configuration
       help: Keep search indexes and configuration in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9200.
+      help: The app listens on TCP port 9200 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   opensearch:
     image: docker.io/opensearchproject/opensearch:latest

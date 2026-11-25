@@ -2,8 +2,8 @@
 x-nex:
   name: ZoneMinder
   summary: Monitor and record network video cameras
-  description: Prepare MariaDB and a dedicated ZoneMinder database. Configure network cameras and user
-    permissions from the web interface on a trusted network.
+  description: MariaDB runs inside this app and the zm database is created on first start. Configure network
+    cameras and user permissions from the web interface on a trusted network.
   category: home-automation
   website: https://www.zoneminder.com/
   source: https://github.com/ZoneMinder/ZoneMinder
@@ -17,30 +17,23 @@ x-nex:
     service: zoneminder
     scheme: http
     port: 80
-  works_with:
-  - mariadb
   options:
-    DB_HOST:
-      label: Database host
-      help: Host or Nex application name of the prepared database service. It must be reachable on internal
-        port 3306.
-    DB_USER:
-      label: Database user
-      help: Create a dedicated non-root database user for this application.
-    DB_NAME:
-      label: Database name
-      help: Create a database owned by the configured user first. The default is zm.
+    DB_ROOT_PASSWORD:
+      label: Database root password
+      help: Use Generate. Root password of the MariaDB service inside this app. Keep it unchanged after the
+        first start.
+      type: password
     DB_PASSWORD:
       label: Database password
-      help: Password for the dedicated database account.
+      help: Use Generate. Password of the zmuser database account. Keep it unchanged after the first start.
       type: password
     TZ:
       label: Tz
       help: IANA time zone for camera footage and logs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Camera media
       help: Select This host. Stores recordings and camera data. Include this folder in a stopped Nex
@@ -51,17 +44,19 @@ x-nex:
     LOGS:
       label: Recorder logs
       help: Select This host. Stores application logs. Include this folder in a stopped Nex backup.
+    DB_DATA:
+      label: Database data
+      help: Select This host. Stores the MariaDB database. Include this folder in a stopped Nex backup.
 services:
   zoneminder:
     image: ghcr.io/zoneminder-containers/zoneminder-base:latest
     environment:
-      MYSQL_HOST: ${DB_HOST}
-      MYSQL_USER: ${DB_USER}
+      MYSQL_HOST: db
+      MYSQL_USER: zmuser
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-zm}
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8895}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/data
     - ${CONFIG}:/config
@@ -69,5 +64,17 @@ services:
     tmpfs:
     - /dev/shm:size=1000000000
     stop_grace_period: 45s
+    deploy:
+      replicas: 1
+  db:
+    image: docker.io/library/mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: zm
+      MARIADB_USER: zmuser
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_AUTO_UPGRADE: '1'
+    volumes:
+    - ${DB_DATA}:/var/lib/mysql
     deploy:
       replicas: 1

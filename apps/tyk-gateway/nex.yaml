@@ -26,9 +26,9 @@ x-nex:
       label: Config folder
       help: Choose the Nex-managed folder mounted at /opt/tyk-gateway/apps.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision Redis before installing. Configure API definitions through the Gateway API or prepare
     the Apps folder. Keep the administration secret private.
 services:
@@ -45,4 +45,4 @@ services:
     volumes:
     - ${CONFIG}:/opt/tyk-gateway/apps
     ports:
-    - ${PORT:-19877}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

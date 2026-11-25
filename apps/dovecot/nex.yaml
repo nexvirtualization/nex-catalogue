@@ -2,15 +2,18 @@
 x-nex:
   name: Dovecot
   summary: Serve mailboxes over IMAP
-  description: Prepare Dovecot configuration for authentication, TLS and the mailbox path. Use a dedicated
-    app network for standard IMAP ports.
+  description: Requires a complete Dovecot 2.4 configuration and writable mailbox storage for the rootless
+    image. Use a dedicated app network and the listener ports in your configuration.
   category: communication
   website: https://www.dovecot.org/
   source: https://github.com/dovecot/core
   docs: https://doc.dovecot.org/main/installation/docker.html
   primary_service: dovecot
-  post_install: Prepare Dovecot configuration for authentication, TLS and the mailbox path. Use a dedicated
-    app network for standard IMAP ports.
+  post_install: Supply a complete Dovecot 2.4 configuration with your authentication backend, TLS certificates
+    and mailbox paths under /srv/mail. Nex's no-new-privileges policy blocks the rootless image's default login chroots.
+    If your security policy permits running without those chroots, follow the upstream Running without Linux capabilities
+    instructions in your prepared configuration. After importing files under Files → Prepared mail configuration,
+    restart and verify an authenticated IMAP connection over TLS.
   license: MIT/LGPL-2.1
   architectures:
   - amd64
@@ -18,10 +21,10 @@ x-nex:
   options:
     CONFIG:
       label: Prepared mail configuration
-      help: Managed directory mounted at /etc/dovecot. Choose storage readable by the application.
+      help: Choose a prepared folder with dovecot.conf and its includes, readable by UID 1000. This folder replaces /etc/dovecot.
     MAIL:
       label: Mailbox storage
-      help: Managed directory mounted at /srv/mail. Choose storage writable by the application.
+      help: Choose storage writable by UID 1000 and configure Dovecot to keep mail under /srv/mail.
 services:
   dovecot:
     image: docker.io/dovecot/dovecot:latest

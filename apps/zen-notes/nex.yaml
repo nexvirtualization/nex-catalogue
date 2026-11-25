@@ -18,18 +18,25 @@ x-nex:
       label: Images folder
       help: Nex-managed folder mounted at /images. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8080/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8080
   post_install: Open Zen Notes and finish its first-user setup. Back up notes and images together.
 services:
   app:
     image: ghcr.io/sheshbabu/zen/zen:2.0.0
+    # The image runs as root; hand the folders to user 1000 and run the app as that user.
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R 1000:1000 /data /images
+      exec setpriv --reuid=1000 --regid=1000 --clear-groups /zen
     volumes:
     - ${FOLDER_1}:/data
     - ${FOLDER_2}:/images
-    user: 1000:1000
     deploy:
       replicas: 1
     ports:

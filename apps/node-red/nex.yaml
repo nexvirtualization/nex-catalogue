@@ -20,7 +20,9 @@ x-nex:
       help: IANA time zone used by flows and schedules, such as Etc/UTC.
     PORT:
       label: Editor port
-      help: Host-published HTTP port. With a dedicated Primary network and host publishing off, use the app address on port 1880. The editor starts without a login; set adminAuth using Nex File Browser or use an authenticating proxy.
+      help: The app listens on TCP port 1880 on its default Docker network. Nex does not publish it on host
+        addresses. The editor starts without a login; set adminAuth using Nex File Browser or use an
+        authenticating proxy.
     DATA:
       label: Flows and settings
       help: Flows, credentials, settings.js and installed nodes at /data. New This host storage inherits writable UID 1000 ownership from the image; existing share folders must already permit that user to write. Pin one host in Basics for File Browser. Back up this folder including the credentials key.

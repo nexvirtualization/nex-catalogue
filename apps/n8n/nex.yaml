@@ -24,9 +24,9 @@ x-nex:
       label: Data folder
       help: Stores the SQLite database, installed community nodes and instance settings.
     PORT:
-      label: Published 5678/tcp port
-      help: Host port for application listener 5678/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 5678/tcp
+      help: The app listens on TCP port 5678 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Supply the client-facing HTTPS URL. Create the owner on first sign-in. Keep this folder and
     the encryption key together in backups.
   web:
@@ -46,4 +46,4 @@ services:
     volumes:
     - ${DATA}:/home/node/.n8n
     ports:
-    - ${PORT:-19523}:5678/tcp
+    - ${PORT:-5678}:5678/tcp

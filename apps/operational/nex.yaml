@@ -33,17 +33,19 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
-      label: Published API port
-      help: Host-published port for the internal 4337/tcp endpoint.
+      label: API port
+      help: The app listens on TCP port 4337 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   operational:
     image: ghcr.io/operational-co/operational.co:latest
     ports:
-    - ${PORT:-23565}:80/tcp
-    - ${API_PORT:-24565}:4337/tcp
+    - ${PORT:-80}:80/tcp
+    - ${API_PORT:-4337}:4337/tcp
     environment:
       PORT: '4337'
       SELFHOSTED: 'true'

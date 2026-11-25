@@ -2,12 +2,13 @@
 x-nex:
   name: Seatsurfing
   summary: Book shared office desks and meeting spaces
-  description: Connect a prepared PostgreSQL database. Configure your organization and administrator
-    through the application’s web interface before wider use.
+  description: Connect a prepared PostgreSQL database and supply a 32-character encryption key. Sign in
+    as admin@seatsurfing.local with the initial administrator password, then configure your
+    organization in the web interface.
   category: management
   website: https://github.com/seatsurfing/seatsurfing
   source: https://github.com/seatsurfing/seatsurfing
-  docs: https://seatsurfing.app/docs/self-hosted/installation/
+  docs: https://seatsurfing.io/docs/self-hosted/docker/
   primary_service: seatsurfing
   scalable: false
   license: GPL-3.0
@@ -18,15 +19,35 @@ x-nex:
       label: PostgreSQL connection URL
       type: password
       help: Supply the full connection URL for a prepared database on a reachable network.
+    DB_SSLMODE:
+      label: Database TLS mode
+      help: Leave empty for disable, which sends database traffic unencrypted; use it only for a
+        PostgreSQL server without TLS on a trusted network. Use require or verify-full when the server
+        offers TLS. A sslmode set in the connection URL takes precedence.
+    CRYPT_KEY:
+      label: Database encryption key
+      type: password
+      generate: {format: alnum, length: 32, max_length: 32}
+      help: Use Generate, which makes exactly 32 letters and digits. If Generate gives only 24 characters
+        (older Nex), paste the output of openssl rand -hex 16 instead. Any other length stops the app at
+        start. Keep the original key when restoring or reconnecting an existing database.
+    INIT_ORG_PASS:
+      label: Initial administrator password
+      type: password
+      help: Use Generate for a new database. Sign in as admin@seatsurfing.local after the first start.
+        Only applied when the database is first set up.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   seatsurfing:
     image: docker.io/seatsurfing/backend:latest
     environment:
       POSTGRES_URL: ${POSTGRES_URL}
+      PGSSLMODE: ${DB_SSLMODE:-disable}
+      CRYPT_KEY: ${CRYPT_KEY}
+      INIT_ORG_PASS: ${INIT_ORG_PASS}
     ports:
     - ${PORT:-8080}:8080/tcp
     deploy:

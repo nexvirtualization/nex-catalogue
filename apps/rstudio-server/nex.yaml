@@ -17,9 +17,9 @@ x-nex:
       label: Work folder
       help: Choose the Nex-managed folder mounted at /home/rstudio.
     PORT:
-      label: Published 8787/tcp port
-      help: Host port for application listener 8787/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8787/tcp
+      help: The app listens on TCP port 8787 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Sign in as rstudio using the configured password. Mount a writable Work folder for projects
     and use HTTPS for remote access.
   web:
@@ -34,4 +34,4 @@ services:
     volumes:
     - ${WORK}:/home/rstudio
     ports:
-    - ${PORT:-19977}:8787/tcp
+    - ${PORT:-8787}:8787/tcp

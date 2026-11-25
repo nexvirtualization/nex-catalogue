@@ -77,8 +77,9 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Uploaded files
       help: Managed directory mounted at /srv/gauzy/apps/api/public. Choose storage writable by the application.
@@ -86,7 +87,7 @@ services:
   gauzy:
     image: docker.io/library/caddy:latest
     ports:
-    - ${PORT:-23491}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     entrypoint:
     - /bin/sh
     command:
@@ -113,6 +114,7 @@ services:
     environment:
       NODE_ENV: production
       DEMO: 'false'
+      WAIT_TIMEOUT: '300'
       API_BASE_URL: ${PUBLIC_URL}
       CLIENT_BASE_URL: ${PUBLIC_URL}
       ALLOWED_ORIGINS: ${PUBLIC_URL}
@@ -145,11 +147,15 @@ services:
     - main.js
     deploy:
       replicas: 1
+      restart_policy:
+        condition: any
+        delay: 10s
   worker:
     image: ghcr.io/ever-co/gauzy-worker:latest
     environment:
       NODE_ENV: production
       DEMO: 'false'
+      WAIT_TIMEOUT: '300'
       API_BASE_URL: ${PUBLIC_URL}
       CLIENT_BASE_URL: ${PUBLIC_URL}
       ALLOWED_ORIGINS: ${PUBLIC_URL}
@@ -181,6 +187,9 @@ services:
     - main.js
     deploy:
       replicas: 1
+      restart_policy:
+        condition: any
+        delay: 10s
   webapp:
     image: ghcr.io/ever-co/gauzy-webapp:latest
     environment:

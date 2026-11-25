@@ -1,34 +1,98 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 x-nex:
   name: OpenBudgeteer
+  version: '1.11.3'
   summary: Track your budget using the bucket budgeting model
-  description: Keep budget records on a trusted endpoint or behind an authenticating proxy. Use one
-    copy and stop it before backing up its SQLite files.
+  description: Keep budget records in a dedicated MariaDB database and application settings in Redis.
   category: finance
   website: https://github.com/TheAxelander/OpenBudgeteer
   source: https://github.com/TheAxelander/OpenBudgeteer
-  docs: https://github.com/TheAxelander/OpenBudgeteer
+  docs: https://axelander.dev/latest/how-to/
   primary_service: openbudgeteer
   scalable: false
   license: AGPL-3.0
+  first_sign_in: Sign in with the username and password you set. From another app in the cluster,
+    use this app's connection name on port 8080. For devices on a dedicated Primary network, use the
+    assigned app address on port 8080. Use a trusted network or an HTTPS proxy.
   web:
     port: 8080
   options:
-    DATA:
-      label: Budget database
-      help: Keep budget database in this managed folder between restarts.
-    PORT:
-      label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+    APP_USERNAME:
+      label: Sign-in username
+      help: Leave empty for admin.
+    APP_PASSWORD:
+      label: Sign-in password
+      type: password
+      help: Use Generate for a unique password.
+    DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Use Generate for the dedicated OpenBudgeteer database account.
+    DB_ROOT_PASSWORD:
+      label: Database administrator password
+      type: password
+      help: Use Generate for a separate password for MariaDB's local root account.
+    REDIS_PASSWORD:
+      label: Redis password
+      type: password
+      help: Use Generate for a separate password for the OpenBudgeteer Redis account.
+    DB_DATA:
+      label: MariaDB data
+      help: Keep this folder on This host and back it up with the Redis data while the app is stopped.
+    REDIS_DATA:
+      label: Redis data
+      help: Keep this folder on This host and back it up with the MariaDB data while the app is stopped.
 services:
   openbudgeteer:
     image: docker.io/axelander/openbudgeteer:latest
     environment:
-      CONNECTION_PROVIDER: sqlite
+      CONNECTION_PROVIDER: mariadb
+      CONNECTION_SERVER: mariadb
+      CONNECTION_DATABASE: openbudgeteer
+      CONNECTION_USER: openbudgeteer
+      CONNECTION_PASSWORD: ${DB_PASSWORD}
+      CONNECTION_REDIS_SERVER: redis
+      CONNECTION_REDIS_USER: openbudgeteer
+      CONNECTION_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CONNECTION_REDIS_PREFIX: openbudgeteer
+      APPSETTINGS_DEMO_DATA: 'false'
+      APPSETTINGS_AUTH_ENABLED: 'true'
+      APPSETTINGS_AUTH_USERNAME: ${APP_USERNAME:-admin}
+      APPSETTINGS_AUTH_PASSWORD: ${APP_PASSWORD}
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |-
+      for target in mariadb:3306 redis:6379; do
+        until (exec 3<>/dev/tcp/$${target%:*}/$${target#*:}) 2>/dev/null; do sleep 1; done
+      done
+      exec dotnet OpenBudgeteer.dll
+  mariadb:
+    image: docker.io/library/mariadb:latest
+    environment:
+      MARIADB_DATABASE: openbudgeteer
+      MARIADB_USER: openbudgeteer
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_HOST: localhost
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
-    - ${DATA}:/app/database
-    ports:
-    - ${PORT:-8080}:8080/tcp
-    deploy:
-      replicas: 1
+    - ${DB_DATA}:/var/lib/mysql
+  redis:
+    image: docker.io/library/redis:latest
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+    - sh
+    - -ec
+    - |
+      hash=$$(printf '%s' "$$REDIS_PASSWORD" | sha256sum)
+      exec docker-entrypoint.sh redis-server - <<EOF
+      appendonly yes
+      user default off
+      user openbudgeteer on #$${hash%% *} ~openbudgeteer:* +echo +ping +info +get +set +setex +del +exists +expire +pexpire +hgetall +hset +scan
+      EOF
+    volumes:
+    - ${REDIS_DATA}:/data
+networks:
+  default:
+    internal: true

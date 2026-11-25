@@ -39,22 +39,28 @@ x-nex:
     COOKIE_SECRET:
       label: Cookie signing key
       type: password
-      help: Use Nex Generate.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
     CORE_SECRET:
       label: Core signing key
       type: password
-      help: Use Nex Generate.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
     ASSETS_SECRET:
       label: Assets signing key
       type: password
-      help: Use Nex Generate.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
     DATA:
       label: Messages and users
       help: Keep messages and users in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4000.
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   chatto:
     image: ghcr.io/chattocorp/chatto:latest

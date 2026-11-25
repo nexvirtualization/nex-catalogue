@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Portfolio data
       help: Select This host. Holds accounts, portfolio history and personal settings. Include this folder
@@ -34,7 +34,7 @@ services:
   rotki:
     image: rotki/rotki:latest
     ports:
-    - ${PORT:-8168}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/data
     - ${LOGS}:/logs

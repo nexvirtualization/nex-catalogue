@@ -11,9 +11,9 @@ x-nex:
   primary_service: hometube
   options:
     PORT:
-      label: Published 8501/tcp port
-      help: Host port for application listener 8501/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8501/tcp
+      help: The app listens on TCP port 8501 on its default Docker network. Nex does not publish it on host
+        addresses.
     VIDEOS:
       label: Videos folder
       help: Stores completed downloads.
@@ -35,7 +35,7 @@ services:
     - ${VIDEOS}:/data/videos
     - ${TEMP}:/data/tmp
     ports:
-    - ${PORT:-19991}:8501/tcp
+    - ${PORT:-8501}:8501/tcp
     environment:
       VIDEOS_FOLDER: /data/videos
       TMP_DOWNLOAD_FOLDER: /data/tmp

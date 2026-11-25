@@ -48,11 +48,12 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8502.
+      help: The app listens on TCP port 8502 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
       label: Api Port
-      help: Host-published API port for clients and reverse proxies.
+      help: The app listens on TCP port 5055 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notebook files
       help: Select This host. Stores locally uploaded research material. Include this folder in a stopped
@@ -70,7 +71,7 @@ services:
       OPEN_NOTEBOOK_PASSWORD: ${APP_PASSWORD}
       API_URL: ${API_URL}
     ports:
-    - ${PORT:-8424}:8502/tcp
+    - ${PORT:-8502}:8502/tcp
     - ${API_PORT:-5055}:5055/tcp
     volumes:
     - ${DATA}:/app/data

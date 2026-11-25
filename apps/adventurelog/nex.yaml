@@ -2,9 +2,8 @@
 x-nex:
   name: AdventureLog
   summary: Track travel experiences and plan trips
-  description: Set up a PostgreSQL database with the PostGIS extension enabled. Enter the client-facing
-    site address and provision administrator credentials. The upstream integrated image serves its UI
-    and API on the same web route.
+  description: Runs with its own PostGIS database. Enter the client-facing site address and provision
+    administrator credentials. The upstream integrated image serves its UI and API on the same web route.
   category: productivity
   website: https://adventurelog.app
   source: https://github.com/seanmorley15/AdventureLog
@@ -18,22 +17,10 @@ x-nex:
     service: adventurelog
     scheme: http
     port: 80
-  works_with:
-  - postgresql
   options:
-    DB_HOST:
-      label: Database host
-      help: Host or Nex application name of the prepared database service. It must be reachable on internal
-        port 5432.
-    DB_USER:
-      label: Database user
-      help: Create a dedicated non-root database user for this application.
-    DB_NAME:
-      label: Database name
-      help: Create a database owned by the configured user first. The default is adventurelog.
     DB_PASSWORD:
       label: Database password
-      help: Password for the dedicated database account.
+      help: Use Generate to create a unique secret for this installation.
       type: password
     PUBLIC_URL:
       label: Public web address
@@ -51,8 +38,11 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
+    DB_DATA:
+      label: AdventureLog database
+      help: Select This host. Stores the PostGIS database. Include this folder in a stopped Nex backup.
     DATA:
       label: Travel photos and files
       help: Select This host. Stores uploaded media and processed assets. Include this folder in a stopped
@@ -61,19 +51,44 @@ services:
   adventurelog:
     image: ghcr.io/seanmorley15/adventurelog:latest
     environment:
-      PGHOST: ${DB_HOST}
-      POSTGRES_USER: ${DB_USER}
+      PGHOST: database
+      POSTGRES_USER: adventurelog
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-adventurelog}
+      POSTGRES_DB: adventurelog
       SITE_URL: ${PUBLIC_URL}
       PORT: '3000'
       SECRET_KEY: ${APP_SECRET}
       DJANGO_ADMIN_EMAIL: ${ADMIN_EMAIL}
       DJANGO_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       DJANGO_ADMIN_USERNAME: admin
+    # The image downloads all country and region data before it starts the web server, which takes
+    # about half an hour on first start. Start the server first and load that data in the background.
+    entrypoint:
+    - /bin/bash
+    - -c
+    - |
+      export SKIP_WORLD_DATA=1
+      (
+        set -e
+        cd /code
+        source /aio/env-setup.sh > /dev/null
+        until python manage.py migrate --check > /dev/null 2>&1; do sleep 5; done
+        exec python manage.py download-countries
+      ) &
+      exec /aio/entrypoint.sh supervisord -c /aio/supervisord.conf
     ports:
-    - ${PORT:-8418}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/code/media
+    deploy:
+      replicas: 1
+  database:
+    image: docker.io/postgis/postgis:latest
+    environment:
+      POSTGRES_USER: adventurelog
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: adventurelog
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql
     deploy:
       replicas: 1

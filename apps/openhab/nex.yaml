@@ -23,9 +23,9 @@ x-nex:
       label: Addons folder
       help: Choose the Nex-managed folder mounted at /openhab/addons.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Install on a primary network that can reach your devices. Configure devices explicitly by address.
     Discovery and USB-dependent integrations are outside this package.
   web:
@@ -44,4 +44,4 @@ services:
     - ${USERDATA}:/openhab/userdata
     - ${ADDONS}:/openhab/addons
     ports:
-    - ${PORT:-19824}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

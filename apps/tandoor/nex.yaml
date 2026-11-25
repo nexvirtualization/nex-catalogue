@@ -30,9 +30,9 @@ x-nex:
       label: Media folder
       help: Choose the Nex-managed folder mounted at /opt/recipes/mediafiles.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a PostgreSQL database and create the first administrator in the browser. Back up Media
     and the PostgreSQL database together.
   web:
@@ -54,4 +54,4 @@ services:
     volumes:
     - ${MEDIA}:/opt/recipes/mediafiles
     ports:
-    - ${PORT:-19487}:80/tcp
+    - ${PORT:-80}:80/tcp

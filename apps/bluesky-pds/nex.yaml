@@ -29,14 +29,17 @@ x-nex:
     PLC_PRIVATE_KEY:
       label: PLC rotation private key
       type: password
-      help: Supply a 32-byte secp256k1 private key as 64 hexadecimal characters. Keep a secure backup.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. It is the 32-byte secp256k1 PLC
+        rotation private key. Keep a secure backup.
     DATA:
       label: Account records and blobs
       help: Keep account records and blobs in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bluesky-pds:
     image: ghcr.io/bluesky-social/pds:0.4.5051

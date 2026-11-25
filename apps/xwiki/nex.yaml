@@ -17,25 +17,29 @@ x-nex:
     DB_HOST:
       label: Database hostname
       help: Reachable PostgreSQL server.
+    DB_DATABASE:
+      label: Database name
+      help: Name of the prepared, empty PostgreSQL database that XWiki will use. Leave empty for xwiki.
     DB_PASSWORD:
       label: Database password
       type: password
       help: Password for the prepared XWiki database user.
     DB_USER:
       label: Database user
-      help: Dedicated user of the prepared xwiki database.
+      help: Dedicated user that owns the prepared database.
     DATA:
       label: Wiki extensions and attachments
       help: Keep wiki extensions and attachments in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   xwiki:
     image: docker.io/library/xwiki:stable-postgres-tomcat
     environment:
       DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE:-xwiki}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_USER: ${DB_USER}
     volumes:

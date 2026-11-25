@@ -36,8 +36,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5000.
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Data protection keys
       help: Select This host. Keep these keys together with backups of the archive database. Include this
@@ -51,7 +51,7 @@ services:
       Authentication__Password: ${ADMIN_PASSWORD}
       TimeZone__DisplayTimeZoneId: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8437}:5000/tcp
+    - ${PORT:-5000}:5000/tcp
     volumes:
     - ${DATA}:/app/DataProtection-Keys
     deploy:

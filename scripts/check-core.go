@@ -75,6 +75,7 @@ func main() {
 }
 
 type renderedService struct {
+	Ports    []yaml.Node
 	Volumes  []string
 	Networks map[string]struct{ Aliases []string }
 	Deploy   struct {
@@ -121,14 +122,7 @@ func checkCopies(compose string, p apps.Package, s protocol.AppSettings) {
 	in.Settings, in.Hosts = s, []string{"lab-host", "lab-peer"}
 	rendered, err := apps.Render(in)
 	must(err)
-	ports, err := apps.PublishedPorts(rendered, id, s.Name, in.Hosts)
-	must(err)
-	for _, port := range ports {
-		if !port.Ingress {
-			panic(p.Name + ": scalable package publishes a port outside the ingress mesh")
-		}
-	}
-	services := decode(rendered).Services
+	services := decode(p.Name, rendered).Services
 	for _, name := range p.Services {
 		want := 1
 		if slices.Contains(p.Scale, name) {
@@ -145,9 +139,14 @@ type renderedCompose struct {
 	Volumes  map[string]struct{ Name string }
 }
 
-func decode(text string) renderedCompose {
+func decode(appName, text string) renderedCompose {
 	var c renderedCompose
 	must(yaml.Unmarshal([]byte(text), &c))
+	for name, svc := range c.Services {
+		if len(svc.Ports) > 0 {
+			panic(fmt.Sprintf("%s: %s publishes ports", appName, name))
+		}
+	}
 	return c
 }
 
@@ -157,7 +156,7 @@ func checkPlatform(compose string, p apps.Package, s protocol.AppSettings, facts
 	const firstID = "00000000-0000-4000-8000-000000000001"
 	const secondID = "10000000-0000-4000-8000-000000000002"
 	fail := func(problem string) { panic(p.Name + ": " + problem) }
-	base := decode(rendered)
+	base := decode(p.Name, rendered)
 	for _, name := range p.Services {
 		svc, ok := base.Services[apps.RenderedServiceName(firstID, name)]
 		if !ok {
@@ -184,16 +183,20 @@ func checkPlatform(compose string, p apps.Package, s protocol.AppSettings, facts
 		}
 	}
 	// A second install must not share data or runtime service names with the first.
+	// A legacy request to publish ports must still leave every service unpublished.
+	on := true
 	second := s
 	second.Name += " second"
+	second.PublishPorts = &on
 	other, err := apps.Render(apps.RenderInput{Compose: compose, AppID: secondID, Settings: second, Hosts: s.HostIDs})
 	must(err)
-	for name := range decode(other).Services {
+	otherStack := decode(p.Name, other)
+	for name := range otherStack.Services {
 		if _, exists := base.Services[name]; exists {
 			fail("two installations share a runtime service name")
 		}
 	}
-	for _, volume := range decode(other).Volumes {
+	for _, volume := range otherStack.Volumes {
 		for _, original := range base.Volumes {
 			if volume.Name == original.Name {
 				fail("two installations share a local data volume")
@@ -217,8 +220,7 @@ func checkPlatform(compose string, p apps.Package, s protocol.AppSettings, facts
 			fail("share selection did not render to a Core-managed bind")
 		}
 	}
-	// Dedicated primary networks use the application's original listener ports.
-	// The checkbox must remove host publication, and sidecars must stay private.
+	// The dedicated network reaches only the primary service. Sidecars stay private.
 	off := false
 	lan := s
 	lan.PrimaryNetwork, lan.PublishPorts = "catalogue-network", &off
@@ -230,13 +232,9 @@ func checkPlatform(compose string, p apps.Package, s protocol.AppSettings, facts
 	}
 	onLAN, err := apps.Render(apps.RenderInput{Compose: compose, AppID: firstID, Settings: lan, Hosts: []string{"lab-host"}, Reach: []string{"lab-host"}, LAN: []string{"catalogue-test-network"}})
 	must(err)
-	ports, err := apps.PublishedPorts(onLAN, firstID, lan.Name, lan.HostIDs)
-	must(err)
-	if len(ports) != 0 {
-		fail("host ports survived the publication checkbox being cleared")
-	}
+	lanStack := decode(p.Name, onLAN)
 	for _, name := range p.Services {
-		svc := decode(onLAN).Services[apps.RenderedServiceName(firstID, name)]
+		svc := lanStack.Services[apps.RenderedServiceName(firstID, name)]
 		_, attached := svc.Networks["nex_lan0"]
 		if attached != (name == p.PrimaryService) {
 			fail("dedicated network must reach only the selected primary service")

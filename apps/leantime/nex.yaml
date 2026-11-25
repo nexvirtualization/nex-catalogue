@@ -43,8 +43,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Private project attachments
       help: Select This host. Stores user uploads and private attachments. Include this folder in a stopped
@@ -64,7 +64,7 @@ services:
       LEAN_APP_URL: ${PUBLIC_URL}
       LEAN_SESSION_PASSWORD: ${SESSION_SECRET}
     ports:
-    - ${PORT:-8415}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/var/www/html/userfiles
     - ${PUBLIC_FILES}:/var/www/html/public/userfiles

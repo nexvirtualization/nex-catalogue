@@ -29,13 +29,14 @@ x-nex:
       help: Connection string for a reachable MongoDB service, including credentials if needed.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8081 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8081 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   mongo-express:
     image: docker.io/library/mongo-express:latest
     ports:
-    - ${PORT:-20257}:8081/tcp
+    - ${PORT:-8081}:8081/tcp
     environment:
       ME_CONFIG_MONGODB_URL: ${MONGO_URL}
       ME_CONFIG_BASICAUTH_ENABLED: 'true'

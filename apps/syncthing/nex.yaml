@@ -26,15 +26,12 @@ x-nex:
         files and NAS export permissions must allow this group access.
     PORT:
       label: Web port
-      help: Published HTTP port for the administration UI. Set GUI authentication and HTTPS in Syncthing settings
-        before granting other users access. With Network → Docker and host publishing enabled, use the chosen host
-        web port. On a registered VLAN or private Primary network with its own address, use that address and internal
-        port 8384; host publishing is a separate switch.
+      help: The app listens on TCP port 8384 on its default Docker network. Nex does not publish it on host
+        addresses. Set GUI authentication and HTTPS in Syncthing settings before granting other users access.
     SYNC_PORT:
       label: TCP synchronization port
-      help: Host-published TCP port mapped to internal 22000. For Network → Docker, set peer tcp://HOST:PORT using
-        this published port. With an own address on a registered VLAN/private Primary network, use tcp://APP_ADDRESS:22000.
-        No UDP/QUIC or multicast discovery publication is included.
+      help: The app listens on TCP port 22000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Device settings and synchronized files
       help: Persistent /var/syncthing contains config (device identity, settings and index) and Sync (default synchronized

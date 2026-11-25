@@ -17,8 +17,8 @@ x-nex:
       help: Keep geospatial data and logs in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9851.
+      help: The app listens on TCP port 9851 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   tile38:
     image: docker.io/tile38/tile38:latest

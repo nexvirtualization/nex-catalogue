@@ -2,70 +2,92 @@
 x-nex:
   name: Prisme Analytics
   summary: Collect privacy-focused website analytics
-  description: Provision compatible ClickHouse and Grafana services. Set the list of tracked domains and
-    point the tracking snippet to the HTTPS Prisme endpoint. Review reports in Grafana.
+  description: Runs Prisme with its own private ClickHouse and Grafana services. Set the list of tracked
+    domains and point the tracking snippet to the HTTPS Prisme endpoint. Review reports in Grafana.
+    Grafana downloads its ClickHouse plugins on first start, so it needs internet access.
   category: monitoring
   website: https://www.prismeanalytics.com
   source: https://github.com/prismelabs/analytics
   docs: https://www.prismeanalytics.com/docs/guides/self-host-prisme-docker/
   primary_service: prisme-analytics
-  post_install: Provision compatible ClickHouse and Grafana services. Set the list of tracked domains and
-    point the tracking snippet to the HTTPS Prisme endpoint. Review reports in Grafana.
+  post_install: Sign in to Grafana as admin with the Grafana password you set, and point the tracking
+    snippet at the Prisme endpoint. Back up the ClickHouse and Grafana folders together.
   license: AGPL-3.0
   architectures:
   - amd64
   web:
     port: 8000
+    path: /static/wa.js
   options:
-    CLICKHOUSE_TLS:
-      label: Clickhouse tls
-      help: Enter the deployment value described in the upstream setup guide.
-    CLICKHOUSE_ADDRESS:
-      label: Clickhouse address
-      help: Enter the deployment value described in the upstream setup guide.
-    CLICKHOUSE_DB:
-      label: Clickhouse db
-      help: Enter the deployment value described in the upstream setup guide.
-    CLICKHOUSE_USER:
-      label: Clickhouse user
-      help: Enter the deployment value described in the upstream setup guide.
-    CLICKHOUSE_PASSWORD:
-      label: Clickhouse password
-      help: Use the credential or secret required by the upstream configuration.
-      type: password
     TRACKED_DOMAINS:
       label: Tracked domains
-      help: Enter the deployment value described in the upstream setup guide.
-    GRAFANA_URL:
-      label: Grafana url
-      help: Enter the deployment value described in the upstream setup guide.
-    GRAFANA_USER:
-      label: Grafana user
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Comma-separated domains Prisme accepts events from, such as example.com,blog.example.com.
+        Events from other domains are rejected.
+    CLICKHOUSE_PASSWORD:
+      label: ClickHouse password
+      help: Use Generate. Letters and digits only. Keep it unchanged after the first start.
+      type: password
     GRAFANA_PASSWORD:
-      label: Grafana password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Grafana administrator password
+      help: Use Generate. Password for the Grafana admin account, applied when Grafana first creates
+        its database. Keep it unchanged afterwards.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
+    GRAFANA_PORT:
+      label: Grafana web port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
+    DATA:
+      label: ClickHouse event data
+      help: Select This host. Stores the analytics events. Include this folder in a stopped Nex backup.
+    GRAFANA_DATA:
+      label: Grafana dashboards and database
+      help: Select This host. Nex creates it from the Grafana image, so no ownership change is needed.
+        Include this folder in a stopped Nex backup.
 services:
   prisme-analytics:
     image: docker.io/prismelabs/analytics:v0.20.0
     ports:
-    - ${PORT:-23521}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     environment:
       PRISME_PORT: '8000'
       PRISME_DEBUG: 'false'
       PRISME_ACCESS_LOG: /dev/stdout
-      PRISME_CLICKHOUSE_TLS: ${CLICKHOUSE_TLS:-false}
-      PRISME_CLICKHOUSE_HOSTPORT: ${CLICKHOUSE_ADDRESS}
-      PRISME_CLICKHOUSE_DB: ${CLICKHOUSE_DB:-prisme}
-      PRISME_CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      PRISME_CLICKHOUSE_TLS: 'false'
+      PRISME_CLICKHOUSE_HOSTPORT: clickhouse:9000
+      PRISME_CLICKHOUSE_DB: prisme
+      PRISME_CLICKHOUSE_USER: prisme
       PRISME_CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       PRISME_SOURCE_REGISTRY_SOURCES: ${TRACKED_DOMAINS}
-      PRISME_GRAFANA_URL: ${GRAFANA_URL}
-      PRISME_GRAFANA_USER: ${GRAFANA_USER}
+      PRISME_GRAFANA_URL: http://grafana:3000
+      PRISME_GRAFANA_USER: admin
       PRISME_GRAFANA_PASSWORD: ${GRAFANA_PASSWORD}
+    deploy:
+      replicas: 1
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_DB: prisme
+      CLICKHOUSE_USER: prisme
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+    - ${DATA}:/var/lib/clickhouse
+    deploy:
+      replicas: 1
+  grafana:
+    image: docker.io/grafana/grafana-oss:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource,mckn-funnel-panel
+    ports:
+    - ${GRAFANA_PORT:-3000}:3000/tcp
+    volumes:
+    - ${GRAFANA_DATA}:/var/lib/grafana
     deploy:
       replicas: 1

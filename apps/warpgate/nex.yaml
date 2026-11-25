@@ -2,9 +2,9 @@
 x-nex:
   name: Warpgate
   summary: Manage authorized gateway access to remote services
-  description: Prepare the gateway folder with the upstream Warpgate setup command before installing.
-    Select the prepared folder and open the HTTPS administration interface. This profile publishes HTTPS
-    and SSH only.
+  description: Warpgate sets itself up on first start, with a generated TLS certificate and an administrator named
+    admin whose password you choose when installing. Open the HTTPS administration interface on the web port and
+    accept the certificate warning. This profile publishes HTTPS and SSH only.
   category: security
   website: https://github.com/warp-tech/warpgate
   source: https://github.com/warp-tech/warpgate
@@ -12,26 +12,63 @@ x-nex:
   primary_service: warpgate
   scalable: false
   license: Apache-2.0
+  web:
+    scheme: https
+    port: 8888
   options:
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use Generate. Password of the admin user, set on first start only; change it later in the web
+        interface.
     DATA:
-      label: Prepared gateway data
-      help: Select a folder initialized by Warpgate setup. It must contain warpgate.yaml, the certificate
-        and private key, and database state.
+      label: Gateway data
+      help: Keep warpgate.yaml, the certificate and private key, and the database in this managed folder between
+        restarts. Setup runs only when warpgate.yaml is missing.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     SSH_PORT:
       label: SSH gateway port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 2222.
+      help: The app listens on TCP port 2222 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   warpgate:
     image: ghcr.io/warp-tech/warpgate:latest
+    # The Warpgate image has no shell, so it runs a copy of busybox made by the helper below.
+    entrypoint:
+    - /data/.nex/busybox
+    - sh
+    - -ec
+    - |
+      /usr/local/bin/warpgate unattended-setup --data-path /data --http-port 8888 --ssh-port 2222 \
+        --listen-address 0.0.0.0 --if-config-exists skip
+      exec /usr/local/bin/warpgate run
+    environment:
+      WARPGATE_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     volumes:
     - ${DATA}:/data
     ports:
     - ${PORT:-8888}:8888/tcp
     - ${SSH_PORT:-2222}:2222/tcp
+    deploy:
+      replicas: 1
+      # Retry quickly: Warpgate starts before the helper below has copied the shell it needs on first start.
+      restart_policy:
+        condition: any
+        delay: 1s
+  shell-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      mkdir -p /data/.nex
+      cp /bin/busybox /data/.nex/busybox.new
+      mv /data/.nex/busybox.new /data/.nex/busybox
+      exec tail -f /dev/null
+    volumes:
+    - ${DATA}:/data
     deploy:
       replicas: 1

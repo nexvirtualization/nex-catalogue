@@ -20,13 +20,14 @@ x-nex:
       label: Website files
       help: Static content directory. Make the directory and its files readable to the server.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ferron:
     image: ghcr.io/ferronweb/ferron:latest
     ports:
-    - ${PORT:-18127}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${SITE}:/var/www/ferron:ro
     deploy:

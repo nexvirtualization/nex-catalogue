@@ -39,8 +39,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Zigbee coordinator state
       help: Select This host. Stores configuration, device state and network keys. Include this folder
@@ -56,7 +56,7 @@ services:
       ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD: ${MQTT_PASSWORD}
       ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: 'true'
     ports:
-    - ${PORT:-8782}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

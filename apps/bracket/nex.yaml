@@ -2,8 +2,9 @@
 x-nex:
   name: Bracket
   summary: Organize tournaments and publish match schedules
-  description: Provision PostgreSQL and use one HTTPS origin for both the dashboard and API. Finish account
-    initialization on a trusted network.
+  description: Provision PostgreSQL and use one HTTPS origin for both the dashboard and API. For a new,
+    empty database, set the bootstrap admin email and password to create the first account. Leave both
+    blank when the database already has accounts.
   category: productivity
   website: https://docs.bracketapp.nl/
   source: https://github.com/evroon/bracket
@@ -28,10 +29,24 @@ x-nex:
     PUBLIC_URL:
       label: Public web address
       help: Full URL clients will open, including scheme and any non-default port.
+    JWT_SECRET:
+      label: Session signing key
+      help: Use openssl rand -hex 32 to create a unique key for a new install. Reuse the existing
+        key when updating an installation.
+      type: password
+    ADMIN_EMAIL:
+      label: Bootstrap admin email
+      help: Set this email and the bootstrap admin password together only for a verified empty database.
+        Leave both blank for an initialized database.
+    ADMIN_PASSWORD:
+      label: Bootstrap admin password
+      help: Set this password and the bootstrap admin email together only for a verified empty database.
+        Leave both blank for an initialized database.
+      type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8400.
+      help: The app listens on TCP port 8400 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Tournament assets
       help: Select This host. Stores uploaded and generated tournament assets. Include this folder in
@@ -41,12 +56,15 @@ services:
     image: ghcr.io/evroon/bracket:latest
     environment:
       PG_DSN: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       ENVIRONMENT: PRODUCTION
       CORS_ORIGINS: ${PUBLIC_URL}
       SERVE_FRONTEND: 'true'
       API_PREFIX: /api
     ports:
-    - ${PORT:-8440}:8400/tcp
+    - ${PORT:-8400}:8400/tcp
     volumes:
     - ${DATA}:/app/static
     deploy:

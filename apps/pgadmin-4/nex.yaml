@@ -29,8 +29,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: pgAdmin data
       help: Select This host. Stores registered servers, preferences and login data. Include this folder
@@ -43,7 +43,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'True'
     ports:
-    - ${PORT:-8180}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/lib/pgadmin
     deploy:

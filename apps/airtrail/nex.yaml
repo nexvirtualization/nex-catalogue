@@ -27,8 +27,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Flight uploads
       help: Select This host. Stores local profile or shared flight-related media. Include this folder
@@ -40,7 +40,7 @@ services:
       DB_URL: ${DATABASE_URL}
       UPLOAD_LOCATION: /app/uploads
     ports:
-    - ${PORT:-8449}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/app/uploads
     deploy:

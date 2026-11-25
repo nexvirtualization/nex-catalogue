@@ -58,8 +58,9 @@ x-nex:
       label: From email
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     CERT:
       label: Signing certificate
       help: Managed directory mounted at /certificate. Choose storage readable by the application.
@@ -67,7 +68,7 @@ services:
   documenso:
     image: docker.io/documenso/documenso:latest
     ports:
-    - ${PORT:-23530}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${CERT}:/certificate:ro
     environment:

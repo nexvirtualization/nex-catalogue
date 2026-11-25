@@ -19,15 +19,15 @@ x-nex:
       help: Trilium document database, configuration and backups.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   trilium-notes:
     image: ghcr.io/triliumnext/trilium:latest
-    environment:
-      TRILIUM_DATA_DIR: /data
+    user: "1000:1000"
     volumes:
-    - ${DATA}:/data
+    # Docker gives an empty named volume the image directory's ownership.
+    - ${DATA}:/home/node/trilium-data
     ports:
     - ${PORT:-8080}:8080/tcp
     deploy:

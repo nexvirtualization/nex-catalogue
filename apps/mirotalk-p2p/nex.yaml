@@ -11,10 +11,20 @@ x-nex:
   docs: https://docs.mirotalk.com/mirotalk-p2p/self-hosting/
   primary_service: mirotalk-p2p
   options:
+    JWT_KEY:
+      label: JWT signing key
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
+      type: password
+      generate: {format: alnum, length: 32, min_length: 32}
+    API_KEY_SECRET:
+      label: API access key
+      help: Generate a separate key for callers of the MiroTalk REST API.
+      type: password
     PORT:
-      label: Published 3000/tcp port
-      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3000/tcp
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Serve over browser-trusted HTTPS with WebSocket forwarding. Configure a TURN server for clients
     that cannot connect directly.
   web:
@@ -22,7 +32,10 @@ x-nex:
 services:
   mirotalk-p2p:
     image: docker.io/mirotalk/p2p:latest
+    environment:
+      JWT_KEY: ${JWT_KEY}
+      API_KEY_SECRET: ${API_KEY_SECRET}
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-19905}:3000/tcp
+    - ${PORT:-3000}:3000/tcp

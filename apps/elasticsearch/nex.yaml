@@ -22,8 +22,8 @@ x-nex:
       help: Keep elasticsearch data in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9200.
+      help: The app listens on TCP port 9200 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.5.3

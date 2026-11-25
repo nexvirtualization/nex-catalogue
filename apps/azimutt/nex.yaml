@@ -21,7 +21,10 @@ x-nex:
     SECRET_KEY_BASE:
       label: Application signing secret
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
+      generate: {format: alnum, length: 64, min_length: 64}
+      help: Use Generate, which makes 64 letters and digits. It must be at least 64 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Preserve this
+        secret across upgrades and restores.
     PHX_HOST:
       label: Public hostname
       help: Hostname of the browser-facing HTTPS endpoint.
@@ -40,8 +43,8 @@ x-nex:
       help: Secret for the configured S3 access key.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4000.
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   azimutt:
     image: ghcr.io/azimuttapp/azimutt:main

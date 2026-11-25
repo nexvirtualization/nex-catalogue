@@ -26,11 +26,13 @@ x-nex:
       help: Choose a strong password for this deployment.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5030 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5030 on its default Docker network. Nex does not publish it on host
+        addresses.
     PEER_PORT:
-      label: Published Soulseek peer port
-      help: Host-published port for the internal 50300/tcp endpoint.
+      label: Soulseek peer port
+      help: The app listens on TCP port 50300 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Client configuration and transfers
       help: Managed directory mounted at /app. Choose storage writable by the application.
@@ -38,8 +40,8 @@ services:
   slskd:
     image: docker.io/slskd/slskd:latest
     ports:
-    - ${PORT:-20272}:5030/tcp
-    - ${PEER_PORT:-21272}:50300/tcp
+    - ${PORT:-5030}:5030/tcp
+    - ${PEER_PORT:-50300}:50300/tcp
     volumes:
     - ${DATA}:/app
     environment:

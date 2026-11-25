@@ -24,9 +24,9 @@ x-nex:
       label: Originals folder
       help: Choose the Nex-managed folder mounted at /photoprism/originals.
     PORT:
-      label: Published 2342/tcp port
-      help: Host port for application listener 2342/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 2342/tcp
+      help: The app listens on TCP port 2342 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Sign in as admin. Add photos to Originals and run indexing in the UI. Keep Storage on This host
     for SQLite and include both folders in backups.
   web:
@@ -44,4 +44,4 @@ services:
     - ${STORAGE}:/photoprism/storage
     - ${ORIGINALS}:/photoprism/originals
     ports:
-    - ${PORT:-19524}:2342/tcp
+    - ${PORT:-2342}:2342/tcp

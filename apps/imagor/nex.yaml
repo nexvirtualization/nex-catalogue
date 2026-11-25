@@ -16,9 +16,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 8000/tcp port
-      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8000/tcp
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Use the configured secret to sign requests. Use HTTPS to reach the image transformation endpoint.
 services:
   imagor:
@@ -29,4 +29,4 @@ services:
       IMAGOR_SECRET: ${SIGNING_SECRET}
       IMAGOR_UNSAFE: 'false'
     ports:
-    - ${PORT:-19994}:8000/tcp
+    - ${PORT:-8000}:8000/tcp

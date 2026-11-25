@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8971.
+      help: The app listens on TCP port 8971 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Frigate configuration
       help: Select This host. Stores config.yaml, local database and UI settings. Include this folder

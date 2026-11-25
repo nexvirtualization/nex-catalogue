@@ -47,8 +47,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 443.
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Sites and documents
       help: Select This host. Stores site configuration, uploaded records and attachments. Include this
@@ -69,7 +69,7 @@ services:
       OE_USER: ${ADMIN_USERNAME:-admin}
       OE_PASS: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8898}:443/tcp
+    - ${PORT:-443}:443/tcp
     volumes:
     - ${DATA}:/var/www/localhost/htdocs/openemr/sites
     - ${LOGS}:/var/log

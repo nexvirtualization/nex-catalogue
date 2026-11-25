@@ -27,11 +27,17 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. Nametag needs 32 characters, so a SHA-256 hash of this value is used as
+        the key. Keep it unchanged.
+      type: password
+    CRON_SECRET:
+      label: Reminder job secret
+      help: Use Generate. At least 16 characters; protects the scheduled reminder endpoint.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PHOTOS:
       label: Contact photos
       help: Managed directory mounted at /app/data/photos. Choose storage writable by the application.
@@ -39,12 +45,21 @@ services:
   nametag:
     image: ghcr.io/mattogodoy/nametag:latest
     ports:
-    - ${PORT:-23569}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${PHOTOS}:/app/data/photos
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NEXTAUTH_URL: ${PUBLIC_URL}
-      NEXTAUTH_SECRET: ${SIGNING_SECRET}
+      SIGNING_SECRET: ${SIGNING_SECRET}
+      CRON_SECRET: ${CRON_SECRET}
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R nextjs /app/data/photos
+      export NEXTAUTH_SECRET=$$(printf '%s' "$$SIGNING_SECRET" | sha256sum | cut -d' ' -f1)
+      exec su -p nextjs -s /bin/sh -c 'exec docker-entrypoint.sh node server.js'
     deploy:
       replicas: 1

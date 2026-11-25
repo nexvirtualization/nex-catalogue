@@ -3,7 +3,9 @@ x-nex:
   name: WriteFreely
   summary: Publish a Markdown blog or writing community
   description: Runs a standalone SQLite instance with dedicated storage for the configuration, database and keys.
-    Prepare config.ini in the State folder before installing. The app initializes a new SQLite instance on startup.
+    On first start it writes a default config.ini, creates the database and keys and creates the administrator
+    from the options below, with open registration off. Edit config.ini in the State folder to change further
+    settings; an existing config.ini is never overwritten.
   category: productivity
   website: https://writefreely.org/
   source: https://github.com/writefreely/writefreely
@@ -13,43 +15,88 @@ x-nex:
   web:
     port: 8080
   options:
+    SITE_URL:
+      label: Public address
+      help: Address visitors use to reach the blog, for example https://blog.example.com. Used when the default
+        config.ini is first written.
+    ADMIN_USER:
+      label: Administrator username
+      help: Username of the first account, created on first start. Leave empty for blogger. Letters and
+        digits only, at least 3 characters; reserved names such as admin are refused.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Password of the first account, created on first start; later changes here do not alter the account.
+        Use Generate for a strong value.
+      type: password
     STATE:
       label: State folder
-      help: Use a writable folder on This host with config.ini at its root. Configure the sqlite3 database
-        filename as /data/writefreely.db, leave keys_parent_dir at its default, and set server bind to
-        0.0.0.0 and port to 8080.
+      help: Holds config.ini and the SQLite database, mounted at /data. A default config.ini is written here
+        on first start. Edit it to change settings, then restart the app.
     KEYS:
       label: Encryption keys
       help: Keep on This host and back up with State. Retain these keys when moving an existing installation.
     PORT:
       label: Web port
-      help: Host port for the listener on 8080 when host publishing is available.
-  post_install: >-
-    Disable open registration in config.ini until you are ready. Inside the container, run
-    `/go/cmd/writefreely/writefreely -c /data/config.ini --create-admin 'USERNAME:PASSWORD'`
-    with your own administrator credentials, then open the web interface.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Open /login on the application address and sign in with the administrator username and password
+    you chose.
 services:
   writefreely:
-    image: ghcr.io/writefreely/writefreely:v0.17.1
+    image: ghcr.io/writefreely/writefreely:v0.17.3
+    user: '0:0'
     working_dir: /go
     entrypoint: [/bin/sh, -ec]
     command:
       - |
-        if [ ! -r /data/config.ini ]; then
-          echo "Prepare /data/config.ini before starting WriteFreely" >&2
-          exit 1
-        fi
-        if [ ! -s /data/writefreely.db ]; then
-          if [ -z "$$(ls -A /go/keys | grep -v -e README.md -e .gitkeep || true)" ]; then
-            /go/cmd/writefreely/writefreely -c /data/config.ini --gen-keys
+        for dir in /data /go/keys; do
+          if ! su -s /bin/sh -c "test -w '$$dir'" daemon; then
+            chown daemon:daemon "$$dir"
           fi
-          /go/cmd/writefreely/writefreely -c /data/config.ini --init-db
+        done
+        if [ ! -e /data/config.ini ]; then
+          cat > /data/config.ini <<INI
+        [server]
+        port = 8080
+        bind = 0.0.0.0
+
+        [database]
+        type = sqlite3
+        filename = /data/writefreely.db
+
+        [app]
+        site_name = WriteFreely
+        host = $$NEX_SITE_URL
+        single_user = false
+        open_registration = false
+        min_username_len = 3
+        INI
+          chown daemon:daemon /data/config.ini
         fi
-        exec /go/cmd/writefreely/writefreely -c /data/config.ini
+        exec su -s /bin/sh -c '
+          set -e
+          if [ ! -s /data/writefreely.db ]; then
+            /go/cmd/writefreely/writefreely -c /data/config.ini --gen-keys
+            /go/cmd/writefreely/writefreely -c /data/config.ini --init-db
+            /go/cmd/writefreely/writefreely -c /data/config.ini --create-admin "$$NEX_ADMIN_USER:$$NEX_ADMIN_PASSWORD" ||
+              { rm -f /data/writefreely.db; exit 1; }
+          fi
+          exec /go/cmd/writefreely/writefreely -c /data/config.ini
+        ' daemon
+    environment:
+      NEX_SITE_URL: ${SITE_URL}
+      NEX_ADMIN_USER: ${ADMIN_USER:-blogger}
+      NEX_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     volumes:
       - ${STATE}:/data
       - ${KEYS}:/go/keys
     ports:
-      - ${PORT:-19430}:8080/tcp
+      - ${PORT:-8080}:8080/tcp
+    healthcheck:
+      test: [CMD, wget, -q, -T, '3', -O, /dev/null, 'http://127.0.0.1:8080/login']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     deploy:
       replicas: 1

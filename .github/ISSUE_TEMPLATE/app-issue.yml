@@ -1,0 +1,49 @@
+name: An app does not work
+description: Report a catalogue app that fails to install, start or work in Nex.
+labels: [app-issue]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Nex fills in the app and your setup when you use **Got issues? Report it here** on the app's
+        catalogue page. Please add what happened and the errors from the app's logs. Remove passwords,
+        keys, tokens, host names and addresses before you submit; this report is public.
+  - type: input
+    id: app
+    attributes:
+      label: App
+      description: The app's catalogue ID, such as `vikunja`.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: As shown on the app's catalogue page.
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Filled in by Nex. Edit it if anything is wrong or private.
+      render: text
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what went wrong instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Errors in the logs
+      description: >-
+        In Nex, open the app, select its **Logs** tab and paste the lines around the first error.
+      render: text
+  - type: checkboxes
+    id: private
+    attributes:
+      label: Before you submit
+      options:
+        - label: I removed passwords, keys, tokens, host names and addresses from this report.
+          required: true

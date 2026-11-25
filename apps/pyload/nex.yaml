@@ -19,8 +19,9 @@ x-nex:
       label: Downloads folder
       help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8000/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8000
   post_install: Open pyLoad on a trusted network and replace the upstream initial login before remote use.

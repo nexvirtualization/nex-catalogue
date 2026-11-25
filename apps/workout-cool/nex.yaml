@@ -25,10 +25,18 @@ x-nex:
       label: Authentication signing secret
       type: password
       help: Use Nex Generate and preserve across restores.
+    GOOGLE_CLIENT_ID:
+      label: Google sign-in client ID
+      help: OAuth client ID from the Google Cloud console, used for Sign in with Google. Leave empty to use
+        email and password only; the app requires a value, so Nex supplies a placeholder.
+    GOOGLE_CLIENT_SECRET:
+      label: Google sign-in client secret
+      help: OAuth client secret that goes with the client ID. Leave empty to use email and password only.
+      type: password
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   workout-cool:
     image: ghcr.io/snouzy/workout-cool:latest
@@ -36,6 +44,8 @@ services:
       DATABASE_URL: ${DB_URL}
       BETTER_AUTH_URL: ${BASE_URL}
       BETTER_AUTH_SECRET: ${AUTH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-not-configured}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-not-configured}
     ports:
     - ${PORT:-3000}:3000/tcp
     deploy:

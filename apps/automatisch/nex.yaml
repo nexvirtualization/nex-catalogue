@@ -2,8 +2,9 @@
 x-nex:
   name: Automatisch
   summary: Connect your services through configured workflows
-  description: Prepare a PostgreSQL database and password-protected Redis-compatible queue. Route the
-    browser through an HTTPS proxy and finish admin setup on a trusted network.
+  description: Includes its own PostgreSQL database and Redis queue. Set the address you open it at and let
+    Generate create the secrets. Route the browser through an HTTPS proxy and finish admin setup on a trusted
+    network.
   category: productivity
   website: https://github.com/automatisch/automatisch
   source: https://github.com/automatisch/automatisch
@@ -14,66 +15,66 @@ x-nex:
   web:
     port: 3000
   options:
-    HOST:
-      label: Public hostname
-      help: Hostname or hostname and port, without a scheme.
-    POSTGRES_HOST:
-      label: Database hostname
-      help: Reachable PostgreSQL hostname.
-    POSTGRES_DATABASE:
-      label: Database name
-      help: Name of the prepared database.
-    POSTGRES_USERNAME:
-      label: Database username
-      help: User allowed to use this database.
-    POSTGRES_PASSWORD:
+    PUBLIC_URL:
+      label: Public address
+      help: Full browser-facing address, including the port if nonstandard, for example https://flows.example.com
+        or http://<host address>:3000. Leave empty for http://localhost:3000.
+    DB_PASSWORD:
       label: Database password
       type: password
-      help: Password of that PostgreSQL account.
-    REDIS_HOST:
-      label: Queue broker hostname
-      help: Reachable Redis-compatible hostname.
+      help: Use Generate. Password of the bundled PostgreSQL account. Letters and digits only.
     REDIS_PASSWORD:
-      label: Queue broker password
+      label: Queue password
       type: password
-      help: Password of the Redis-compatible broker.
+      help: Use Generate. Password of the bundled Redis queue. Letters and digits only.
     ENCRYPTION_KEY:
-      label: Application signing secret
+      label: Data encryption key
       type: password
       help: Use Nex Generate and preserve this secret across upgrades and restores.
     WEBHOOK_SECRET_KEY:
-      label: Application signing secret
+      label: Webhook signing key
       type: password
       help: Use Nex Generate and preserve this secret across upgrades and restores.
     APP_SECRET_KEY:
-      label: Application signing secret
+      label: Session signing key
       type: password
       help: Use Nex Generate and preserve this secret across upgrades and restores.
-    PUBLIC_URL:
-      label: Public HTTPS URL
-      help: Full browser-facing HTTPS URL, including the port if nonstandard.
     STORAGE:
       label: Workflow application files
       help: Keep workflow application files in this managed folder between restarts.
+    DB_DATA:
+      label: PostgreSQL data
+      help: Keep this folder on This host and back it up with the app stopped.
+    REDIS_DATA:
+      label: Redis data
+      help: Keep this folder on This host and back it up with the app stopped.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   automatisch:
     image: docker.io/automatischio/automatisch:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      export PROTOCOL="$${PUBLIC_URL%%://*}"
+      host="$${PUBLIC_URL#*://}"
+      export HOST="$${host%%/*}"
+      until nc -z postgres 5432 && nc -z redis 6379; do sleep 1; done
+      exec sh /entrypoint.sh
     environment:
-      PROTOCOL: https
       PORT: '3000'
       APP_ENV: production
-      API_URL: ${PUBLIC_URL}
-      WEB_APP_URL: ${PUBLIC_URL}
-      HOST: ${HOST}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_HOST: ${REDIS_HOST}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      API_URL: ${PUBLIC_URL:-http://localhost:3000}
+      WEB_APP_URL: ${PUBLIC_URL:-http://localhost:3000}
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: automatisch
+      POSTGRES_USERNAME: automatisch
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       WEBHOOK_SECRET_KEY: ${WEBHOOK_SECRET_KEY}
@@ -86,12 +87,18 @@ services:
       replicas: 1
   worker:
     image: docker.io/automatischio/automatisch:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      until nc -z postgres 5432 && nc -z redis 6379; do sleep 1; done
+      exec sh /entrypoint.sh
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
-      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_HOST: ${REDIS_HOST}
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: automatisch
+      POSTGRES_USERNAME: automatisch
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       WEBHOOK_SECRET_KEY: ${WEBHOOK_SECRET_KEY}
@@ -100,5 +107,27 @@ services:
       WORKER: 'true'
     volumes:
     - ${STORAGE}:/automatisch/storage
+    deploy:
+      replicas: 1
+  postgres:
+    image: docker.io/library/postgres:latest
+    environment:
+      POSTGRES_DB: automatisch
+      POSTGRES_USER: automatisch
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+    - sh
+    - -ec
+    - exec docker-entrypoint.sh redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+    volumes:
+    - ${REDIS_DATA}:/data
     deploy:
       replicas: 1

@@ -21,14 +21,17 @@ x-nex:
     STEAM_TOKEN:
       label: Steam game server login token
       type: password
-      help: Create a separate 32-character token for this server with Steam app ID 730.
+      help: Create a separate token for this server with Steam app ID 730 at steamcommunity.com/dev/managegameservers.
+        It is exactly 32 hexadecimal characters (0-9 and A-F).
     JOIN_PASSWORD:
       label: Join password
       type: password
+      generate: {format: alnum, length: 24, min_length: 8, max_length: 64}
       help: Use Generate or enter 8 to 64 letters and numbers. Share this password with your players.
     RCON_PASSWORD:
       label: RCON password
       type: password
+      generate: {format: alnum, length: 24, min_length: 16, max_length: 64}
       help: Use Generate or enter 16 to 64 letters and numbers. Keep this separate from the join password.
     DATA:
       label: Server data

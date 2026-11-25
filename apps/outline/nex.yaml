@@ -23,12 +23,16 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     SECRET_KEY:
       label: Secret key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: hex, length: 64}
     UTILS_SECRET:
       label: Utils secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: hex, length: 64}
     DATABASE_URL:
       label: Database url
       help: Connection URL for the database. Percent-encode special characters in credentials.
@@ -56,8 +60,9 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     STORAGE:
       label: Document attachments
       help: Managed directory mounted at /var/lib/outline/data. Choose storage writable by the application.
@@ -65,7 +70,7 @@ services:
   outline:
     image: docker.io/outlinewiki/outline:latest
     ports:
-    - ${PORT:-23572}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${STORAGE}:/var/lib/outline/data
     environment:

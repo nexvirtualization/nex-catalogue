@@ -22,26 +22,36 @@ x-nex:
   options:
     DATABASE_URL:
       label: Database connection string
-      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
-        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      help: Supply a PostgreSQL URI with a percent-encoded password. Tinode creates the database named in
+        the URI on first start, so that database must not exist yet and the role needs permission to create
+        databases. To use a database that already exists, restore a compatible Tinode schema with its initial
+        records, then enable Use initialized database.
       type: password
+    NO_DB_INIT:
+      label: Use initialized database
+      help: Off by default, so Tinode creates its database on first start. Turn on only after restoring a
+        compatible Tinode schema into an existing database. Keep the role scoped to that database.
+      type: bool
     TOKEN_KEY:
       label: Authentication token key
-      help: Provide 32 random bytes encoded in base64.
+      help: Use Generate, which makes 32 random bytes in Base64. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -base64 32 instead.
       type: password
+      generate: {format: base64, bytes: 32}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 6060.
+      help: The app listens on TCP port 6060 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   tinode:
     image: tinode/tinode:latest
     environment:
       POSTGRES_DSN: ${DATABASE_URL}
       STORE_USE_ADAPTER: postgres
+      NO_DB_INIT: ${NO_DB_INIT:-false}
       SAMPLE_DATA: ''
       AUTH_TOKEN_KEY: ${TOKEN_KEY}
     ports:
-    - ${PORT:-8873}:6060/tcp
+    - ${PORT:-6060}:6060/tcp
     deploy:
       replicas: 1

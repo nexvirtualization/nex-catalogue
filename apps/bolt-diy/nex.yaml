@@ -19,12 +19,13 @@ x-nex:
     port: 5173
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 5173. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 5173 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bolt-diy:
     image: ghcr.io/stackblitz-labs/bolt.diy:latest
     ports:
-    - ${PORT:-18122}:5173/tcp
+    - ${PORT:-5173}:5173/tcp
     deploy:
       replicas: 1

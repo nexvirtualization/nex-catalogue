@@ -18,8 +18,9 @@ x-nex:
     port: 5299
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5299 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5299 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: LazyLibrarian settings
       help: Managed directory mounted at /config. Choose storage writable by the application.
@@ -33,7 +34,7 @@ services:
   lazylibrarian:
     image: lscr.io/linuxserver/lazylibrarian:latest
     ports:
-    - ${PORT:-20259}:5299/tcp
+    - ${PORT:-5299}:5299/tcp
     volumes:
     - ${CONFIG}:/config
     - ${BOOKS}:/books

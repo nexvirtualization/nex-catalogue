@@ -2,8 +2,8 @@
 x-nex:
   name: vod2pod-rss
   summary: Convert stream archives into podcast feeds
-  description: Open the app and provide a supported archive URL. Use a trusted network and a reachable feed
-    address for podcast clients.
+  description: Includes its own private Valkey cache, which holds only disposable data. Use a trusted
+    network and a reachable feed address for podcast clients.
   category: media
   website: https://github.com/madiele/vod2pod-rss
   source: https://github.com/madiele/vod2pod-rss
@@ -22,14 +22,26 @@ x-nex:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   vod2pod-rss:
     image: docker.io/madiele/vod2pod-rss:latest
     ports:
-    - ${PORT:-23515}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       BASE_URL: ${PUBLIC_URL}
+      REDIS_ADDRESS: cache
+      REDIS_PORT: '6379'
+    # vod2pod exits at once when the cache is not reachable yet.
+    entrypoint:
+    - /bin/bash
+    - -c
+    - until (exec 3<>/dev/tcp/cache/6379) 2>/dev/null; do sleep 1; done; exec vod2pod
+    deploy:
+      replicas: 1
+  cache:
+    image: docker.io/valkey/valkey:latest
     deploy:
       replicas: 1

@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3001.
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Workspaces and settings
       help: Select This host. Stores uploaded documents, local data and model settings. Include this folder
@@ -33,7 +33,7 @@ services:
     environment:
       STORAGE_DIR: /app/server/storage
     ports:
-    - ${PORT:-8764}:3001/tcp
+    - ${PORT:-3001}:3001/tcp
     volumes:
     - ${DATA}:/app/server/storage
     deploy:

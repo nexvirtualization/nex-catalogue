@@ -31,8 +31,8 @@ x-nex:
       help: Set false after creating your last user. Existing accounts continue to sync.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   atuin:
     image: ghcr.io/atuinsh/atuin:latest
@@ -42,9 +42,8 @@ services:
       ATUIN_PORT: '8888'
       ATUIN_OPEN_REGISTRATION: ${ALLOW_REGISTRATION:-true}
     command:
-    - server
     - start
     ports:
-    - ${PORT:-8433}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     deploy:
       replicas: 1

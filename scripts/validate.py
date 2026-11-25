@@ -13,6 +13,44 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 LATEST_IMAGE = re.compile(r"^[a-z0-9./_-]+:latest$")
+# Nex Core reads only these keys from an x-nex option; a value is optional when the service gives it a
+# ${VAR:-default}.
+OPTION_KEYS = {'label', 'type', 'help', 'generate'}
+# generate: on a password option, as Nex Core checks it (internal/apps/secret.go): the settings each
+# format takes, and the bounds.
+SECRET_SETTINGS = {
+    'alnum': {'length', 'min_length', 'max_length'},
+    'password': {'length', 'min_length', 'max_length'},
+    'hex': {'length'},
+    'base64': {'bytes'},
+    'base64url': {'bytes'},
+    'uuid': set(),
+}
+
+
+def check_generate(path, name, option):
+    spec = option.get('generate')
+    assert option.get('type') == 'password', (path, name, 'generate needs type: password')
+    assert isinstance(spec, dict) and spec.get('format') in SECRET_SETTINGS, (
+        path, name, f'generate needs a format: {", ".join(SECRET_SETTINGS)}')
+    fmt = spec['format']
+    unknown = set(spec) - SECRET_SETTINGS[fmt] - {'format', 'prefix'}
+    assert not unknown, (path, name, f'generate: {fmt} does not take {sorted(unknown)}')
+    for key in ('length', 'min_length', 'max_length', 'bytes'):
+        assert key not in spec or (isinstance(spec[key], int) and not isinstance(spec[key], bool)), (path, name, key)
+    prefix = spec.get('prefix', '')
+    assert isinstance(prefix, str) and len(prefix) <= 32 and all('!' <= c <= '~' for c in prefix), (
+        path, name, 'generate prefix must be up to 32 printable characters without spaces')
+    if fmt in ('alnum', 'password', 'hex'):
+        length = spec.get('length', 64 if fmt == 'hex' else 24)
+        assert 8 <= length <= 512, (path, name, 'generate length must be from 8 to 512')
+        if fmt != 'hex':
+            low, high = spec.get('min_length', length), spec.get('max_length', 0)
+            assert (4 if fmt == 'password' else 1) <= low <= length and (not high or high >= length), (
+                path, name, 'generate min_length, length and max_length must be in increasing order')
+            assert high <= 512, (path, name, 'generate max_length must be at most 512')
+    if fmt in ('base64', 'base64url'):
+        assert 16 <= spec.get('bytes', 32) <= 512, (path, name, 'generate bytes must be from 16 to 512')
 STEAMCMD_BOOTSTRAP = (ROOT / 'scripts' / 'steamcmd-bootstrap.sh').read_text().strip().replace('$', '$$')
 # Reviewed exceptions for upstream game and release tags.
 GAME_IMAGES = {
@@ -64,7 +102,6 @@ GAME_IMAGES = {
     'minecraft-mohist': 'ghcr.io/itzg/minecraft-server:java17',
     'minecraft-nanolimbo': 'ghcr.io/itzg/minecraft-server:java21',
     'minecraft-neoforge': 'ghcr.io/itzg/minecraft-server:java21',
-    'minecraft-nukkit': 'ghcr.io/itzg/minecraft-server:java17',
     'minecraft-quilt': 'ghcr.io/itzg/minecraft-server:java21',
     'minecraft-spigot': 'ghcr.io/itzg/minecraft-server:java25-jdk',
     'minecraft-spongeforge': 'ghcr.io/itzg/minecraft-server:java21',
@@ -134,12 +171,14 @@ RELEASE_IMAGES = {
     'booklogr': ('docker.io/mozzo/booklogr-web:v1.12.0', 'docker.io/mozzo/booklogr:v1.12.0'),
     'btcpay-server': ('docker.io/btcpayserver/btcpayserver:2.4.6',),
     'budget-board': ('ghcr.io/teelur/budget-board/client:v3', 'ghcr.io/teelur/budget-board/server:v3'),
+    'chatwoot': ('docker.io/pgvector/pgvector:pg16',),
     'chevereto': ('docker.io/chevereto/chevereto:4',),
     'cockpit-cms': ('docker.io/cockpithq/cockpit:core-latest',),
     'comfyui': ('ghcr.io/romkey/comfyui-docker:0.38.0-cpu',),
     'commafeed': ('athou/commafeed:latest-h2',),
     'coral': ('docker.io/coralproject/talk:9.7.0',),
     'cronicle': ('docker.io/soulteary/cronicle:0.9.80',),
+    'dawarich': ('docker.io/postgis/postgis:16-3.5',),
     'ebook2audiobook': ('docker.io/athomasson2/ebook2audiobook:cpu',),
     'elabftw': ('docker.io/elabftw/elabimg:stable',),
     'elasticsearch': ('docker.elastic.co/elasticsearch/elasticsearch:9.5.3',),
@@ -155,10 +194,10 @@ RELEASE_IMAGES = {
     'garage': ('dxflrs/garage:v2.0.0',),
     'gatus': ('ghcr.io/twin/gatus:stable',),
     'gitingest': ('ghcr.io/coderamp-labs/gitingest:v0.3.1',),
-    'glitchsoc': ('ghcr.io/glitch-soc/mastodon-streaming:v4.7.5', 'ghcr.io/glitch-soc/mastodon:v4.7.5'),
+    'glitchsoc': ('docker.io/library/postgres:17-alpine', 'ghcr.io/glitch-soc/mastodon-streaming:v4.7.5', 'ghcr.io/glitch-soc/mastodon:v4.7.5'),
     'graylog': ('docker.io/graylog/graylog:7.2',),
     'hasura': ('docker.io/hasura/graphql-engine:v2.48.4',),
-    'headscale': ('docker.io/headscale/headscale:0.29.5',),
+    'headscale': ('docker.io/headscale/headscale:0.29.7',),
     'hedgedoc': ('quay.io/hedgedoc/hedgedoc:1.12.0',),
     'heyform': ('docker.io/heyform/community-edition:v3.0.6',),
     'hi-events': ('docker.io/daveearley/hi.events-all-in-one:v2.2.0',),
@@ -182,7 +221,7 @@ RELEASE_IMAGES = {
     'octobot': ('drakkarsoftware/octobot:stable',),
     'open-notebook': ('lfnovo/open_notebook:v1-latest',),
     'open-webui': ('ghcr.io/open-webui/open-webui:v0.13.4',),
-    'openpanel': ('docker.io/lindesvard/openpanel-api:2', 'docker.io/lindesvard/openpanel-dashboard:2', 'docker.io/lindesvard/openpanel-worker:2'),
+    'openpanel': ('docker.io/clickhouse/clickhouse-server:25.10.2.65', 'docker.io/library/postgres:17-alpine', 'docker.io/lindesvard/openpanel-api:2', 'docker.io/lindesvard/openpanel-dashboard:2', 'docker.io/lindesvard/openpanel-worker:2'),
     'openproject': ('docker.io/openproject/openproject:17',),
     'openremote': ('docker.io/openremote/postgresql:latest-slim',),
     'opensign': ('docker.io/opensign/opensign:main', 'docker.io/opensign/opensignserver:main'),
@@ -206,10 +245,11 @@ RELEASE_IMAGES = {
     'reitti': ('docker.io/dedicatedcode/reitti-tile-cache:5', 'docker.io/dedicatedcode/reitti:5'),
     'ryot': ('ignisda/ryot:v10',),
     'screego': ('docker.io/screego/server:1.12.6',),
-    'scrutiny': ('ghcr.io/analogj/scrutiny:latest-web',),
+    'scrutiny': ('docker.io/library/influxdb:2', 'ghcr.io/analogj/scrutiny:latest-web'),
     'seafile': ('docker.io/seafileltd/seafile-mc:14.0.9',),
     'shellhub': ('docker.io/shellhubio/server:v0.30.1', 'docker.io/shellhubio/ui:v0.30.1', 'docker.io/valkey/valkey:9.1-alpine'),
     'silverbullet': ('ghcr.io/silverbulletmd/silverbullet:v2',),
+    'sparkyfitness': ('docker.io/postgres:16-alpine',),
     'srs': ('docker.io/ossrs/srs:6',),
     'stalwart': ('docker.io/stalwartlabs/stalwart:v1',),
     'strapi': ('docker.io/elestio/strapi-production:v5.33.0',),
@@ -222,12 +262,14 @@ RELEASE_IMAGES = {
     'vector': ('docker.io/timberio/vector:latest-debian',),
     'vllm': ('vllm/vllm-openai-cpu:latest-x86_64',),
     'wiki-js': ('ghcr.io/requarks/wiki:2',),
-    'writefreely': ('ghcr.io/writefreely/writefreely:v0.17.1',),
+    'writefreely': ('ghcr.io/writefreely/writefreely:v0.17.3',),
     'xwiki': ('docker.io/library/xwiki:stable-postgres-tomcat',),
     'yuvomi': ('ghcr.io/ulsklyc/yuvomi:2.80.0',),
     'zabbix': ('docker.io/zabbix/zabbix-server-pgsql:alpine-7.4-latest', 'docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest'),
     'zen-notes': ('ghcr.io/sheshbabu/zen/zen:2.0.0',),
+    'ziit': ('docker.io/timescale/timescaledb:latest-pg17',),
     'zitadel': ('ghcr.io/zitadel/zitadel:v4.16.0',),
+    'zulip': ('docker.io/zulip/zulip-postgresql:14',),
 }
 REF = re.compile(r"\$\{([A-Z][A-Z0-9_]*)(?::-([^}]*))?\}")
 PATH_SEGMENT = r'[A-Za-z0-9_.-]+(?: [A-Za-z0-9_.-]+)*'
@@ -260,6 +302,16 @@ def validate(root=ROOT):
             svg = ET.parse(icon).getroot()
             assert svg.tag == '{http://www.w3.org/2000/svg}svg', icon
             assert not any(e.tag.endswith(('script', 'foreignObject', 'image')) for e in svg.iter()), icon
+        for name, option in (meta.get('options') or {}).items():
+            unknown = set(option) - OPTION_KEYS if isinstance(option, dict) else set()
+            assert not unknown, (
+                path, name, f'Core ignores option keys {sorted(unknown)}; put defaults in the service as ${{VAR:-value}}'
+            )
+            if isinstance(option, dict) and 'generate' in option:
+                check_generate(path, name, option)
+                # A fixed default would be shared by every install, and Core refuses one outside the form.
+                assert not any(var == name and default for var, default in REF.findall(text)), (
+                    path, name, 'a generated secret takes no ${VAR:-default}')
         defaults = {}
         for var, default in REF.findall(text):
             if default:

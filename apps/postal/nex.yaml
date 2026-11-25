@@ -2,17 +2,16 @@
 x-nex:
   name: Postal
   summary: Operate a transactional email delivery server
-  description: Provision MariaDB and DNS. Prepare postal.yml and signing.key in Configuration and run Postal
-    initialization and user creation. Route HTTPS to the web endpoint and public TCP 25 to the SMTP port.
-    Configure the upstream SMTP certificate if required.
+  description: Before starting Postal, provision MariaDB 10.6 or later, prepare postal.yml and signing.key,
+    then initialize the database and create the first administrator.
   category: communication
   website: https://docs.postalserver.io/
   source: https://github.com/postalserver/postal
   docs: https://docs.postalserver.io/other/containers/
   primary_service: postal
-  post_install: Provision MariaDB and DNS. Prepare postal.yml and signing.key in Configuration and run Postal
-    initialization and user creation. Route HTTPS to the web endpoint and public TCP 25 to the SMTP port.
-    Configure the upstream SMTP certificate if required.
+  post_install: Configure public DNS and route HTTPS to port 5000 and public TCP 25 to port 2525 on
+    the application address. Configure Postal's SMTP certificate if required. Back up the configuration
+    and both the main and message databases.
   license: MIT
   architectures:
   - amd64
@@ -20,30 +19,37 @@ x-nex:
     port: 5000
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
     SMTP_PORT:
-      label: Published SMTP port
-      help: Host-published port for the internal 2525/tcp endpoint.
+      label: SMTP port
+      help: The app listens on TCP port 2525 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Postal configuration
-      help: Managed directory containing postal.yml, signing.key, and any SMTP TLS files. Mounted at /config.
+      help: Select the folder with postal.yml, signing.key and any SMTP TLS files readable by Postal
+        (UID 999). Use /config for container paths. Run postal initialize and postal make-user using the
+        Postal 3.4.0 image with the same configuration and access to MariaDB before starting the app.
 services:
   postal:
     image: docker.io/library/haproxy:latest
     ports:
-    - ${PORT:-23492}:5000/tcp
-    - ${SMTP_PORT:-24492}:2525/tcp
+    - ${PORT:-5000}:5000/tcp
+    - ${SMTP_PORT:-2525}:2525/tcp
     entrypoint:
     - /bin/sh
     command:
     - -ec
     - |-
       cat > /tmp/postal-proxy.cfg <<'EOF'
+      resolvers docker
+        nameserver embedded 127.0.0.11:53
       defaults
         timeout connect 5s
         timeout client 120s
         timeout server 120s
+        default-server resolvers docker init-addr none
       listen web
         bind :5000
         mode http

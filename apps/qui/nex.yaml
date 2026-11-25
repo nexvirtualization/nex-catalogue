@@ -23,8 +23,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7476.
+      help: The app listens on TCP port 7476 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Client settings
       help: Select This host. Holds the SQLite database, login and qBittorrent instance configuration.

@@ -25,7 +25,9 @@ x-nex:
     MASTER_PASSWORD:
       label: Dedicated-server password
       type: password
-      help: Enter the password for that account.
+      help: >-
+        Enter the password Ubisoft set for that account. Nex Generate cannot make it. With a wrong
+        login or password the server logs "Invalid credentials" and exits.
     DATA:
       label: Server data
       help: Choose This host and include this folder in stopped backups.
@@ -52,7 +54,9 @@ services:
           exit 1
         fi
         if [ ! -L /server/UserData ]; then
-          cp -an /server/UserData/. /data/
+          for item in /server/UserData/*; do
+            [ -e "/data/$${item##*/}" ] || cp -a "$$item" /data/
+          done
           mv /server/UserData /server/UserData.defaults
           ln -s /data /server/UserData
         fi

@@ -2,34 +2,57 @@
 x-nex:
   name: Headscale
   summary: Control server for running a Tailscale-compatible private network
-  description: Control server for running a Tailscale-compatible private network.
+  description: Headscale 0.29.7 starts with built-in defaults (SQLite in the Data folder, the standard
+    Tailscale relay map and MagicDNS). Set the public server URL and tailnet domain below. For anything
+    else, put a config.yaml in the Config folder; settings made here still override the same keys there.
   category: networking
   source: https://github.com/juanfont/headscale
   website: https://headscale.net/
-  docs: https://headscale.net/0.29.5/setup/install/container/
+  docs: https://headscale.net/0.29.7/setup/install/container/
   primary_service: headscale
   options:
     CONFIG:
       label: Config folder
-      help: Choose the Nex-managed folder mounted at /etc/headscale.
+      help: Optional. Holds an extra config.yaml, ACL policy or custom relay map. Leave it empty to use
+        the defaults. Mounted read-only at /etc/headscale.
+    SERVER_URL:
+      label: Public server URL
+      help: HTTPS (or HTTP) address clients use to reach this server, for example https://vpn.example.net.
+        Clients cannot connect until this matches the address you publish.
+    BASE_DOMAIN:
+      label: Tailnet domain
+      help: MagicDNS suffix for device names. Use a name you do not serve, different from the server
+        URL's domain and not a parent of it. Leave empty for tailnet.internal.
     DATA:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /var/lib/headscale.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Prepare config.yaml for version 0.29.5 in Configuration before installation. Set the public
-    TLS URL, listen address, and SQLite and key paths. Keep Configuration and Data in backups.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Route the public HTTPS endpoint for the Public server URL to TCP 8080 at the assigned
+    app address, then run headscale users create and headscale preauthkeys create from the task console
+    to add devices. Keep the Data folder in backups; it holds the database and the noise key.
 services:
   headscale:
-    image: docker.io/headscale/headscale:0.29.5
+    image: docker.io/headscale/headscale:0.29.7
     deploy:
       replicas: 1
     volumes:
     - ${CONFIG}:/etc/headscale:ro
     - ${DATA}:/var/lib/headscale
     ports:
-    - ${PORT:-19914}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
+    environment:
+      HEADSCALE_SERVER_URL: ${SERVER_URL:-http://localhost:8080}
+      HEADSCALE_LISTEN_ADDR: 0.0.0.0:8080
+      HEADSCALE_NOISE_PRIVATE_KEY_PATH: /var/lib/headscale/noise_private.key
+      HEADSCALE_DATABASE_TYPE: sqlite
+      HEADSCALE_DATABASE_SQLITE_PATH: /var/lib/headscale/db.sqlite
+      HEADSCALE_PREFIXES_V4: 100.64.0.0/10
+      HEADSCALE_PREFIXES_V6: fd7a:115c:a1e0::/48
+      HEADSCALE_DNS_BASE_DOMAIN: ${BASE_DOMAIN:-tailnet.internal}
+      HEADSCALE_DNS_OVERRIDE_LOCAL_DNS: 'false'
+      HEADSCALE_DERP_URLS: https://controlplane.tailscale.com/derpmap/default
     command:
     - serve

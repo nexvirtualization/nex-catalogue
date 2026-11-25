@@ -2,8 +2,8 @@
 x-nex:
   name: Ganymede
   summary: Archive Twitch streams and their chat
-  description: Prepare PostgreSQL, and use the web interface to configure Twitch integration. Keep the
-    data folders on a single host and take backups of configuration and saved videos.
+  description: Prepare PostgreSQL and register a Twitch developer application for its client ID and secret.
+    Keep the data folders on a single host and take backups of configuration and saved videos.
   category: media
   website: https://github.com/Zibbp/ganymede
   source: https://github.com/Zibbp/ganymede
@@ -34,10 +34,17 @@ x-nex:
       label: Database password
       help: Password for the dedicated database account.
       type: password
+    TWITCH_CLIENT_ID:
+      label: Twitch client ID
+      help: Client ID from your Twitch developer application, required by Ganymede at startup.
+    TWITCH_CLIENT_SECRET:
+      label: Twitch client secret
+      help: Client secret from your Twitch developer application, required by Ganymede at startup.
+      type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 4000.
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Video archive
       help: Select This host. Stores saved videos. Include this folder in a stopped Nex backup.
@@ -59,13 +66,15 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME:-ganymede}
+      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID}
+      TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET}
       VIDEOS_DIR: /videos
       TEMP_DIR: /temp
       LOGS_DIR: /logs
       CONFIG_DIR: /config
       DB_PORT: '5432'
     ports:
-    - ${PORT:-8465}:4000/tcp
+    - ${PORT:-4000}:4000/tcp
     volumes:
     - ${DATA}:/videos
     - ${TEMP_DATA}:/temp

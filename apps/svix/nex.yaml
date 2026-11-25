@@ -20,9 +20,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 8071/tcp port
-      help: Host port for application listener 8071/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8071/tcp
+      help: The app listens on TCP port 8071 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and Redis before installing. Use the matching JWT credentials from your
     webhook publisher and protect the HTTP API.
   web:
@@ -37,4 +37,4 @@ services:
       SVIX_REDIS_DSN: ${REDIS_URL}
       SVIX_JWT_SECRET: ${JWT_SECRET}
     ports:
-    - ${PORT:-19925}:8071/tcp
+    - ${PORT:-8071}:8071/tcp

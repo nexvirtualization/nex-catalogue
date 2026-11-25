@@ -30,13 +30,14 @@ x-nex:
       help: Connection URL for the database. Percent-encode special characters in credentials.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   kan:
     image: ghcr.io/kanbn/kan:0.7.0
     ports:
-    - ${PORT:-23493}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     environment:
       NEXT_PUBLIC_BASE_URL: ${PUBLIC_URL}
       BETTER_AUTH_SECRET: ${SIGNING_SECRET}

@@ -31,9 +31,9 @@ x-nex:
       label: Bookdrop folder
       help: Choose the Nex-managed folder mounted at /bookdrop.
     PORT:
-      label: Published 6060/tcp port
-      help: Host port for application listener 6060/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 6060/tcp
+      help: The app listens on TCP port 6060 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a MariaDB database and user before installing. Complete the first-user setup, then
     add the Books folder as a library.
   web:
@@ -52,4 +52,4 @@ services:
     - ${BOOKS}:/books
     - ${BOOKDROP}:/bookdrop
     ports:
-    - ${PORT:-19472}:6060/tcp
+    - ${PORT:-6060}:6060/tcp

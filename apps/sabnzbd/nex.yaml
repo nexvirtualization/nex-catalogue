@@ -11,7 +11,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published TCP port; the application still listens on container port 8080. Complete initial setup on a trusted network and enable authentication.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses. Complete initial setup on a trusted network and enable authentication.
     PUID:
       label: User ID
       help: Numeric owner of application files. Both selected folders must be writable by this UID and the group below; share ACLs and root squash still apply.
@@ -31,7 +32,7 @@ services:
   sabnzbd:
     image: ghcr.io/linuxserver/sabnzbd:latest
     ports:
-      - "${PORT:-8081}:8080/tcp"
+      - "${PORT:-8080}:8080/tcp"
     environment:
       PUID: "${PUID:-1000}"
       PGID: "${PGID:-1000}"

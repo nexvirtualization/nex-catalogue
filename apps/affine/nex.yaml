@@ -2,15 +2,15 @@
 x-nex:
   name: AFFiNE Community Edition
   summary: Collaborate in a workspace with pages and whiteboards
-  description: Provision PostgreSQL and Redis, and run the upstream schema migration for this release before
-    starting. Use HTTPS and back up workspace storage and the database.
+  description: Provision PostgreSQL with pgvector and Redis before installing. AFFiNE applies database
+    migrations before serving requests. Use HTTPS and back up workspace storage and the database.
   category: productivity
   website: https://affine.pro/
   source: https://github.com/toeverything/AFFiNE
   docs: https://docs.affine.pro/self-host-affine/install/docker-compose
   primary_service: affine
-  post_install: Provision PostgreSQL and Redis, and run the upstream schema migration for this release before
-    starting. Use HTTPS and back up workspace storage and the database.
+  post_install: Wait for database migrations to finish, then open the web interface. Use HTTPS and back
+    up workspace storage and the database.
   architectures:
   - amd64
   - arm64
@@ -31,8 +31,9 @@ x-nex:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3010 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3010 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Workspace attachments
       help: Managed directory mounted at /root/.affine/storage. Choose storage writable by the application.
@@ -42,8 +43,12 @@ x-nex:
 services:
   affine:
     image: ghcr.io/toeverything/affine:stable
+    command:
+    - sh
+    - -c
+    - node ./scripts/self-host-predeploy.js && exec node ./dist/main.js
     ports:
-    - ${PORT:-23575}:3010/tcp
+    - ${PORT:-3010}:3010/tcp
     volumes:
     - ${DATA}:/root/.affine/storage
     - ${CONFIG}:/root/.affine/config

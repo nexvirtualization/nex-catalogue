@@ -17,18 +17,20 @@ x-nex:
     APP_KEY:
       label: Application key
       type: password
-      help: 'Provide a Laravel application key with base64: followed by 32 encoded random bytes. Retain
-        it for restores.'
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead. Save this key securely for restores.'
     APP_URL:
       label: Public HTTPS URL
-      help: Set the browser-facing address including https://.
+      help: Enter the exact HTTPS URL users will open, including any non-default port.
     DATA:
       label: 2FAuth data
       help: User accounts, encryption data and stored 2FA entries.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   2fauth:
     image: docker.io/2fauth/2fauth:latest
@@ -39,5 +41,11 @@ services:
     - ${DATA}:/2fauth
     ports:
     - ${PORT:-8000}:8000/tcp
+    healthcheck:
+      test: [CMD, wget, -q, -T, '3', -O, /dev/null, 'http://127.0.0.1:8000/up']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     deploy:
       replicas: 1

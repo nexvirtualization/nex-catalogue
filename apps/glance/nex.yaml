@@ -2,14 +2,15 @@
 x-nex:
   name: Glance
   summary: Build a configurable homelab dashboard
-  description: The Glance dashboard reads its pages and widgets from a prepared managed configuration folder.
+  description: Glance starts with a simple starter dashboard (calendar and bookmarks) written to glance.yml in the
+    configuration folder. Edit that file to add pages and widgets; Nex writes it only when it is missing and
+    never overwrites yours.
   category: productivity
   website: https://github.com/glanceapp/glance
   source: https://github.com/glanceapp/glance
   docs: https://github.com/glanceapp/glance#installation
   primary_service: glance
-  post_install: Before starting, place glance.yml in Configuration using the upstream example. Restart after
-    edits and keep unauthenticated dashboards private.
+  post_install: Glance reloads glance.yml when it changes. The dashboard has no sign-in by default, so keep it private.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -18,17 +19,45 @@ x-nex:
     port: 8080
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
-      label: Prepared dashboard configuration
-      help: Managed directory mounted at /app/src/config. Choose storage readable by the application.
+      label: Dashboard configuration
+      help: Keep glance.yml and any files it includes in this managed folder between restarts. A starter glance.yml
+        is written on first start.
 services:
   glance:
     image: docker.io/glanceapp/glance:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /app/config/glance.yml ]; then
+        cat > /app/config/glance.yml <<'GLANCE'
+      pages:
+        - name: Home
+          columns:
+            - size: small
+              widgets:
+                - type: calendar
+                  first-day-of-week: monday
+            - size: full
+              widgets:
+                - type: bookmarks
+                  groups:
+                    - title: Glance
+                      links:
+                        - title: Documentation
+                          url: https://github.com/glanceapp/glance/blob/main/docs/configuration.md
+                        - title: Widgets
+                          url: https://github.com/glanceapp/glance/blob/main/docs/configuration.md#widgets
+      GLANCE
+      fi
+      exec /app/glance --config /app/config/glance.yml
     ports:
-    - ${PORT:-20191}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
-    - ${CONFIG}:/app/src/config:ro
+    - ${CONFIG}:/app/config
     deploy:
       replicas: 1

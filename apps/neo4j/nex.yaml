@@ -26,12 +26,12 @@ x-nex:
       help: Keep import files in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7474.
+      help: The app listens on TCP port 7474 on its default Docker network. Nex does not publish it on host
+        addresses.
     BOLT_PORT:
       label: Bolt client port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7687.
+      help: The app listens on TCP port 7687 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   neo4j:
     image: docker.io/library/neo4j:latest

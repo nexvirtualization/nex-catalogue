@@ -20,14 +20,18 @@ x-nex:
   options:
     PUBLIC_URL:
       label: Public HTTPS address
-      help: Full HTTPS URL reachable from clients and the application.
+      help: Full URL starting with https:// that clients and the app use, for example https://cloud.example.com.
+        OpenCloud refuses to start with an http:// address. Terminate HTTPS at a proxy in front of the app.
+        Leave empty for https://localhost:9200.
     ADMIN_PASSWORD:
       label: Initial administrator password
-      help: Choose a strong password before initializing OpenCloud.
+      help: Password for the admin account, applied only on the first start. Use Generate or choose a
+        strong password.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9200 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 9200 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: OpenCloud configuration
       help: Managed directory mounted at /etc/opencloud. Choose storage writable by the application.
@@ -38,13 +42,13 @@ services:
   opencloud:
     image: docker.io/opencloudeu/opencloud:latest
     ports:
-    - ${PORT:-20223}:9200/tcp
+    - ${PORT:-9200}:9200/tcp
     volumes:
     - ${CONFIG}:/etc/opencloud
     - ${DATA}:/var/lib/opencloud
     environment:
-      OC_URL: ${PUBLIC_URL}
-      INITIAL_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      OC_URL: ${PUBLIC_URL:-https://localhost:9200}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       OC_INSECURE: 'false'
       PROXY_HTTP_ADDR: 0.0.0.0:9200
       PROXY_TLS: 'false'
@@ -52,6 +56,6 @@ services:
     - /bin/sh
     - -ec
     command:
-    - if [ ! -s /etc/opencloud/opencloud.yaml ]; then opencloud init; fi; exec opencloud server
+    - if [ ! -s /etc/opencloud/opencloud.yaml ]; then opencloud init --admin-password "$$ADMIN_PASSWORD"; fi; exec opencloud server
     deploy:
       replicas: 1

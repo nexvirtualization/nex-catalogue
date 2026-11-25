@@ -2,15 +2,17 @@
 x-nex:
   name: Zitadel
   summary: Serve an identity provider for OIDC applications
-  description: Provision PostgreSQL with the privileges required for initialization. Route the configured
-    HTTPS hostname through a proxy that supports HTTP/2, then sign in using the initial administrator.
+  description: Connect a PostgreSQL server and an account that can create databases and roles, then route
+    the public hostname through an HTTPS proxy that supports HTTP/2. Sign in with the initial administrator.
+    Nex sets the instance-wide password policy to at least 12 characters with no required character classes,
+    so a generated password works; tighten it in the Zitadel Console under Default settings if you need to.
   category: security
   website: https://zitadel.com/
   source: https://github.com/zitadel/zitadel
   docs: https://zitadel.com/docs/self-hosting/deploy/compose
   primary_service: zitadel
-  post_install: Provision PostgreSQL with the privileges required for initialization. Route the configured
-    HTTPS hostname through a proxy that supports HTTP/2, then sign in using the initial administrator.
+  post_install: Route the public hostname through an HTTPS proxy that supports HTTP/2, then sign in as the
+    initial administrator. The administrator's login name is the username followed by @zitadel.<public host>.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -19,53 +21,65 @@ x-nex:
     port: 8080
   options:
     DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
+      label: PostgreSQL host
+      help: Hostname or Nex connection name of the PostgreSQL server. The connection is not encrypted, so use
+        a trusted private network.
     DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
+      label: PostgreSQL port
+      help: TCP port of the PostgreSQL server. Leave empty for 5432.
     DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Database name
+      help: Database Zitadel uses. The administrator account below creates it if it is missing. Leave empty
+        for zitadel.
     DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Zitadel database user
+      help: Account Zitadel runs as. Created by the administrator account below if it is missing.
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Zitadel database password
+      help: Use Generate. Password for the Zitadel database user.
       type: password
     DB_ADMIN:
-      label: Db admin
-      help: Enter the deployment value described in the upstream setup guide.
+      label: PostgreSQL administrator user
+      help: Account that can create databases and roles, used only to initialize Zitadel, for example postgres.
     DB_ADMIN_PASSWORD:
-      label: Db admin password
-      help: Use the credential or secret required by the upstream configuration.
+      label: PostgreSQL administrator password
+      help: Password of the PostgreSQL administrator account.
       type: password
     PUBLIC_HOST:
       label: Public host
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Hostname people use to reach Zitadel through your HTTPS proxy, such as login.example.com, without
+        a scheme or port. It cannot be changed later without breaking sign-ins. Leave empty only for a test on
+        localhost.
     MASTER_KEY:
       label: Master key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes exactly 32 letters and digits. If Generate gives only 24 characters
+        (older Nex), paste the output of openssl rand -hex 16 instead. Keep it with the database backup; the
+        data cannot be read without it.
       type: password
+      generate: {format: alnum, length: 32, max_length: 32}
     ADMIN_USER:
       label: Admin user
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Login name of the first administrator. Leave empty for admin.
     ADMIN_PASSWORD:
       label: Admin password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 24 characters with upper- and lower-case letters, a digit and a symbol.
+        Older Nex makes letters and digits only, which also works. A password you type needs at least 12
+        characters with all four kinds. Used for the first sign-in, set once when the database is empty. The
+        12-character rule becomes the default password policy for every user of this instance.
       type: password
+      generate: {format: password, length: 24, min_length: 12}
     ADMIN_EMAIL:
       label: Admin email
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Email address of the first administrator.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   zitadel:
     image: ghcr.io/zitadel/zitadel:v4.16.0
     ports:
-    - ${PORT:-23559}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       ZITADEL_DATABASE_POSTGRES_HOST: ${DB_HOST}
       ZITADEL_DATABASE_POSTGRES_PORT: ${DB_PORT:-5432}
@@ -76,7 +90,7 @@ services:
       ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: ${DB_ADMIN}
       ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: ${DB_ADMIN_PASSWORD}
       ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE: disable
-      ZITADEL_EXTERNALDOMAIN: ${PUBLIC_HOST}
+      ZITADEL_EXTERNALDOMAIN: ${PUBLIC_HOST:-localhost}
       ZITADEL_EXTERNALPORT: '443'
       ZITADEL_EXTERNALSECURE: 'true'
       ZITADEL_TLS_ENABLED: 'false'
@@ -85,6 +99,11 @@ services:
       ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: ${ADMIN_PASSWORD}
       ZITADEL_FIRSTINSTANCE_ORG_HUMAN_EMAIL_ADDRESS: ${ADMIN_EMAIL}
       ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED: 'false'
+      ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_MINLENGTH: '12'
+      ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASLOWERCASE: 'false'
+      ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASUPPERCASE: 'false'
+      ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASNUMBER: 'false'
+      ZITADEL_DEFAULTINSTANCE_PASSWORDCOMPLEXITYPOLICY_HASSYMBOL: 'false'
     command:
     - start-from-init
     - --masterkeyFromEnv

@@ -2,23 +2,27 @@
 x-nex:
   name: cross-seed
   summary: Find matching torrents across configured clients
-  description: The cross-seed service reads managed configuration and works with an existing authenticated
-    torrent client and indexers.
+  description: >-
+    cross-seed starts with a working default config.js in Configuration: it only saves matched .torrent
+    files and has no indexers or torrent client yet. Edit that file to add your indexers and client
+    (and linkDirs if you want injection). Your own config.js is never overwritten.
   category: downloads
   website: https://github.com/cross-seed/cross-seed
   source: https://github.com/cross-seed/cross-seed
   docs: https://www.cross-seed.org/docs/basics/getting-started
   primary_service: cross-seed
-  post_install: Before starting, place the upstream config.js in Configuration and add your indexer and client
-    details. Keep all credentials private and use shared staging paths only for authorized media.
+  post_install: >-
+    Edit config.js in Configuration to add your Torznab indexers and torrent client, then restart the
+    application. Keep all credentials private and use shared staging paths only for authorized media.
   license: Apache-2.0
   architectures:
   - amd64
   - arm64
   options:
     CONFIG:
-      label: Prepared cross-seed configuration
-      help: Managed directory mounted at /config. Choose storage writable by the application.
+      label: cross-seed configuration
+      help: Managed directory mounted at /config. A default config.js is written here on first start if
+        none exists. Choose storage writable by the application.
     DATA:
       label: Shared media and links
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -28,7 +32,25 @@ services:
     volumes:
     - ${CONFIG}:/config
     - ${DATA}:/data
-    command:
-    - daemon
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -e /config/config.js ]; then
+        cat > /config/config.js <<'CONFIG'
+      "use strict";
+      // Default written by Nex on first start. Edit it freely; it is never overwritten.
+      // Add indexers and a torrent client, then restart the application.
+      // https://www.cross-seed.org/docs/basics/options
+      module.exports = {
+        action: "save",
+        matchMode: "strict",
+        seasonFromEpisodes: null,
+        torznab: [],
+        torrentClients: [],
+      };
+      CONFIG
+      fi
+      exec /usr/bin/catatonit -- /usr/local/bin/cross-seed daemon
     deploy:
       replicas: 1

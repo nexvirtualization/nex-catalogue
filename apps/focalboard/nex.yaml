@@ -19,8 +19,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Board state
       help: Select This host. Stores the local database and attachment files. Include this folder in a
@@ -29,7 +29,7 @@ services:
   focalboard:
     image: mattermost/focalboard:latest
     ports:
-    - ${PORT:-8457}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/opt/focalboard/data
     deploy:

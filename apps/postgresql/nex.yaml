@@ -15,9 +15,9 @@ x-nex:
   primary_service: postgresql
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 5432 on its default Docker network. Nex does not publish it on host
+        addresses.
     DB_USER:
       label: Initial superuser
       help: Creates a PostgreSQL superuser on first startup. Use it to provision separate application roles.

@@ -26,8 +26,8 @@ x-nex:
       help: IANA time zone for logs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 1984.
+      help: The app listens on TCP port 1984 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Camera relay settings
       help: Select This host. Stores go2rtc.yaml and any stream credentials. Create or edit the file in

@@ -52,14 +52,16 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7351.
+      help: The app listens on TCP port 7351 on its default Docker network. Nex does not publish it on host
+        addresses.
     CLIENT_PORT:
       label: Client Port
-      help: Host-published client HTTP and WebSocket port.
+      help: The app listens on TCP port 7350 on its default Docker network. Nex does not publish it on host
+        addresses.
     GRPC_PORT:
       label: Grpc Port
-      help: Host-published gRPC port for trusted clients.
+      help: The app listens on TCP port 7349 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Runtime files
       help: Select This host. Stores custom runtime modules and application files. Include this folder

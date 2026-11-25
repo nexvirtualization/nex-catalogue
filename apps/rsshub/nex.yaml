@@ -12,9 +12,9 @@ x-nex:
   primary_service: rsshub
   options:
     PORT:
-      label: Published 1200/tcp port
-      help: Host port for application listener 1200/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 1200/tcp
+      help: The app listens on TCP port 1200 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Use a feed reader to subscribe to a documented route. This package uses the built-in memory
     cache. Routes needing an extra browser or private API credentials require separate configuration.
   web:
@@ -27,4 +27,4 @@ services:
     environment:
       CACHE_TYPE: memory
     ports:
-    - ${PORT:-19476}:1200/tcp
+    - ${PORT:-1200}:1200/tcp

@@ -29,8 +29,8 @@ x-nex:
       help: Full URL clients will open, including scheme and any non-default port.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8065.
+      help: The app listens on TCP port 8065 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Mattermost configuration
       help: Select This host. Stores site and workspace settings. Include this folder in a stopped Nex
@@ -54,7 +54,7 @@ services:
       MM_SQLSETTINGS_DRIVERNAME: postgres
       MM_SERVICESETTINGS_SITEURL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-8400}:8065/tcp
+    - ${PORT:-8065}:8065/tcp
     volumes:
     - ${DATA}:/mattermost/config
     - ${FILES}:/mattermost/data

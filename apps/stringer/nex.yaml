@@ -2,8 +2,11 @@
 x-nex:
   name: Stringer
   summary: Collect and read syndicated feeds through a private RSS app
-  description: Create a PostgreSQL database before installing. Open the application on a trusted network
-    and configure its first account. The container applies the upstream database migrations on start.
+  description: Create a PostgreSQL database before installing. Stringer redirects every request to HTTPS, so
+    this package serves it over HTTPS with a self-signed certificate (accept the browser warning, or put
+    your own HTTPS proxy in front and trust this certificate). Known issue - the current upstream image
+    ships without compiled web assets, so pages fail to render until a fixed image is published. Open the
+    application on a trusted network and configure its first account. Database migrations run on start.
   category: reading
   website: https://github.com/stringer-rss/stringer
   source: https://github.com/stringer-rss/stringer
@@ -12,6 +15,7 @@ x-nex:
   scalable: false
   license: MIT
   web:
+    scheme: https
     port: 8080
   options:
     DATABASE_URL:
@@ -22,21 +26,53 @@ x-nex:
       label: Application signing secret
       type: password
       help: Use Nex Generate and preserve this secret across upgrades and restores.
+    ENCRYPTION_PRIMARY_KEY:
+      label: Primary encryption key
+      type: password
+      help: Use Generate for a new database, separate from the other keys. For an existing database, reuse
+        its original key. Keep this value for restores.
+    ENCRYPTION_DETERMINISTIC_KEY:
+      label: Deterministic encryption key
+      type: password
+      help: Use Generate for a new database, separate from the other keys. For an existing database, reuse
+        its original key. Keep this value for restores.
+    ENCRYPTION_KEY_DERIVATION_SALT:
+      label: Encryption key derivation salt
+      type: password
+      help: Use Generate for a new database, separate from the keys. For an existing database, reuse its
+        original salt. Keep this value for restores.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   stringer:
     image: docker.io/stringerrss/stringer:latest
+    # Stringer redirects every plain-HTTP request to HTTPS, so start it with a self-signed certificate
+    # on 8080. The plain listener the image's puma.rb adds moves to 3000 and is not published.
     command:
     - sh
     - -ec
-    - bundle exec rails db:migrate; exec /app/start.sh
+    - |
+      openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj /CN=stringer \
+        -keyout /tmp/key.pem -out /tmp/cert.pem
+      bundle exec rails db:migrate
+      # start.sh ignores a failed precompile too; the image has no JavaScript package manager for it.
+      bundle exec rails assets:precompile || echo 'assets:precompile failed; pages that need compiled assets will not render'
+      : $${FETCH_FEEDS_CRON:='*/5 * * * *'}
+      : $${CLEANUP_CRON:='0 0 * * *'}
+      printf '%s cd /app && bundle exec rake fetch_feeds\n%s cd /app && bundle exec rake cleanup_old_stories\n' \
+        "$$FETCH_FEEDS_CRON" "$$CLEANUP_CRON" > /app/crontab
+      supercronic /app/crontab &
+      exec bundle exec puma -b 'ssl://0.0.0.0:8080?key=/tmp/key.pem&cert=/tmp/cert.pem' -C ./config/puma.rb
     environment:
       RAILS_ENV: production
+      PORT: '3000'
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ENCRYPTION_PRIMARY_KEY: ${ENCRYPTION_PRIMARY_KEY}
+      ENCRYPTION_DETERMINISTIC_KEY: ${ENCRYPTION_DETERMINISTIC_KEY}
+      ENCRYPTION_KEY_DERIVATION_SALT: ${ENCRYPTION_KEY_DERIVATION_SALT}
     ports:
     - ${PORT:-8080}:8080/tcp
     deploy:

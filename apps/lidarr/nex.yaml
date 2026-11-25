@@ -18,7 +18,8 @@ x-nex:
       help: Music and staged downloads under /data/music and /data/downloads. For shared media, select the same existing folder on the same share in each app.
     PORT:
       label: Web port
-      help: Use an unused port. Configure application authentication before allowing access beyond a trusted network.
+      help: The app listens on TCP port 8686 on its default Docker network. Nex does not publish it on host
+        addresses. Configure application authentication before allowing access beyond a trusted network.
     PUID:
       label: User ID
       help: Numeric owner of the application files. Ensure both selected folders are writable by this user or group.

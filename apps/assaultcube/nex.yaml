@@ -35,6 +35,7 @@ services:
     - /bin/bash
     - -ec
     - |
+      set -o pipefail
       download() {
         local url="$$1" sha256="$$2" target="$$3"
         curl --fail --silent --show-error --location --retry 3 "$$url" -o "$$target"
@@ -44,7 +45,6 @@ services:
         }
       }
 
-
       cd "$$HOME"
       if [ ! -x ./bin_unix/linux_64_server ]; then
         staging=$$(mktemp -d ./.assaultcube-install.XXXXXX)
@@ -52,14 +52,15 @@ services:
         download https://github.com/assaultcube/AC/releases/download/v1.3.0.2/AssaultCube_v1.3.0.2_LockdownEdition_RC1.tar.bz2 \
           9b3118e7929253f0114fa06cad8310faab646d177b4660406011152f34086b55 "$$staging/release.tar.bz2"
         mkdir -p "$$staging/files" bin_unix
-        tar -xjf "$$staging/release.tar.bz2" -C "$$staging/files" ./bin_unix/linux_64_server ./config ./packages
+        python3 -c 'import bz2, shutil, sys; shutil.copyfileobj(bz2.open(sys.argv[1]), sys.stdout.buffer)' \
+          "$$staging/release.tar.bz2" | tar -xf - -C "$$staging/files" ./bin_unix/linux_64_server ./config ./packages
         cp -Rn "$$staging/files/config" "$$staging/files/packages" ./
         chmod 755 "$$staging/files/bin_unix/linux_64_server"
         mv "$$staging/files/bin_unix/linux_64_server" ./bin_unix/linux_64_server
         rm -rf "$$staging"
         trap - EXIT
       fi
-      exec ./bin_unix/linux_64_server -f28763 -mlocalhost
+      exec stdbuf -oL ./bin_unix/linux_64_server -f28763 -mlocalhost -LF5
     stop_grace_period: 90s
     deploy:
       replicas: 1

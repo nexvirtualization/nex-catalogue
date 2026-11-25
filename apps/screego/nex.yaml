@@ -2,15 +2,17 @@
 x-nex:
   name: Screego
   summary: Share a screen in a private browser room
-  description: Configure an external TURN relay and create the authorized users file in Configuration with
-    screego hash. Use HTTPS with WebSocket support and verify sharing across different networks.
+  description: Needs an external TURN relay. A users file with the sign-in user is written to
+    Configuration on first start. Use HTTPS with WebSocket support and verify sharing across different
+    networks.
   category: communication
   website: https://screego.net
   source: https://github.com/screego/server
   docs: https://github.com/screego/server/blob/v1.12.6/screego.config.example
   primary_service: screego
-  post_install: Configure an external TURN relay and create the authorized users file in Configuration with
-    screego hash. Use HTTPS with WebSocket support and verify sharing across different networks.
+  post_install: Needs an external TURN relay. A users file with the sign-in user is written to
+    Configuration on first start. Use HTTPS with WebSocket support and verify sharing across different
+    networks.
   license: GPL-3.0
   architectures:
   - amd64
@@ -18,41 +20,47 @@ x-nex:
   web:
     port: 5050
   options:
-    EXTERNAL_IP:
-      label: External ip
-      help: Enter the deployment value described in the upstream setup guide.
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. Signs session cookies; keep it across restarts.
       type: password
     TURN_HOST:
-      label: Turn host
-      help: Enter the deployment value described in the upstream setup guide.
+      label: TURN host
+      help: IP address of the external TURN relay that browsers can reach.
     TURN_PORT:
-      label: Turn port
-      help: Enter the deployment value described in the upstream setup guide.
+      label: TURN port
+      help: Port of the external TURN relay. Leave empty for 3478.
     TURN_SECRET:
-      label: Turn secret
-      help: Use the credential or secret required by the upstream configuration.
+      label: TURN secret
+      help: Shared secret configured on the external TURN relay (static-auth-secret in coturn).
+      type: password
+    ADMIN_USER:
+      label: Sign-in user
+      help: User created in the users file on first start. The default is admin.
+    ADMIN_PASSWORD:
+      label: Sign-in password
+      help: Use Generate. It is stored as a bcrypt hash in the users file. Changing it here later does not
+        change an existing users file.
       type: password
     PUBLIC_URL:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5050 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5050 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
-      label: Prepared Screego users file
-      help: Managed directory mounted at /configuration. Choose storage readable by the application.
+      label: Screego users file
+      help: Managed directory mounted at /configuration. Nex writes a users file here on first start for the
+        sign-in user above. Add more users with screego hash.
 services:
   screego:
     image: docker.io/screego/server:1.12.6
     ports:
-    - ${PORT:-23576}:5050/tcp
+    - ${PORT:-5050}:5050/tcp
     volumes:
     - ${CONFIG}:/configuration:ro
     environment:
-      SCREEGO_EXTERNAL_IP: ${EXTERNAL_IP}
       SCREEGO_SECRET: ${SIGNING_SECRET}
       SCREEGO_AUTH_MODE: all
       SCREEGO_USERS_FILE: /configuration/users
@@ -60,5 +68,30 @@ services:
       SCREEGO_TURN_EXTERNAL_PORT: ${TURN_PORT:-3478}
       SCREEGO_TURN_EXTERNAL_SECRET: ${TURN_SECRET}
       SCREEGO_CORS_ALLOWED_ORIGINS: ${PUBLIC_URL}
+    deploy:
+      replicas: 1
+      # Retry: Screego may start before the helper below has written the users file on first start.
+      restart_policy:
+        condition: any
+        delay: 5s
+  # The Screego image has no shell, so this helper writes the users file if it is missing and waits.
+  users-init:
+    image: docker.io/library/httpd:latest
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /configuration/users ]; then
+        printf '%s' "$$ADMIN_PASSWORD" | htpasswd -niBC 10 "$$ADMIN_USER" | sed 's/\$$2y\$$/$$2a$$/' > /configuration/users.new
+        mv /configuration/users.new /configuration/users
+        echo "Wrote /configuration/users for $$ADMIN_USER"
+      fi
+      chmod 644 /configuration/users
+      exec su -s /bin/sh nobody -c 'exec tail -f /dev/null'
+    volumes:
+    - ${CONFIG}:/configuration
     deploy:
       replicas: 1

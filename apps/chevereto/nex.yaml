@@ -24,17 +24,18 @@ x-nex:
       label: Db name
     PUBLIC_HOST:
       label: Public host
+      help: Host name browsers use to reach Chevereto, without a scheme, for example images.example.com.
     IMAGES:
       label: Images folder
       help: Choose the Nex-managed folder mounted at /var/www/html/images.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Web port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision an empty MySQL database, configure the client-facing hostname, then complete the web
     installer. Chevereto edition and feature availability depend on its license.
   web:
-    port: 80
+    port: 8080
 services:
   chevereto:
     image: docker.io/chevereto/chevereto:4
@@ -50,4 +51,17 @@ services:
     volumes:
     - ${IMAGES}:/var/www/html/images
     ports:
-    - ${PORT:-19516}:80/tcp
+    - ${PORT:-8080}:8080/tcp
+  # Chevereto runs as www-data (uid 33), so this helper gives it the images folder and waits.
+  images-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown 33:33 /images
+      exec tail -f /dev/null
+    volumes:
+    - ${IMAGES}:/images
+    deploy:
+      replicas: 1

@@ -25,7 +25,8 @@ x-nex:
       help: Choose a writable folder on the same host for application logs.
     PORT:
       label: Web port
-      help: Published HTTP port when host publishing is enabled.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Sign in using the upstream initial administrator account, admin with password admin.
     Change this password before enabling public access.
 services:
@@ -55,7 +56,7 @@ services:
         }
         CADDYFILE
     ports:
-      - ${PORT:-23445}:80/tcp
+      - ${PORT:-80}:80/tcp
     volumes:
       - ${UPLOADS}:/uploads:ro
     deploy:

@@ -46,8 +46,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Business documents
       help: Select This host. Stores generated and uploaded documents. Include this folder in a stopped
@@ -68,7 +68,7 @@ services:
       DOLI_ADMIN_LOGIN: ${ADMIN_USERNAME:-admin}
       DOLI_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8421}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/documents
     - ${APP}:/var/www/html

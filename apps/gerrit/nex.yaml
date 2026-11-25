@@ -31,12 +31,12 @@ x-nex:
       help: Keep gerrit data in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     SSH_PORT:
       label: Git SSH port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 29418.
+      help: The app listens on TCP port 29418 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   gerrit:
     image: docker.io/gerritcodereview/gerrit:latest

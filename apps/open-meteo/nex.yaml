@@ -18,11 +18,12 @@ x-nex:
     service: open-meteo
     scheme: http
     port: 8080
+    path: /v1/forecast
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Weather datasets
       help: Select This host. Stores downloaded forecast data and indexes. Include this folder in a stopped
@@ -42,13 +43,22 @@ services:
     - --port
     - '8080'
     ports:
-    - ${PORT:-8888}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:
       replicas: 1
   sync:
     image: ghcr.io/open-meteo/open-meteo:latest
+    # Root only to hand the shared data folder to the image user, then sync runs as openmeteo.
+    user: '0'
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R openmeteo:openmeteo /app/data
+      exec setpriv --reuid=openmeteo --regid=openmeteo --init-groups ./openmeteo-api "$$@"
+    - sh
     command:
     - sync
     - dwd_icon

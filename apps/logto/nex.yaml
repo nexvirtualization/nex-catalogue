@@ -9,6 +9,12 @@ x-nex:
   website: https://logto.io/
   source: https://github.com/logto-io/logto
   docs: https://docs.logto.io/logto-oss/get-started-with-oss
+  post_install: After the first database seed completes, remove CREATEROLE from the database owner.
+    If you revoked CONNECT from PUBLIC, grant CONNECT on the dedicated database to its generated
+    Logto tenant group, then restart the app. Before updating Logto, back up its database and follow
+    the target version's upgrade guide. If the release requires database alterations, run npm run
+    alteration deploy with the target version and database connection using the target Logto image
+    before starting the new version.
   scalable: false
   primary_service: logto
   architectures:
@@ -23,32 +29,38 @@ x-nex:
   options:
     DATABASE_URL:
       label: Database connection string
-      help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
-        percent-encoded password. Nex applications can use the database app connection name and port 5432.
+      help: Create a dedicated PostgreSQL database and owner. On an empty database the seed requires
+        temporary CREATEROLE to create tenant roles. Follow the post-install instructions for removing
+        the attribute and configuring restricted tenant access. Supply a PostgreSQL URI with a percent-encoded
+        password. Nex apps can use the database app connection name and port 5432.
       type: password
     OIDC_URL:
-      label: Oidc Url
-      help: Public HTTPS authentication endpoint.
+      label: Authentication endpoint
+      help: Public address clients use to sign in, such as https://auth.example.com. Use the HTTPS address
+        served by your reverse proxy. Leave empty for http://localhost:3001, which only works from this host.
     ADMIN_URL:
-      label: Admin Url
-      help: Public HTTPS address of the Admin Console.
+      label: Admin Console endpoint
+      help: Public address of the Admin Console, such as https://admin.example.com. Use the HTTPS address
+        served by your reverse proxy. Leave empty for http://localhost:3002, which only works from this host.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3002.
+      help: The app listens on TCP port 3002 on its default Docker network. Nex does not publish it on host
+        addresses.
     OIDC_PORT:
       label: Oidc Port
-      help: Host-published Logto authentication port. Use internal port 3001 from a Nex reverse proxy.
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   logto:
     image: ghcr.io/logto-io/logto:latest
+    entrypoint: [sh, -c, "npm run cli db seed -- --swe && exec npm start"]
     environment:
       DB_URL: ${DATABASE_URL}
       TRUST_PROXY_HEADER: '1'
-      ENDPOINT: ${OIDC_URL}
-      ADMIN_ENDPOINT: ${ADMIN_URL}
+      ENDPOINT: ${OIDC_URL:-http://localhost:3001}
+      ADMIN_ENDPOINT: ${ADMIN_URL:-http://localhost:3002}
     ports:
-    - ${PORT:-8426}:3002/tcp
+    - ${PORT:-3002}:3002/tcp
     - ${OIDC_PORT:-3001}:3001/tcp
     deploy:
       replicas: 1

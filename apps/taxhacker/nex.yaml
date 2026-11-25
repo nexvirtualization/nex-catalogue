@@ -19,20 +19,33 @@ x-nex:
     port: 7331
   options:
     DATABASE_URL:
-      label: Database url
-      help: Connection URL for the database. Percent-encode special characters in credentials.
+      label: Database connection URL
+      help: Include the PostgreSQL database name in the connection URL. Percent-encode special characters
+        in credentials.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 7331 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 7331 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Receipts, invoices and settings
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
 services:
   taxhacker:
     image: ghcr.io/vas3k/taxhacker:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ -z "$${PGDATABASE:-}" ]; then
+        PGDATABASE=$$(node -p 'decodeURIComponent(new URL(process.env.DIRECT_URL || process.env.DATABASE_URL).pathname.slice(1))')
+        export PGDATABASE
+      fi
+      exec docker-entrypoint.sh "$$@"
+    - taxhacker
+    command: [npm, start]
     ports:
-    - ${PORT:-23558}:7331/tcp
+    - ${PORT:-7331}:7331/tcp
     volumes:
     - ${DATA}:/app/data
     environment:

@@ -36,8 +36,8 @@ x-nex:
       help: IANA time zone for server logs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notification routes
       help: Select This host. Stores Apprise settings and notification destination configuration. Include
@@ -53,7 +53,7 @@ services:
       PGID: ${PGID:-1000}
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8169}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/config
     deploy:

@@ -20,12 +20,33 @@ x-nex:
     scheme: https
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9090 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 9090 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   cockpit-ws:
     image: quay.io/cockpit/ws:latest
     ports:
-    - ${PORT:-20254}:9090/tcp
+    - ${PORT:-9090}:9090/tcp
+    healthcheck:
+      test:
+      - CMD
+      - /usr/bin/python3
+      - -c
+      - |
+        import ssl
+        import urllib.request
+        from pathlib import Path
+
+        certs = Path("/etc/cockpit/ws-certs.d")
+        ca = certs / "0-self-signed-ca.pem"
+        if not ca.is_file():
+            ca = certs / "0-self-signed.cert"
+        context = ssl.create_default_context(cafile=ca)
+        with urllib.request.urlopen("https://localhost:9090/ping", context=context, timeout=3):
+            pass
+      interval: 15s
+      timeout: 5s
+      retries: 3
     deploy:
       replicas: 1

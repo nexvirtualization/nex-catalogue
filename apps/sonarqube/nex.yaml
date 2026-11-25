@@ -2,9 +2,11 @@
 x-nex:
   name: SonarQube
   summary: Review code quality and maintainability
-  description: Use a dedicated host prepared for the embedded Elasticsearch process according to the upstream
-    requirements. Provision PostgreSQL and change the initial administrator password. Use the app address
-    to configure scanner clients.
+  description: Provision PostgreSQL first. The embedded Elasticsearch needs at least 10% of the host's disk
+    free, or it will not start. It also needs the host setting vm.max_map_count of at least 262144 (set it
+    on the host with sysctl -w vm.max_map_count=262144 and persist it in /etc/sysctl.d); an app cannot change
+    it, so Nex skips that startup check, and a lower value can make search crash under load. Sign in as
+    admin/admin and change the password, then use the app address to configure scanner clients.
   category: development
   website: https://github.com/SonarSource/sonarqube
   source: https://github.com/SonarSource/sonarqube
@@ -25,16 +27,16 @@ x-nex:
       label: PostgreSQL JDBC URL
       help: Enter jdbc:postgresql://host:5432/database. Use the Nex database connection name if applicable.
     DB_USER:
-      label: Db User
-      help: Dedicated PostgreSQL user.
+      label: Database user
+      help: Dedicated PostgreSQL user that owns the database.
     DB_PASSWORD:
       label: Database password
       help: Use Generate to create a unique secret for this installation.
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9000.
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Code analysis indexes
       help: Select This host. Stores Elasticsearch indexes. Include this folder in a stopped Nex backup.
@@ -47,12 +49,21 @@ x-nex:
 services:
   sonarqube:
     image: sonarqube:latest
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R sonarqube:root /opt/sonarqube/data /opt/sonarqube/extensions /opt/sonarqube/logs
+      exec setpriv --reuid=sonarqube --regid=root --init-groups /opt/sonarqube/docker/entrypoint.sh
     environment:
+      # An app cannot raise the host's vm.max_map_count; this skips Elasticsearch's check for it.
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: 'true'
       SONAR_JDBC_URL: ${DATABASE_URL}
       SONAR_JDBC_USERNAME: ${DB_USER}
       SONAR_JDBC_PASSWORD: ${DB_PASSWORD}
     ports:
-    - ${PORT:-8467}:9000/tcp
+    - ${PORT:-9000}:9000/tcp
     volumes:
     - ${DATA}:/opt/sonarqube/data
     - ${EXTENSIONS}:/opt/sonarqube/extensions

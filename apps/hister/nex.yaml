@@ -16,9 +16,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /hister/data.
     PORT:
-      label: Published 4433/tcp port
-      help: Host port for application listener 4433/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 4433/tcp
+      help: The app listens on TCP port 4433 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Point the browser companion at the client-facing Hister server URL. Keep the data folder private
     because indexed pages may contain personal content.
   web:
@@ -34,4 +34,4 @@ services:
     volumes:
     - ${DATA}:/hister/data
     ports:
-    - ${PORT:-19960}:4433/tcp
+    - ${PORT:-4433}:4433/tcp

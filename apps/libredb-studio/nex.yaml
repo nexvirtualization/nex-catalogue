@@ -14,8 +14,9 @@ x-nex:
   primary_service: app
   options:
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 3000/tcp.
+      label: TCP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 3000
   post_install: Complete setup with the configured administrator credentials. Put the UI behind HTTPS for remote

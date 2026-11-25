@@ -18,8 +18,9 @@ x-nex:
     port: 80
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: App storage
       help: Managed directory mounted at /var/www/html/storage. Choose storage writable by the application.
@@ -27,7 +28,7 @@ services:
   faved:
     image: docker.io/denho/faved:latest
     ports:
-    - ${PORT:-20230}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html/storage
     deploy:

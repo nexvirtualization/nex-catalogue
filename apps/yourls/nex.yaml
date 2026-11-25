@@ -16,7 +16,7 @@ x-nex:
   web:
     service: yourls
     scheme: http
-    port: 80
+    port: 8080
   works_with:
   - mariadb
   options:
@@ -46,8 +46,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Shortener site files
       help: Select This host. Stores plugins, customization and local app configuration. Include this
@@ -64,7 +64,7 @@ services:
       YOURLS_USER: ${ADMIN_USERNAME:-admin}
       YOURLS_PASS: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8439}:80/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/var/www/html
     deploy:

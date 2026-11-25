@@ -2,59 +2,68 @@
 x-nex:
   name: OpenPanel
   summary: Collect product analytics and explore event data
-  description: Provision PostgreSQL, Redis, and ClickHouse with the prepared environment. Configure
-    distinct, reachable dashboard and API HTTPS URLs and keep the initial administrator private.
+  description: PostgreSQL, Redis and ClickHouse run inside this app. Serve the dashboard and the analytics API
+    on two distinct, reachable HTTPS URLs through your reverse proxy, and keep the first account private.
   category: monitoring
   website: https://github.com/Openpanel-dev/openpanel
   source: https://github.com/Openpanel-dev/openpanel
   docs: https://openpanel.dev/docs/self-hosting
   primary_service: openpanel
+  post_install: Open the dashboard and create the first account; it becomes the organisation owner. Keep the
+    database, Redis and ClickHouse folders on one host and include all three in stopped backups.
   scalable: false
   license: AGPL-3.0
   web:
     port: 3000
   options:
-    DATABASE_URL:
-      label: PostgreSQL connection URL
-      type: password
-      help: Supply the full connection URL for a prepared database on a reachable network.
-    REDIS_URL:
-      label: Redis connection URL
-      type: password
-      help: Supply the full connection URL for the prepared Redis-compatible service.
-    CLICKHOUSE_URL:
-      label: ClickHouse analytics URL
-      type: password
-      help: Use the prepared ClickHouse endpoint and database.
-    API_URL:
-      label: Public analytics API URL
-      help: Full API URL reachable by analytics clients.
-    DASHBOARD_URL:
+    DASHBOARD_PUBLIC_URL:
       label: Public dashboard URL
-      help: Full browser-facing dashboard HTTPS URL.
+      help: Full browser-facing dashboard URL, for example https://analytics.example.com. Session cookies are
+        set for this domain.
+    API_PUBLIC_URL:
+      label: Public analytics API URL
+      help: Full URL of the analytics API that browsers and tracking scripts reach, for example
+        https://api.analytics.example.com. Route it to the published API port.
     API_PORT:
-      label: Published analytics API port
-      help: Host port to serve the browser-facing API through your reverse proxy.
+      label: Analytics API port
+      help: The app listens on TCP port 3333 on its default Docker network. Nex does not publish it on host
+        addresses.
     COOKIE_SECRET:
       label: Cookie signing secret
       type: password
-      help: Use a long random signing secret and retain it for restore.
+      help: Use Generate and keep it unchanged, or every signed-in session ends.
+    POSTGRES_PASSWORD:
+      label: Database password
+      type: password
+      help: Use Generate. Letters and digits only, because it is placed in a URL. Password of the PostgreSQL
+        service inside this app; keep it unchanged after the first start.
+    CLICKHOUSE_PASSWORD:
+      label: ClickHouse password
+      type: password
+      help: Use Generate. Letters and digits only, because it is placed in a URL. Keep it unchanged after the
+        first start.
+    DB_DATA:
+      label: PostgreSQL data
+      help: Choose This host. Stores accounts, projects and settings.
+    REDIS_DATA:
+      label: Redis data
+      help: Choose This host. Stores queued events that are not yet written to ClickHouse.
+    CLICKHOUSE_DATA:
+      label: ClickHouse event data
+      help: Choose This host. Stores the analytics events.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   openpanel:
     image: docker.io/lindesvard/openpanel-dashboard:2
     environment:
       NODE_ENV: production
       SELF_HOSTED: 'true'
-      API_URL: ${API_URL}
-      DASHBOARD_URL: ${DASHBOARD_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_URL_DIRECT: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      API_URL: ${API_PUBLIC_URL}
+      API_URL_SSR: http://api:3333
+      DASHBOARD_URL: ${DASHBOARD_PUBLIC_URL}
     ports:
     - ${PORT:-3000}:3000/tcp
     deploy:
@@ -66,18 +75,29 @@ services:
     environment:
       NODE_ENV: production
       SELF_HOSTED: 'true'
-      API_URL: ${API_URL}
-      DASHBOARD_URL: ${DASHBOARD_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_URL_DIRECT: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      API_URL: ${API_PUBLIC_URL}
+      DASHBOARD_URL: ${DASHBOARD_PUBLIC_URL}
+      DATABASE_URL: postgresql://openpanel:${POSTGRES_PASSWORD}@db:5432/openpanel
+      DATABASE_URL_DIRECT: postgresql://openpanel:${POSTGRES_PASSWORD}@db:5432/openpanel
+      REDIS_URL: redis://redis:6379
+      CLICKHOUSE_URL: http://openpanel:${CLICKHOUSE_PASSWORD}@clickhouse:8123/openpanel
       COOKIE_SECRET: ${COOKIE_SECRET}
       ALLOW_REGISTRATION: 'true'
+      # Container port of the API (it defaults to 3000); the API_PORT option is the host port.
+      API_PORT: '3333'
     command:
     - sh
     - -ec
-    - CI=true pnpm -r run migrate:deploy; exec pnpm start
+    - |-
+      # PostgreSQL and ClickHouse start alongside this service; retry the migrations until they answer.
+      i=0
+      until CI=true pnpm -r run migrate:deploy; do
+        i=$$((i + 1))
+        [ "$$i" -ge 60 ] && exit 1
+        echo "Waiting for PostgreSQL and ClickHouse..."
+        sleep 5
+      done
+      exec pnpm start
     deploy:
       replicas: 1
   worker:
@@ -85,11 +105,60 @@ services:
     environment:
       NODE_ENV: production
       SELF_HOSTED: 'true'
-      API_URL: ${API_URL}
-      DASHBOARD_URL: ${DASHBOARD_URL}
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_URL_DIRECT: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      API_URL: ${API_PUBLIC_URL}
+      DASHBOARD_URL: ${DASHBOARD_PUBLIC_URL}
+      DATABASE_URL: postgresql://openpanel:${POSTGRES_PASSWORD}@db:5432/openpanel
+      DATABASE_URL_DIRECT: postgresql://openpanel:${POSTGRES_PASSWORD}@db:5432/openpanel
+      REDIS_URL: redis://redis:6379
+      CLICKHOUSE_URL: http://openpanel:${CLICKHOUSE_PASSWORD}@clickhouse:8123/openpanel
+    entrypoint:
+    - sh
+    - -ec
+    command:
+    - |-
+      # Wait for the bundled databases before the worker connects.
+      for target in db:5432 redis:6379 clickhouse:8123; do
+        i=0
+        until node -e 'const [h,p]=process.argv[1].split(":");require("net").connect(+p,h).on("connect",()=>process.exit(0)).on("error",()=>process.exit(1))' "$$target"; do
+          i=$$((i + 1))
+          [ "$$i" -ge 60 ] && break
+          sleep 3
+        done
+      done
+      exec docker-entrypoint.sh node dist/index.js
+    deploy:
+      replicas: 1
+  db:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: openpanel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: openpanel
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
+    command:
+    - redis-server
+    - --appendonly
+    - 'yes'
+    - --maxmemory-policy
+    - noeviction
+    volumes:
+    - ${REDIS_DATA}:/data
+    deploy:
+      replicas: 1
+  clickhouse:
+    # The version upstream ships with; newer ClickHouse rejects OpenPanel's migration 14
+    # (profile_event_property_summary_mv) unless allow_dimensions_outside_sorting_key is set.
+    image: docker.io/clickhouse/clickhouse-server:25.10.2.65
+    environment:
+      CLICKHOUSE_DB: openpanel
+      CLICKHOUSE_USER: openpanel
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+    - ${CLICKHOUSE_DATA}:/var/lib/clickhouse
     deploy:
       replicas: 1

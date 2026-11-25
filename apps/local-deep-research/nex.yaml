@@ -30,8 +30,8 @@ x-nex:
       help: Full URL to the SearXNG search service.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5000.
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Research data
       help: Select This host. Stores sessions, configuration, and research material. Include this folder
@@ -50,7 +50,7 @@ services:
       LDR_LLM_OLLAMA_URL: ${OLLAMA_URL}
       LDR_SEARCH_ENGINE_WEB_SEARXNG_DEFAULT_PARAMS_INSTANCE_URL: ${SEARCH_URL}
     ports:
-    - ${PORT:-8812}:5000/tcp
+    - ${PORT:-5000}:5000/tcp
     volumes:
     - ${DATA}:/data
     - ${SCRIPTS}:/scripts

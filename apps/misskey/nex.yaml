@@ -2,9 +2,10 @@
 x-nex:
   name: Misskey
   summary: Run a federated social community
-  description: Create the PostgreSQL database and Redis-compatible queue first. Prepare default.yml using
-    upstream’s Docker example with your public HTTPS origin and database endpoints. Configure a reverse
-    proxy with WebSocket support before site setup.
+  description: Create a PostgreSQL database and user and have a Redis-compatible server ready, then enter their
+    details and your public HTTPS origin when installing. Nex builds the Misskey configuration from those answers
+    at each start. To manage it yourself, put default.yml in the configuration folder; it is then used instead.
+    Configure a reverse proxy with WebSocket support before site setup.
   category: communication
   website: https://misskey.io/
   source: https://github.com/misskey-dev/misskey
@@ -22,23 +23,97 @@ x-nex:
   - postgresql
   - valkey
   options:
+    PUBLIC_URL:
+      label: Public URL
+      help: Full public address such as https://social.example.org/. It cannot be changed after the first
+        post is federated.
+    DB_HOST:
+      label: Database host
+      help: Reachable PostgreSQL host name or address.
+    DB_PORT:
+      label: Database port
+      help: PostgreSQL port. Leave empty for 5432.
+    DB_NAME:
+      label: Database name
+      help: Name of the prepared PostgreSQL database.
+    DB_USER:
+      label: Database user
+      help: PostgreSQL user that owns the database.
+    DB_PASS:
+      label: Database password
+      type: password
+      help: Password of that user. Do not use double quotes or backslashes.
+    REDIS_HOST:
+      label: Redis host
+      help: Reachable Redis-compatible host name or address.
+    REDIS_PORT:
+      label: Redis port
+      help: Redis-compatible port. Leave empty for 6379.
+    REDIS_PASS:
+      label: Redis password
+      type: password
+      help: Leave empty when the Redis-compatible server needs no password. Do not use double quotes or
+        backslashes.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
-      label: Prepared federation configuration
-      help: Select This host. Select a managed folder containing default.yml and its deployment-specific
-        settings. Include this folder in a stopped Nex backup.
+      label: Optional own configuration
+      help: Select This host. Put your own default.yml here to replace the one Nex builds from the install
+        answers. Leave empty to use those answers.
     DATA:
       label: Uploaded media
-      help: Select This host. Stores files uploaded by users and federated attachments. Include this folder
-        in a stopped Nex backup.
+      help: Select This host. Give the container user (991:991) write access for uploads and federated
+        attachments. Include this folder in a stopped Nex backup.
 services:
   misskey:
     image: misskey/misskey:latest
+    entrypoint:
+    - /usr/bin/tini
+    - --
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /misskey/.config/default.yml ]; then
+        cat > /tmp/default.yml <<MISSKEY
+      url: $$PUBLIC_URL
+      port: 3000
+      id: aidx
+      db:
+        host: $$DB_HOST
+        port: $$DB_PORT
+        db: $$DB_NAME
+        user: $$DB_USER
+        pass: "$$DB_PASS"
+      redis:
+        host: $$REDIS_HOST
+        port: $$REDIS_PORT
+      MISSKEY
+        if [ -n "$$REDIS_PASS" ]; then
+          printf '  pass: "%s"\n' "$$REDIS_PASS" >> /tmp/default.yml
+        fi
+        export MISSKEY_CONFIG_YML=/tmp/default.yml
+      fi
+      exec node scripts/start.mjs --migrate
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASS: ${REDIS_PASS:-}
+    # The image check reads port from default.yml, which may be missing, so check the port directly.
+    healthcheck:
+      test: [CMD, curl, -Sfso, /dev/null, 'http://localhost:3000/healthz']
+      interval: 5s
+      retries: 20
+      start_period: 120s
     ports:
-    - ${PORT:-8876}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${CONFIG}:/misskey/.config:ro
     - ${DATA}:/misskey/files

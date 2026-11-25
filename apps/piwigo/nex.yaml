@@ -18,8 +18,9 @@ x-nex:
       label: Gallery folder
       help: Nex-managed folder mounted at /gallery. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 80/tcp.
+      label: TCP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 80
   post_install: Provision a compatible MySQL or MariaDB database, then complete the browser installer. Use
@@ -37,4 +38,4 @@ services:
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-20080}:80/tcp
+    - ${PORT:-80}:80/tcp

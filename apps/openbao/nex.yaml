@@ -2,33 +2,85 @@
 x-nex:
   name: OpenBao
   summary: Manage secrets with an initialized OpenBao server
-  description: Select a prepared OpenBao config with a listener and file storage at /openbao/file. Use
-    TLS before allowing clients. Initialize and unseal the server under your own documented key custody
-    process.
+  description: >-
+    OpenBao starts with a default config.hcl in Configuration: a TLS listener on port 8200 using a
+    self-signed certificate generated on first start (renewed on restart once it is older than ten
+    months) and single-node integrated Raft at /openbao/file. The server starts sealed and
+    uninitialized; follow your documented key custody process to initialize it. Edit config.hcl in
+    Configuration to use your own certificate (give it another file name, since nex-tls.* is renewed) or
+    settings; your config.hcl is never overwritten. The server runs as the image's openbao user. Keep existing
+    data and its configuration until you have a verified backup and a supported migration plan.
+    Changing the backend does not migrate existing data.
   category: security
   website: https://github.com/openbao/openbao
   source: https://github.com/openbao/openbao
   docs: https://openbao.org/docs/configuration/
   primary_service: openbao
   scalable: false
+  web:
+    port: 8200
+    scheme: https
+    path: /ui/
   license: MPL-2.0
   options:
     CONFIG:
-      label: Prepared OpenBao configuration
-      help: Keep prepared openbao configuration in this managed folder between restarts.
+      label: OpenBao configuration
+      help: Holds config.hcl and the generated TLS files. A default single-node config is written on first start if config.hcl is missing.
     DATA:
       label: OpenBao storage
-      help: Keep openbao storage in this managed folder between restarts.
+      help: Use an empty folder for a fresh install. Keep existing data and its config for a separately planned migration.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8200.
+      help: The app listens on TCP port 8200 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   openbao:
     image: docker.io/openbao/openbao:latest
-    command:
-    - server
-    - -config=/openbao/config
+    user: "0:0"
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      cfg=/openbao/config
+      if [ ! -e $$cfg/config.hcl ]; then
+        cat > $$cfg/config.hcl <<'HCL'
+      ui            = true
+      disable_mlock = true
+      api_addr      = "https://127.0.0.1:8200"
+      cluster_addr  = "https://127.0.0.1:8201"
+
+      storage "raft" {
+        path    = "/openbao/file"
+        node_id = "nex"
+      }
+
+      listener "tcp" {
+        address       = "0.0.0.0:8200"
+        tls_cert_file = "/openbao/config/nex-tls.crt"
+        tls_key_file  = "/openbao/config/nex-tls.key"
+      }
+      HCL
+      fi
+      # OpenBao has no certificate tool, so take one from its own TLS dev mode and keep it.
+      if [ -z "$$(find $$cfg -name nex-tls.crt -mtime -300)" ]; then
+        mkdir -p /tmp/tls
+        bao server -dev -dev-tls -dev-tls-cert-dir=/tmp/tls -dev-listen-address=127.0.0.1:8299 >/dev/null 2>&1 &
+        dev=$$!
+        i=0
+        until [ -s /tmp/tls/vault-key.pem ]; do
+          i=$$((i + 1))
+          [ $$i -le 60 ] || { echo "could not generate a TLS certificate" >&2; exit 1; }
+          sleep 1
+        done
+        cat /tmp/tls/vault-cert.pem /tmp/tls/vault-ca.pem > $$cfg/nex-tls.crt
+        cp /tmp/tls/vault-key.pem $$cfg/nex-tls.key
+        cp /tmp/tls/vault-ca.pem $$cfg/nex-ca.crt
+        chmod 600 $$cfg/nex-tls.key
+        kill $$dev
+        wait $$dev || true
+      fi
+      chown -R openbao:openbao $$cfg
+      exec docker-entrypoint.sh server
     volumes:
     - ${CONFIG}:/openbao/config
     - ${DATA}:/openbao/file

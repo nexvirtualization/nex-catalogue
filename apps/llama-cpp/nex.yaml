@@ -27,8 +27,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: GGUF models
       help: Select This host. Select or prepare the managed folder containing the chosen model. Include
@@ -46,7 +46,7 @@ services:
     - --api-key
     - ${API_KEY}
     ports:
-    - ${PORT:-8776}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/models:ro
     deploy:

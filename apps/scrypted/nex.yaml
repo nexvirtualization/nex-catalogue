@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 10443.
+      help: The app listens on TCP port 10443 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Camera setup
       help: Select This host. Stores Scrypted settings, credentials and installed plugins. Include this

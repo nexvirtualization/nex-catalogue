@@ -37,7 +37,7 @@ services:
       SERVER_IDENTITY: nex-rust
       RCON_PASSWORD: ${RCON_PASSWORD}
       STARTUP_ARGUMENTS: +rcon.ip 127.0.0.1
-      APP_PORT: "1-"
+      APP_PORT: "-1"
     expose:
       - "28015/udp"
       - "28016/udp"

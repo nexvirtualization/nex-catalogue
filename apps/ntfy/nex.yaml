@@ -26,7 +26,9 @@ x-nex:
       help: Choose a strong password or use Nex Generate. Nex hashes it inside the container; saving a changed password and restarting updates this administrator.
     PORT:
       label: Web port
-      help: Host-published HTTP port; with a dedicated Primary network and host publishing off, connect to the app address on port 80. A reverse proxy must support long-lived streaming requests. Set Public web address to the client-facing URL.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. A reverse proxy must support long-lived streaming requests. Set Public web address to the
+        client-facing URL.
     DATA:
       label: Messages and accounts
       help: Message cache, user database and attachments at /data. Prefer This host for SQLite. Back up this folder and allow the container to write it.
@@ -50,7 +52,7 @@ services:
       NTFY_CACHE_FILE: /data/cache.db
       NTFY_ATTACHMENT_CACHE_DIR: /data/attachments
     ports:
-      - "${PORT:-8090}:80/tcp"
+      - "${PORT:-80}:80/tcp"
     volumes:
       - "${DATA}:/data"
     deploy:

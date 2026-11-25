@@ -2,15 +2,17 @@
 x-nex:
   name: Authentik
   summary: Manage sign-in, identity providers, and application access
-  description: Provision PostgreSQL and give the server and worker shared writable data. Set up the initial
-    akadmin password using the trusted HTTPS URL. Install any external outposts separately.
+  description: Provision PostgreSQL with a dedicated database and user. The server and its background
+    worker run in one container. Set up the initial akadmin password using the trusted HTTPS URL. Install
+    any external outposts separately.
   category: security
   website: https://goauthentik.io/
   source: https://github.com/goauthentik/authentik
   docs: https://docs.goauthentik.io/install-config/install/docker-compose
   primary_service: authentik
-  post_install: Provision PostgreSQL and give the server and worker shared writable data. Set up the initial
-    akadmin password using the trusted HTTPS URL. Install any external outposts separately.
+  post_install: Provision PostgreSQL with a dedicated database and user. The server and its background
+    worker run in one container. Set up the initial akadmin password using the trusted HTTPS URL. Install
+    any external outposts separately.
   license: MIT
   architectures:
   - amd64
@@ -19,28 +21,29 @@ x-nex:
     port: 9000
   options:
     DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
+      label: Database host
+      help: Hostname or Nex connection name of the PostgreSQL service.
     DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Database port
+      help: PostgreSQL port. Leave empty for 5432.
     DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Database name
+      help: Database owned by the Authentik user. Leave empty for authentik.
     DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Database user
+      help: Dedicated PostgreSQL user for Authentik.
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Database password
+      help: Password of that PostgreSQL user.
       type: password
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate and keep it unchanged; it signs sessions and tokens.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Uploaded files and identity assets
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -48,7 +51,7 @@ services:
   authentik:
     image: ghcr.io/goauthentik/server:2026.8.5
     ports:
-    - ${PORT:-23577}:9000/tcp
+    - ${PORT:-9000}:9000/tcp
     volumes:
     - ${DATA}:/data
     environment:
@@ -58,22 +61,31 @@ services:
       AUTHENTIK_POSTGRESQL__USER: ${DB_USER}
       AUTHENTIK_POSTGRESQL__PASSWORD: ${DB_PASSWORD}
       AUTHENTIK_SECRET_KEY: ${SIGNING_SECRET}
-    command:
-    - server
+    # The worker must reach the database the way the server does, and only this service joins the
+    # shared application network, so the worker runs in this container beside the server, on its own
+    # ports. It starts once the server has migrated the database: a worker that waits for the
+    # migration lock is cancelled by any database statement timeout.
+    entrypoint:
+    - dumb-init
+    - --
+    - bash
+    - -c
+    - |
+      ak server &
+      server=$$!
+      until python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:9000/-/health/ready/', timeout=5)" 2>/dev/null; do
+        kill -0 $$server || exit 1
+        sleep 5
+      done
+      AUTHENTIK_LISTEN__HTTP=[::]:9001 AUTHENTIK_LISTEN__HTTPS=[::]:9444 AUTHENTIK_LISTEN__METRICS=[::]:9301 ak worker &
+      wait -n
+      exit 1
+    # The first start migrates the database for minutes; the image's 2 minute grace would stop it mid-way.
+    healthcheck:
+      test: [CMD, ak, healthcheck]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 10m
     deploy:
       replicas: 1
-  worker:
-    image: ghcr.io/goauthentik/server:2026.8.5
-    environment:
-      AUTHENTIK_POSTGRESQL__HOST: ${DB_HOST}
-      AUTHENTIK_POSTGRESQL__PORT: ${DB_PORT:-5432}
-      AUTHENTIK_POSTGRESQL__NAME: ${DB_NAME:-authentik}
-      AUTHENTIK_POSTGRESQL__USER: ${DB_USER}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${DB_PASSWORD}
-      AUTHENTIK_SECRET_KEY: ${SIGNING_SECRET}
-    deploy:
-      replicas: 1
-    command:
-    - worker
-    volumes:
-    - ${DATA}:/data

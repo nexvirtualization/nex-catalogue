@@ -25,14 +25,19 @@ x-nex:
       help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
         percent-encoded password. Nex applications can use the database app connection name and port 5432.
       type: password
+    DB_SSLMODE:
+      label: PostgreSQL TLS mode
+      help: Use disable for a Nex database app on a private network, which does not offer TLS. Use require,
+        verify-ca or verify-full for a server with TLS. Leave empty for disable. A sslmode in the connection
+        string overrides this.
     ENCRYPTION_KEY:
       label: Backup encryption key
       help: Use Generate to create a unique secret for this installation.
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8085.
+      help: The app listens on TCP port 8085 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Local backups
       help: Select This host. Choose managed storage appropriate for the backup retention policy. Include
@@ -42,9 +47,10 @@ services:
     image: eduardolat/pgbackweb:latest
     environment:
       PBW_POSTGRES_CONN_STRING: ${DATABASE_URL}
+      PGSSLMODE: ${DB_SSLMODE:-disable}
       PBW_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     ports:
-    - ${PORT:-8461}:8085/tcp
+    - ${PORT:-8085}:8085/tcp
     volumes:
     - ${DATA}:/backups
     deploy:

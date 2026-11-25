@@ -30,14 +30,21 @@ x-nex:
     APP_KEY:
       label: Laravel application key
       type: password
-      help: Use the upstream-generated Laravel key and preserve it for restore.
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead. Preserve this key for restore.'
     PUBLIC_URL:
       label: Public web address
       help: Full browser-facing URL, including scheme and any port.
+    DATA:
+      label: Application files
+      help: Select This host. Holds uploads, logs and the generated API signing keys. Include this folder
+        in a stopped Nex backup.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   solidtime:
     image: docker.io/solidtime/solidtime:latest
@@ -51,6 +58,22 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       APP_KEY: ${APP_KEY}
       APP_URL: ${PUBLIC_URL}
+      AUTO_DB_MIGRATE: 'true'
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - |
+      cd /var/www/html
+      mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+      chown -R laravel:laravel storage
+      chmod a+w /dev/stdout /dev/stderr || true
+      app() { setpriv --reuid=laravel --regid=laravel --init-groups "$$@"; }
+      [ -f storage/oauth-private.key ] || app php artisan passport:keys
+      exec setpriv --reuid=laravel --regid=laravel --init-groups start-container
+    volumes:
+    - ${DATA}:/var/www/html/storage
     ports:
     - ${PORT:-8000}:8000/tcp
     deploy:

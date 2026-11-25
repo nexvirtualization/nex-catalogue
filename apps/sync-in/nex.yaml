@@ -2,15 +2,14 @@
 x-nex:
   name: Sync-in
   summary: Share and synchronize files across devices
-  description: Prepare environment.yaml in Configuration with a compatible MariaDB connection and the HTTPS
-    browser URL. Sign in with the initial administrator.
+  description: Connect an empty MariaDB database, set the address you open it at and let Generate create the
+    secrets. Sign in with the initial administrator.
   category: management
   website: https://sync-in.com
   source: https://github.com/Sync-in/server
   docs: https://github.com/Sync-in/server/blob/main/docker/docker-compose.yaml
   primary_service: sync-in
-  post_install: Prepare environment.yaml in Configuration with a compatible MariaDB connection and the HTTPS
-    browser URL. Sign in with the initial administrator.
+  post_install: Sign in with the initial administrator, then change its password.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -18,19 +17,39 @@ x-nex:
   web:
     port: 8080
   options:
+    DATABASE_URL:
+      label: MariaDB URL
+      type: password
+      help: 'Connection URL of an empty MariaDB database, for example mysql://user:password@host:3306/syncin.
+        Percent-encode special characters in credentials.'
     ADMIN_USER:
       label: Admin user
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Login name of the first administrator, created once when the database is empty. Leave empty
+        for admin.
     ADMIN_PASSWORD:
       label: Admin password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. Password of the first administrator, set once when the database is empty.
+      type: password
+    PUBLIC_URL:
+      label: Public address
+      help: Full address people use to open Sync-in, for example https://files.example.com. Used in
+        notification links. Leave empty for http://localhost:8080.
+    ENCRYPTION_KEY:
+      label: Encryption key
+      help: Use Generate and keep it. Encrypts users' two-factor secrets; changing it later invalidates them.
+      type: password
+    ACCESS_SECRET:
+      label: Access token secret
+      help: Use Generate. Signs access tokens and cookies.
+      type: password
+    REFRESH_SECRET:
+      label: Refresh token secret
+      help: Use Generate. Signs refresh tokens and cookies.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
-    CONFIG:
-      label: Prepared Sync-in configuration
-      help: Managed directory mounted at /app/environment. Choose storage readable by the application.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Workspace files
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
@@ -38,11 +57,21 @@ services:
   sync-in:
     image: docker.io/syncin/server:latest
     ports:
-    - ${PORT:-23582}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      cp /app/environment/environment.dist.yaml /app/environment/environment.yaml
+      exec ./entrypoint.sh ./sync-in-server.sh
     volumes:
-    - ${CONFIG}:/app/environment:ro
     - ${DATA}:/app/data
     environment:
+      SYNCIN_MYSQL_URL: ${DATABASE_URL}
+      SYNCIN_SERVER_PUBLICURL: ${PUBLIC_URL:-http://localhost:8080}
+      SYNCIN_AUTH_ENCRYPTIONKEY: ${ENCRYPTION_KEY}
+      SYNCIN_AUTH_TOKEN_ACCESS_SECRET: ${ACCESS_SECRET}
+      SYNCIN_AUTH_TOKEN_REFRESH_SECRET: ${REFRESH_SECRET}
       INIT_ADMIN: 'true'
       INIT_ADMIN_LOGIN: ${ADMIN_USER:-admin}
       INIT_ADMIN_PASSWORD: ${ADMIN_PASSWORD}

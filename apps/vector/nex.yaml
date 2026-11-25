@@ -2,8 +2,13 @@
 x-nex:
   name: Vector
   summary: Collect, transform and forward observability events
-  description: Select the prepared configuration folder containing vector.yaml. Define the authenticated
-    sources and sinks your pipeline should use, and configure log delivery before startup.
+  description: >-
+    On first start Vector writes a starter pipeline to vector.yaml in the configuration folder. It never
+    replaces a vector.yaml that defines sources, so your own pipeline survives restarts. The starter reads
+    Vector's own logs and metrics and prints them to the application log, so it runs with no setup. Edit
+    vector.yaml to define the authenticated sources and sinks your pipeline should use, then restart the
+    application. Keep credentials out of the file by
+    referencing environment variables.
   category: monitoring
   website: https://github.com/vectordotdev/vector
   source: https://github.com/vectordotdev/vector
@@ -13,17 +18,37 @@ x-nex:
   license: MPL-2.0
   options:
     CONFIG:
-      label: Prepared pipeline configuration
-      help: Keep prepared pipeline configuration in this managed folder between restarts.
+      label: Pipeline configuration
+      help: Holds vector.yaml. A starter pipeline is written on first start if the file is missing or defines no
+        sources; edit it freely and keep it here between restarts.
     DATA:
       label: Pipeline buffers
       help: Keep pipeline buffers in this managed folder between restarts.
 services:
   vector:
     image: docker.io/timberio/vector:latest-debian
-    command:
-    - --config
-    - /etc/vector/vector.yaml
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if ! grep -qE '^[[:space:]]*"?sources"?[[:space:]]*:' /etc/vector/vector.yaml 2>/dev/null; then
+        cat > /etc/vector/vector.yaml <<'VECTOR'
+      data_dir: /var/lib/vector
+      sources:
+        own_logs:
+          type: internal_logs
+        own_metrics:
+          type: internal_metrics
+          scrape_interval_secs: 60
+      sinks:
+        console:
+          type: console
+          inputs: [own_logs, own_metrics]
+          encoding:
+            codec: json
+      VECTOR
+      fi
+      exec /usr/bin/vector --config /etc/vector/vector.yaml
     volumes:
     - ${CONFIG}:/etc/vector
     - ${DATA}:/var/lib/vector

@@ -37,13 +37,14 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   zabbix:
     image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest
     ports:
-    - ${PORT:-23595}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       DB_SERVER_HOST: ${DB_HOST}
       DB_SERVER_PORT: ${DB_PORT:-5432}

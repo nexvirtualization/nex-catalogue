@@ -34,8 +34,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 1111.
+      help: The app listens on TCP port 1111 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Blinko files
       help: Select This host. Stores local uploaded resources. Include this folder in a stopped Nex backup.
@@ -49,7 +49,7 @@ services:
       NEXTAUTH_URL: ${PUBLIC_URL}
       NEXT_PUBLIC_BASE_URL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-8409}:1111/tcp
+    - ${PORT:-1111}:1111/tcp
     volumes:
     - ${DATA}:/app/.blinko
     deploy:

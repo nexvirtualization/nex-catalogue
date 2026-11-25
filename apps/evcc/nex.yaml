@@ -13,13 +13,13 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /root/.evcc.
     PORT:
-      label: Published 7070/tcp port
-      help: Host port for application listener 7070/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 7070/tcp
+      help: The app listens on TCP port 7070 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 8887/tcp port
-      help: Host port for application listener 8887/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8887/tcp
+      help: The app listens on TCP port 8887 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Set up charging and meters in the web UI. Enter device IP addresses where multicast discovery
     is unavailable. Keep Data on This host for SQLite.
   web:
@@ -32,5 +32,5 @@ services:
     volumes:
     - ${DATA}:/root/.evcc
     ports:
-    - ${PORT:-19882}:7070/tcp
-    - ${PORT_2:-20882}:8887/tcp
+    - ${PORT:-7070}:7070/tcp
+    - ${PORT_2:-8887}:8887/tcp

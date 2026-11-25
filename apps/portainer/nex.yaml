@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9443.
+      help: The app listens on TCP port 9443 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Portainer state
       help: Select This host. Stores remote environment credentials, users and preferences. Include this

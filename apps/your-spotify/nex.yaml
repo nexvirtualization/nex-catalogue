@@ -32,12 +32,13 @@ x-nex:
       type: password
       help: Connection URL for the prepared MongoDB instance.
     API_PORT:
-      label: Backend host port
-      help: Reachable API port when host publication is enabled.
+      label: Backend port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   your-spotify:
     image: docker.io/yooooomi/your_spotify_client:latest

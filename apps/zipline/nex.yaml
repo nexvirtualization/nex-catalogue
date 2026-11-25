@@ -27,12 +27,14 @@ x-nex:
       type: password
     SESSION_SECRET:
       label: Session signing secret
-      help: Use Generate to create a unique secret for this installation.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Shared files
       help: Select This host. Stores user uploads. Include this folder in a stopped Nex backup.
@@ -53,7 +55,7 @@ services:
       DATASOURCE_TYPE: local
       DATASOURCE_LOCAL_DIRECTORY: /zipline/uploads
     ports:
-    - ${PORT:-8410}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/zipline/uploads
     - ${PUBLIC}:/zipline/public

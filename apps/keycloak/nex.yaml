@@ -2,13 +2,11 @@
 x-nex:
   name: Keycloak
   summary: Single sign-on and identity management backed by PostgreSQL
-  description: >-
-    OpenID Connect and SAML identity provider running in production mode. All copies
-    use the same external PostgreSQL database for application state and cluster discovery.
-    Start with one copy to bootstrap the administrator, then increase Copies on the
-    Docker network. Terminate TLS at a reverse proxy. If the proxy is on the shared
-    application network, use the app connection name and port 8080 with host publishing
-    off. Keep direct HTTP access private. Back up PostgreSQL separately before upgrading.
+  description: OpenID Connect and SAML identity provider running in production mode. All copies use the same
+    external PostgreSQL database for application state and cluster discovery. Start with one copy to bootstrap
+    the administrator, then increase Copies on the Docker network. Terminate TLS at a reverse proxy. If the
+    proxy is on the shared application network, use the app connection name and port 8080. Keep direct HTTP
+    access private. Back up PostgreSQL separately before upgrading.
   category: security
   website: https://www.keycloak.org/
   source: https://github.com/keycloak/keycloak
@@ -47,7 +45,8 @@ x-nex:
       help: Generate a strong temporary password. Changing this field after bootstrap does not reset an account.
     PORT:
       label: HTTP backend port
-      help: When host publishing is enabled, keep this port private and use an HTTPS reverse proxy for client access. A proxy on the shared application network uses internal port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -67,7 +66,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: "${ADMIN_USER:-admin}"
       KC_BOOTSTRAP_ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
     ports:
-      - "${PORT:-8091}:8080/tcp"
+      - "${PORT:-8080}:8080/tcp"
     healthcheck:
       test:
         - CMD

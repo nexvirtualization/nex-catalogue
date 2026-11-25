@@ -46,8 +46,9 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8053 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8053 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Cloud files
       help: Managed directory mounted at /app/data-files. Choose storage writable by the application.
@@ -55,7 +56,7 @@ services:
   bewcloud:
     image: ghcr.io/bewcloud/bewcloud:v4.23.1
     ports:
-    - ${PORT:-23502}:8053/tcp
+    - ${PORT:-8053}:8053/tcp
     volumes:
     - ${DATA}:/app/data-files
     environment:

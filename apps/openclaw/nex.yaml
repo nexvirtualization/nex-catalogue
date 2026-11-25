@@ -2,8 +2,9 @@
 x-nex:
   name: OpenClaw
   summary: Run a private assistant gateway for configured model providers
-  description: Select a folder initialized by OpenClaw onboarding. Configure allowed browser origins,
-    keep the endpoint private, and preserve the gateway token separately.
+  description: Starts the gateway with the access token you set. Keep the endpoint private, preserve the
+    gateway token separately, and add your browser origin to the gateway settings in the data folder
+    before opening the control page from another address.
   category: ai
   website: https://github.com/openclaw/openclaw
   source: https://github.com/openclaw/openclaw
@@ -19,23 +20,25 @@ x-nex:
       type: password
       help: Use Nex Generate or match the token used during onboarding.
     DATA:
-      label: Prepared OpenClaw settings and workspace
-      help: Keep prepared openclaw settings and workspace in this managed folder between restarts.
+      label: OpenClaw settings and workspace
+      help: Select This host. Keeps the gateway settings and workspace between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 18789.
+      help: The app listens on TCP port 18789 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   openclaw:
     image: ghcr.io/openclaw/openclaw:latest
-    command:
-    - node
-    - dist/index.js
-    - gateway
-    - --bind
-    - lan
-    - --port
-    - '18789'
+    # The image runs as the node user, which cannot write Nex's root-owned folder, so this starts as
+    # root only to hand the folder over and then drops back to node.
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown node:node /home/node/.openclaw
+      exec setpriv --reuid=node --regid=node --init-groups tini -s -- node /app/docker-entrypoint.mjs \
+        node dist/index.js gateway --allow-unconfigured --bind lan --port 18789
     environment:
       OPENCLAW_GATEWAY_TOKEN: ${GATEWAY_TOKEN}
       HOME: /home/node
@@ -43,5 +46,9 @@ services:
     - ${DATA}:/home/node/.openclaw
     ports:
     - ${PORT:-18789}:18789/tcp
+    healthcheck:
+      # The image checks only every three minutes, which leaves a fresh start waiting for its first result.
+      interval: 30s
+      start_period: 3m
     deploy:
       replicas: 1

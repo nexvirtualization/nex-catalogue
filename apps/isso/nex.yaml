@@ -2,8 +2,10 @@
 x-nex:
   name: Isso
   summary: Host a small comment system for your site
-  description: Select a prepared Isso configuration for your own web origin. Set the SQLite database
-    path to /db/comments.db and configure moderation before allowing comments.
+  description: Isso starts with a working isso.cfg written to the configuration folder on first start, using the
+    site origin and administrator password you set when installing. Comments wait for approval in /admin.
+    Edit isso.cfg to change moderation, mail or limits; Nex writes it only when it is missing and never
+    overwrites yours.
   category: communication
   website: https://github.com/isso-comments/isso
   source: https://github.com/isso-comments/isso
@@ -13,20 +15,51 @@ x-nex:
   license: MIT
   web:
     port: 8080
+    path: /admin/
   options:
+    SITE_ORIGIN:
+      label: Site origin
+      help: Full origin of the website that shows the comments, such as https://blog.example.org (scheme, host
+        and port, no path). Only used the first time; later change host in isso.cfg.
+    ADMIN_PASSWORD:
+      label: Moderation password
+      type: password
+      help: Use Generate. Signs in to /admin to approve or delete comments. Written to isso.cfg on first start;
+        later change password in [admin] of isso.cfg.
     CONFIG:
-      label: Prepared Isso configuration
-      help: Folder containing isso.cfg with your configured site origin.
+      label: Isso configuration
+      help: Keep isso.cfg in this managed folder between restarts. A default one is written on first start.
     DATA:
       label: Comment database
       help: Keep comment database in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   isso:
     image: ghcr.io/isso-comments/isso:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /config/isso.cfg ]; then
+        cat > /config/isso.cfg <<ISSO
+      [general]
+      dbpath = /db/comments.db
+      host = $$SITE_ORIGIN
+      [moderation]
+      enabled = true
+      [admin]
+      enabled = true
+      password = $$ADMIN_PASSWORD
+      ISSO
+      fi
+      exec /isso/bin/gunicorn -b 0.0.0.0:8080 -w 4 --preload --worker-tmp-dir /dev/shm isso.run
+    environment:
+      SITE_ORIGIN: ${SITE_ORIGIN}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ISSO_SETTINGS: /config/isso.cfg
     volumes:
     - ${CONFIG}:/config
     - ${DATA}:/db

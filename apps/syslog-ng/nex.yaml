@@ -17,8 +17,9 @@ x-nex:
   - arm64
   options:
     SYSLOG_PORT:
-      label: Published syslog TCP port
-      help: Host-published port for the internal 5514/tcp endpoint.
+      label: Syslog TCP port
+      help: The app listens on TCP port 5514 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: syslog-ng configuration
       help: Managed directory mounted at /config. Choose storage writable by the application.
@@ -29,7 +30,7 @@ services:
   syslog-ng:
     image: lscr.io/linuxserver/syslog-ng:latest
     ports:
-    - ${SYSLOG_PORT:-21264}:5514/tcp
+    - ${SYSLOG_PORT:-5514}:5514/tcp
     volumes:
     - ${CONFIG}:/config
     - ${LOGS}:/var/log

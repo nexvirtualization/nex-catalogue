@@ -23,8 +23,8 @@ x-nex:
       help: IANA time zone for records and backups.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Filament inventory
       help: Select This host. Holds the SQLite database and app backups. Include this folder in a stopped
@@ -35,7 +35,7 @@ services:
     environment:
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8119}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/home/app/.local/share/spoolman
     deploy:

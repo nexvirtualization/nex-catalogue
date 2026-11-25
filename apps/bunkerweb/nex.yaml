@@ -13,21 +13,25 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /data.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 8443/tcp port
-      help: Host port for application listener 8443/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8443/tcp
+      help: The app listens on TCP port 8443 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published 8443/udp port
-      help: Host port for application listener 8443/udp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Complete the built-in setup wizard using a trusted network. Use Nex service names for the protected
-    backends. Ensure the Data folder is writable by UID and GID 101.
+      label: Port 8443/udp
+      help: The app listens on UDP port 8443 on its default Docker network. Nex does not publish it on host
+        addresses.
+    UI_PORT:
+      label: 7000/tcp Web UI port
+      help: The app listens on TCP port 7000 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Complete the built-in setup wizard on the Web UI (port 7000) using a trusted network. Use
+    Nex service names for the protected backends. Ensure the Data folder is writable by UID and GID 101.
   web:
-    port: 8080
+    port: 7000
 services:
   bunkerweb:
     image: docker.io/bunkerity/bunkerweb-all-in-one:latest
@@ -39,6 +43,7 @@ services:
     volumes:
     - ${DATA}:/data
     ports:
-    - ${PORT:-19913}:8080/tcp
-    - ${PORT_2:-20913}:8443/tcp
+    - ${PORT:-8080}:8080/tcp
+    - ${PORT_2:-8443}:8443/tcp
     - ${PORT_3:-21913}:8443/udp
+    - ${UI_PORT:-7000}:7000/tcp

@@ -18,8 +18,9 @@ x-nex:
     port: 4173
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 4173 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 4173 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Prepared dashboard configuration
       help: Managed directory mounted at /app/src/config. Choose storage readable by the application.
@@ -27,7 +28,7 @@ services:
   starbase-80:
     image: ghcr.io/notclickable-jordan/starbase-80:latest
     ports:
-    - ${PORT:-20255}:4173/tcp
+    - ${PORT:-4173}:4173/tcp
     volumes:
     - ${CONFIG}:/app/src/config:ro
     deploy:

@@ -28,7 +28,8 @@ x-nex:
       help: Comma-separated Java Edition usernames. Edit this list in Nex to grant or revoke access.
     MODPACK:
       label: Modrinth modpack
-      help: Enter the Modrinth project slug or exact modpack release URL.
+      help: Enter the Modrinth project slug or exact modpack release URL. Leave empty for cobblemon-fabric,
+        the official Cobblemon modpack for Fabric.
     DATA:
       label: World, extensions and settings
       help: Choose This host and include this folder in stopped backups.
@@ -45,7 +46,7 @@ services:
       WHITELIST: ${PLAYERS}
       ENABLE_RCON: 'false'
       ONLINE_MODE: 'true'
-      MODRINTH_MODPACK: ${MODPACK}
+      MODRINTH_MODPACK: ${MODPACK:-cobblemon-fabric}
     expose:
       - 25565/tcp
     volumes:

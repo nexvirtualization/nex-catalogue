@@ -19,12 +19,12 @@ x-nex:
       help: The local flag store and persisted runtime data.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     GRPC_PORT:
       label: gRPC API port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9000.
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   flipt:
     image: ghcr.io/flipt-io/flipt:v2

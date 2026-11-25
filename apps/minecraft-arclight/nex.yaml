@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 x-nex:
   name: Minecraft Arclight
-  summary: Host Forge mods and compatible Bukkit plugins together
+  summary: Host NeoForge mods and compatible Bukkit plugins together
   description: >-
     Keep the server folders on This host and choose a registered primary network that players can
     reach. Join using the app’s Primary address on TCP 25565 in Java Edition. Includes the Arclight
-    FeudalKings Forge release for Minecraft 1.21.1. Check Arclight’s compatibility for the mods and
-    plugins you install. Make a stopped backup before applying updates.
+    FeudalKings NeoForge release for Minecraft 1.21.1. Check Arclight’s compatibility for the
+    NeoForge mods and plugins you install. Make a stopped backup before applying updates.
   category: games
   website: https://github.com/IzzelAliz/Arclight
   source: https://github.com/itzg/docker-minecraft-server
@@ -42,8 +42,8 @@ services:
       EXISTING_WHITELIST_FILE: SYNCHRONIZE
       WHITELIST: ${PLAYERS}
       VERSION: 1.21.1
-      HYBRIDTYPE: forge
-      CUSTOM_SERVER: https://github.com/IzzelAliz/Arclight/releases/download/FeudalKings/1.0.1/arclight-forge-1.21.1-1.0.1-8ec9529.jar
+      HYBRIDTYPE: neoforge
+      CUSTOM_SERVER: https://github.com/IzzelAliz/Arclight/releases/download/FeudalKings/1.0.1/arclight-neoforge-1.21.1-1.0.1-8ec9529.jar
     expose:
       - 25565/tcp
     volumes:

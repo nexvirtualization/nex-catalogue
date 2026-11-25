@@ -19,8 +19,10 @@ x-nex:
     port: 80
   options:
     APP_KEY:
-      label: App key
-      help: Use the credential or secret required by the upstream configuration.
+      label: Encryption secret
+      help: Use Generate. Mixpost's encryption key is derived from this secret, or enter a ready-made
+        Laravel key that starts with base64:. Keep it with your backup, because changing it makes stored
+        social account tokens unreadable.
       type: password
     PUBLIC_URL:
       label: Public url
@@ -49,11 +51,12 @@ x-nex:
       help: Enter the deployment value described in the upstream setup guide.
     REDIS_PASSWORD:
       label: Redis password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Password of the Redis service. Leave empty when Redis has no password.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Media and app state
       help: Managed directory mounted at /var/www/html/storage/app. Choose storage writable by the application.
@@ -64,10 +67,19 @@ services:
   mixpost:
     image: docker.io/inovector/mixpost:v2.6.0
     ports:
-    - ${PORT:-23546}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html/storage/app
     - ${LOGS}:/var/www/html/storage/logs
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      case "$$APP_KEY" in
+        base64:*) ;;
+        *) APP_KEY="base64:$$(printf %s "$$APP_KEY" | openssl dgst -sha256 -binary | openssl base64)"; export APP_KEY ;;
+      esac
+      exec start.sh
     environment:
       APP_NAME: Mixpost
       APP_KEY: ${APP_KEY}
@@ -80,6 +92,6 @@ services:
       DB_USERNAME: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: ${REDIS_HOST}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     deploy:
       replicas: 1

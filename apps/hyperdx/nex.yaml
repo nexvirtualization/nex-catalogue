@@ -23,16 +23,16 @@ x-nex:
       help: Keep hyperdx user data in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     OTLP_GRPC:
       label: OTLP gRPC ingest
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4317.
+      help: The app listens on TCP port 4317 on its default Docker network. Nex does not publish it on host
+        addresses.
     OTLP_HTTP:
       label: OTLP HTTP ingest
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4318.
+      help: The app listens on TCP port 4318 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   hyperdx:
     image: docker.io/clickhouse/clickstack-all-in-one:latest

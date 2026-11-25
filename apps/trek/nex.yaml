@@ -19,11 +19,14 @@ x-nex:
   options:
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Enter 64 hexadecimal characters from 32 cryptographically random bytes.
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: hex, length: 64}
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Travel plans and database
       help: Managed directory mounted at /app/data. Choose storage writable by the application.
@@ -34,7 +37,7 @@ services:
   trek:
     image: docker.io/mauriceboe/trek:latest
     ports:
-    - ${PORT:-20215}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/app/data
     - ${UPLOADS}:/app/uploads

@@ -28,9 +28,9 @@ x-nex:
       label: Uploads folder
       help: Choose the Nex-managed folder mounted at /listmonk/uploads.
     PORT:
-      label: Published 9000/tcp port
-      help: Host port for application listener 9000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 9000/tcp
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision an empty PostgreSQL database and a role with schema privileges before installing.
     Open the setup page to create the super administrator and configure the SMTP relay.
   web:
@@ -51,7 +51,7 @@ services:
     volumes:
     - ${UPLOADS}:/listmonk/uploads
     ports:
-    - ${PORT:-19482}:9000/tcp
+    - ${PORT:-9000}:9000/tcp
     command:
     - sh
     - -ec

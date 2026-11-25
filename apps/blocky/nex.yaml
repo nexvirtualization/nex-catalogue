@@ -8,32 +8,62 @@ x-nex:
   category: networking
   source: https://github.com/0xERR0R/blocky
   website: https://0xerr0r.github.io/blocky/latest/
-  docs: https://0xerr0r.github.io/blocky/latest/installation/
+  docs: https://0xerr0r.github.io/blocky/latest/configuration/
   primary_service: blocky
   options:
     CONFIG:
       label: Config folder
-      help: Choose the Nex-managed folder mounted at /nex-config.
+      help: Select This host. A starter config.yml (public DNS-over-TLS upstream, DNS on port 53) is written
+        here on first start if the folder has none. Edit it in Files and restart to change it.
     PORT:
-      label: Published 53/tcp port
-      help: Host port for application listener 53/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 53/tcp
+      help: The app listens on TCP port 53 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 53/udp port
-      help: Host port for application listener 53/udp. Leave host publishing off to use only the assigned app
-        address.
-  post_install: Put a valid config.yml in Configuration using the upstream config guide. For standard DNS port
-    53, select a dedicated primary network that your home network can reach.
+      label: Port 53/udp
+      help: The app listens on UDP port 53 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: A starter config.yml is created in the Config folder on first start. Edit it in Files and
+    restart Blocky to set your own upstream resolver or add block lists, following the upstream configuration
+    guide. Keep DNS reachable only from trusted clients. For standard DNS port 53, use a dedicated Primary
+    network reachable from those clients.
 services:
   blocky:
     image: ghcr.io/0xerr0r/blocky:latest
     deploy:
       replicas: 1
+      # Retry quickly: Blocky may start before the helper below has written config.yml on first start.
+      restart_policy:
+        condition: any
+        delay: 1s
+    volumes:
+    - ${CONFIG}:/nex-config:ro
+    ports:
+    - ${PORT:-53}:53/tcp
+    - ${PORT_2:-20748}:53/udp
+    environment:
+      BLOCKY_CONFIG_FILE: /nex-config/config.yml
+  # The Blocky image has no shell, so this helper writes the starter config.yml if it is missing and waits.
+  config-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /nex-config/config.yml ]; then
+        cat > /nex-config/config.yml.new <<'BLOCKY'
+      upstreams:
+        groups:
+          default:
+            - tcp-tls:dns.quad9.net:853
+      ports:
+        dns: 53
+      BLOCKY
+        mv /nex-config/config.yml.new /nex-config/config.yml
+      fi
+      chmod 644 /nex-config/config.yml
+      exec tail -f /dev/null
     volumes:
     - ${CONFIG}:/nex-config
-    ports:
-    - ${PORT:-19748}:53/tcp
-    - ${PORT_2:-20748}:53/udp
-    command:
-    - --config
-    - /nex-config/config.yml
+    deploy:
+      replicas: 1

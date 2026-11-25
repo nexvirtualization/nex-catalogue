@@ -22,8 +22,8 @@ x-nex:
       help: Baïkal SQLite data and local state.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   baikal:
     image: ghcr.io/aalmenar/baikal:0.13.0-nginx

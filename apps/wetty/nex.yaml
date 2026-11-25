@@ -31,8 +31,8 @@ x-nex:
       help: SSH listener port.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   wetty:
     image: wettyoss/wetty:latest
@@ -44,6 +44,6 @@ services:
     - --ssh-port
     - ${SSH_PORT:-22}
     ports:
-    - ${PORT:-8377}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     deploy:
       replicas: 1

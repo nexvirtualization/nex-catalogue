@@ -15,8 +15,9 @@ x-nex:
       label: Memos folder
       help: Nex-managed folder mounted at /var/opt/memos. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 5230/tcp.
+      label: TCP port
+      help: The app listens on TCP port 5230 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 5230
   post_install: Create the first user on a trusted network. The SQLite database and uploads are in the Memos

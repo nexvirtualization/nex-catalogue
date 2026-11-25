@@ -33,8 +33,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   one-time-secret:
     image: onetimesecret/onetimesecret:latest
@@ -45,6 +45,6 @@ services:
       RACK_ENV: production
       SECRET: ${APP_SECRET}
     ports:
-    - ${PORT:-8427}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     deploy:
       replicas: 1

@@ -20,9 +20,9 @@ x-nex:
     PUBLIC_URL:
       label: Public url
     PORT:
-      label: Published 12345/tcp port
-      help: Host port for application listener 12345/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 12345/tcp
+      help: The app listens on TCP port 12345 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a PostgreSQL database using its own user. Sign in on a trusted network and replace
     the upstream initial administrator password.
   web:
@@ -38,4 +38,4 @@ services:
       ALLOW_REGISTER: 'false'
       PUBLIC_URL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-19473}:12345/tcp
+    - ${PORT:-12345}:12345/tcp

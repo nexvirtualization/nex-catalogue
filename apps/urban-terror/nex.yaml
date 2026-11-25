@@ -24,6 +24,24 @@ x-nex:
 services:
   urban-terror:
     image: ghcr.io/ich777/urbanterror:latest
+    # The download site only hands out the updater to a client that keeps its session cookie, which
+    # the image's own script does not. The image runs /opt/scripts/user.sh before it starts the
+    # server, so fetch the updater there; the image then downloads the game itself.
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        cat > /opt/scripts/user.sh <<'SCRIPT'
+        #!/bin/bash
+        if ! ls "$${DATA_DIR}"/Ur*.sh > /dev/null 2>&1; then
+          page=$$(wget -qO- --save-cookies /tmp/urt.cookies --keep-session-cookies "$${DL_URL}")
+          link=$$(echo "$$page" | grep "tar.gz?key=" | cut -d '"' -f4 | cut -d '=' -f2-)
+          wget -qO- --load-cookies /tmp/urt.cookies "$$link" |
+            tar -xz -C "$${DATA_DIR}" --strip-components=1
+        fi
+        SCRIPT
+        chmod 755 /opt/scripts/user.sh
+        exec /opt/scripts/start.sh
     environment:
       DL_URL: https://www.urbanterror.info/downloads/software/urt/43/UrbanTerror43_ded.tar.gz
       CONFIG_NAME: server.cfg

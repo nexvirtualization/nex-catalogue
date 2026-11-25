@@ -35,17 +35,19 @@ x-nex:
       label: Redis address
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3333 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3333 on its default Docker network. Nex does not publish it on host
+        addresses.
     DHT_UDP_PORT:
-      label: Published DHT UDP port
-      help: Host-published port for the internal 3334/udp endpoint.
+      label: DHT UDP port
+      help: The app listens on UDP port 3334 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bitmagnet:
     image: ghcr.io/bitmagnet-io/bitmagnet:v0.10.1
     ports:
-    - ${PORT:-23484}:3333/tcp
-    - ${DHT_UDP_PORT:-24484}:3334/udp
+    - ${PORT:-3333}:3333/tcp
+    - ${DHT_UDP_PORT:-3334}:3334/udp
     environment:
       POSTGRES_HOST: ${DB_HOST}
       POSTGRES_NAME: ${DB_NAME:-bitmagnet}

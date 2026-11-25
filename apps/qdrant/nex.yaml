@@ -15,9 +15,9 @@ x-nex:
   primary_service: qdrant
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 6333 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_KEY:
       label: API key
       help: Generate a key and configure clients to send it in the api-key header.

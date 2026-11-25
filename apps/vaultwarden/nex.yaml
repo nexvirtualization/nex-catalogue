@@ -33,8 +33,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: HTTP host endpoint when host publication is enabled. Another Nex app such as Nginx Proxy Manager uses
-        Name inside applications:80 instead of this host port. A dedicated primary address uses internal port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Vault data
       help: Keep Vault data on This host; Nex creates and initializes the /data volume. Include it in a stopped
@@ -48,7 +48,7 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN}
       SIGNUPS_ALLOWED: 'false'
     ports:
-    - ${PORT:-8222}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/data
     deploy:

@@ -25,11 +25,12 @@ x-nex:
       help: Keep audiobooks in this managed folder between restarts.
     DATA:
       label: Playback state and cache
-      help: Keep playback state and cache in this managed folder between restarts.
+      help: Keep playback state and cache in this managed folder between restarts. If using a share,
+        select a folder writable by Audioserve (UID 1000).
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   audioserve:
     image: docker.io/izderadicka/audioserve:latest
@@ -37,9 +38,10 @@ services:
     - /audiobooks
     environment:
       AUDIOSERVE_SHARED_SECRET: ${SHARED_SECRET}
+      AUDIOSERVE_DATA_DIR: /home/audioserve
     volumes:
     - ${LIBRARY}:/audiobooks
-    - ${DATA}:/home/audioserve/.audioserve
+    - ${DATA}:/home/audioserve
     ports:
     - ${PORT:-3000}:3000/tcp
     deploy:

@@ -30,7 +30,7 @@ x-nex:
       help: >-
         Choose This host and include this folder in stopped backups.
 services:
-  minecraft-attack-of-the-b-team:
+  minecraft-b-team:
     image: ghcr.io/itzg/minecraft-server:java8
     environment:
       EULA: ${EULA}

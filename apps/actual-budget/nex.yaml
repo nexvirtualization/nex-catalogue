@@ -3,9 +3,7 @@ x-nex:
   name: Actual Budget
   summary: Plan your spending with envelope budgeting
   description: >-
-    Personal budgeting with local-first accounts and server synchronization. Put it behind HTTPS
-    for browser access from other devices; the browser requires a secure context. Set the server
-    password on first access before other people can reach the setup page.
+    Personal budgeting with local-first accounts and server synchronization.
   category: finance
   website: https://actualbudget.org
   source: https://github.com/actualbudget/actual
@@ -13,10 +11,22 @@ x-nex:
   scalable: false
   primary_service: actual
   tags: [budget, finance, household]
+  web:
+    port: 5006
+    scheme: http
+  post_install: >-
+    The address reported by Nex is the HTTP backend. For browser access from another device,
+    use a reverse proxy with a browser-trusted HTTPS certificate and preserve Actual's
+    cross-origin isolation headers. From the Applications network, forward to port 5006
+    on the Name inside applications. From outside that network, use the reachable HTTP
+    address reported by Nex.
+  first_sign_in: >-
+    Open the proxy's HTTPS URL and set the server password before sharing access.
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port; a dedicated app address uses port 5006 when host publishing is off. Connect an HTTPS proxy to Name inside applications:5006; browser access from other devices requires HTTPS.
+      help: The app listens on TCP port 5006 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Budgets and server settings
       help: Persistent budget files and server database at /data. Prefer This host for SQLite and back up this folder as well as exporting budgets regularly.

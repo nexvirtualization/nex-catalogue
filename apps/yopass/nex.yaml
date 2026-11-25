@@ -21,15 +21,15 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 1337.
+      help: The app listens on TCP port 1337 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   yopass:
     image: jhaals/yopass:latest
     command:
     - --memcached=cache:11211
     ports:
-    - ${PORT:-8379}:1337/tcp
+    - ${PORT:-1337}:1337/tcp
     deploy:
       replicas: 1
   cache:

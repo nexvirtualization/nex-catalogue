@@ -23,8 +23,8 @@ x-nex:
       help: Documents, assets and configuration. The container user must be able to write to this folder.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 6806.
+      help: The app listens on TCP port 6806 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   siyuan:
     image: docker.io/b3log/siyuan:latest

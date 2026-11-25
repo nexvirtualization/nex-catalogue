@@ -23,8 +23,8 @@ x-nex:
       help: ConvertX SQLite data, uploads and outputs.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   convertx:
     image: ghcr.io/c4illin/convertx:latest

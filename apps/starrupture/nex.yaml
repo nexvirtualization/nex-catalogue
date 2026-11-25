@@ -57,6 +57,10 @@ services:
     stop_grace_period: 90s
     deploy:
       replicas: 1
+      # Steam sometimes refuses the anonymous download ("Missing configuration"); retry instead of stopping.
+      restart_policy:
+        condition: on-failure
+        delay: 30s
     entrypoint:
       - /bin/bash
       - -ec

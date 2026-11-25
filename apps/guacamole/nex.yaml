@@ -40,13 +40,14 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   guacamole:
     image: docker.io/guacamole/guacamole:latest
     ports:
-    - ${PORT:-23537}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       GUACD_HOSTNAME: ${GUACD_HOST}
       GUACD_PORT: ${GUACD_PORT:-4822}

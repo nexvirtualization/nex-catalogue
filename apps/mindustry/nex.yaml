@@ -33,6 +33,7 @@ services:
     stop_grace_period: 90s
     deploy:
       replicas: 1
+    entrypoint: [/usr/bin/tini, -g, --]
     command:
       - /bin/bash
       - -ec

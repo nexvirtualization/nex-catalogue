@@ -18,9 +18,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 8888/tcp port
-      help: Host port for application listener 8888/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8888/tcp
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Supply a space-separated set of trusted client subnets and use an alphanumeric proxy password.
     Configure authorized clients to use the app address and proxy credentials.
 services:
@@ -34,4 +34,4 @@ services:
       AUTH_PASSWORD: ${PROXY_PASSWORD}
       LOG_LEVEL: Notice
     ports:
-    - ${PORT:-19963}:8888/tcp
+    - ${PORT:-8888}:8888/tcp

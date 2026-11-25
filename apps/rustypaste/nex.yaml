@@ -2,8 +2,9 @@
 x-nex:
   name: rustypaste
   summary: Receive file and text pastes through an HTTP endpoint
-  description: Prepare config.toml with your server limits and access policy. Put it in the managed
-    configuration folder and use an authenticating proxy for shared access.
+  description: A default config.toml is written to the configuration folder on first start. Uploads need
+    the token you set when installing; reading a paste needs none. Edit config.toml to change limits or
+    the landing page; it is written only when missing and never overwritten.
   category: tools
   website: https://github.com/orhun/rustypaste
   source: https://github.com/orhun/rustypaste
@@ -12,25 +13,71 @@ x-nex:
   scalable: false
   license: MIT
   options:
+    AUTH_TOKEN:
+      label: Upload token
+      type: password
+      help: Use Generate. Send it in the Authorization header when uploading a paste. Reading a paste needs
+        no token.
     DATA:
       label: Uploaded pastes
-      help: Keep uploaded pastes in this managed folder between restarts.
+      help: Keep uploaded pastes in this managed folder between restarts. A small helper container gives
+        user and group 1000 write access to it.
     CONFIG:
-      label: Prepared configuration
-      help: Keep prepared configuration in this managed folder between restarts.
+      label: Configuration
+      help: Keep config.toml in this managed folder between restarts. A default one is written on first start.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   rustypaste:
     image: docker.io/orhunp/rustypaste:latest
     environment:
       CONFIG: /config/config.toml
+      AUTH_TOKEN: ${AUTH_TOKEN}
     volumes:
     - ${DATA}:/app/upload
     - ${CONFIG}:/config
     ports:
     - ${PORT:-8000}:8000/tcp
+    deploy:
+      replicas: 1
+      # Retry quickly: rustypaste starts before the helper below has written config.toml on first start.
+      restart_policy:
+        condition: any
+        delay: 1s
+  # The rustypaste image has no shell, so this helper prepares its folders and waits.
+  config-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown 1000:1000 /upload
+      if [ ! -f /config/config.toml ]; then
+        cat > /config/config.toml <<'TOML'
+      [server]
+      max_content_length = "10MB"
+      upload_path = "./upload"
+      expose_list = false
+      [landing_page]
+      text = """
+      Submit files via HTTP POST here:
+          curl -H "Authorization: <token>" -F 'file=@example.txt' <server>
+      This will return the URL of the uploaded file.
+      """
+      content_type = "text/plain; charset=utf-8"
+      [paste]
+      random_url = { type = "petname", words = 2, separator = "-" }
+      default_extension = "txt"
+      duplicate_files = true
+      delete_expired_files = { enabled = true, interval = "1h" }
+      TOML
+        chmod 644 /config/config.toml
+      fi
+      exec su -s /bin/sh nobody -c 'exec tail -f /dev/null'
+    volumes:
+    - ${DATA}:/upload
+    - ${CONFIG}:/config
     deploy:
       replicas: 1

@@ -39,8 +39,9 @@ x-nex:
       label: Redis url
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     VIDEOS:
       label: Video archive
       help: Managed directory mounted at /youtube. Choose storage writable by the application.
@@ -51,7 +52,7 @@ services:
   tube-archivist:
     image: docker.io/bbilly1/tubearchivist:latest
     ports:
-    - ${PORT:-23528}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${VIDEOS}:/youtube
     - ${CACHE}:/cache

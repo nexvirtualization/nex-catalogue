@@ -22,9 +22,9 @@ x-nex:
       label: Config folder
       help: Choose the Nex-managed folder mounted at /etc/cups.
     PORT:
-      label: Published 631/tcp port
-      help: Host port for application listener 631/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 631/tcp
+      help: The app listens on TCP port 631 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Add a reachable network printer using its IPP address. Use a trusted primary network and protect
     the administration UI. This profile handles network printers.
   web:
@@ -41,7 +41,7 @@ services:
     volumes:
     - ${CONFIG}:/etc/cups
     ports:
-    - ${PORT:-19980}:631/tcp
+    - ${PORT:-631}:631/tcp
     command:
     - /bin/bash
     - -e

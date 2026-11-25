@@ -23,13 +23,14 @@ x-nex:
       help: Generate a strong token before starting the service.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 11235 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 11235 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   crawl4ai:
     image: docker.io/unclecode/crawl4ai:latest
     ports:
-    - ${PORT:-20229}:11235/tcp
+    - ${PORT:-11235}:11235/tcp
     environment:
       CRAWL4AI_API_TOKEN: ${API_TOKEN}
     deploy:

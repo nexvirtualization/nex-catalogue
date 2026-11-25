@@ -2,14 +2,15 @@
 x-nex:
   name: TileServer GL
   summary: Serve map tiles and styles over HTTP
-  description: TileServer GL reads map data from a managed folder and serves vector and raster tile endpoints.
+  description: Starts with no preparation. When the map folder is empty, TileServer GL downloads its small
+    Zurich demo dataset on first start, so the host needs internet access once. To serve your own maps,
+    put .mbtiles files or a config.json in the folder and restart; an existing folder is never overwritten.
   category: development
   website: https://tileserver.readthedocs.io/
   source: https://github.com/maptiler/tileserver-gl
   docs: https://tileserver.readthedocs.io/en/latest/installation.html
   primary_service: tileserver-gl
-  post_install: Before starting, put your licensed MBTiles file or complete TileServer GL configuration in
-    Map files. Verify the dataset is visible in the preview.
+  post_install: Open the preview and check that the demo map, or your own dataset, is visible.
   license: Apache-2.0
   architectures:
   - amd64
@@ -18,17 +19,19 @@ x-nex:
     port: 8080
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Map tiles and styles
-      help: Managed directory mounted at /data. Choose storage readable by the application.
+      help: Choose storage the application can write to (user ID 1000). Nex mounts it at /data. It holds
+        the demo dataset, or your own .mbtiles files and config.json.
 services:
   tileserver-gl:
     image: docker.io/maptiler/tileserver-gl:latest
     ports:
-    - ${PORT:-20274}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
-    - ${DATA}:/data:ro
+    - ${DATA}:/data
     deploy:
       replicas: 1

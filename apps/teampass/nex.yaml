@@ -2,8 +2,9 @@
 x-nex:
   name: Teampass
   summary: Share team credentials with role-based access
-  description: Provision a reachable MySQL or MariaDB database before installation. Complete the installer
-    through a trusted HTTPS endpoint and retain recovery information separately.
+  description: Before installing, provision a reachable MySQL or MariaDB database and a dedicated non-root
+    account. Use the same database settings in the installer over trusted HTTPS and retain recovery
+    information separately.
   category: security
   website: https://github.com/nilsteampassnet/TeamPass
   source: https://github.com/nilsteampassnet/TeamPass
@@ -16,16 +17,37 @@ x-nex:
   web:
     port: 80
   options:
+    DB_HOST:
+      label: Database host
+      help: Hostname or address reachable from Teampass.
+    DB_PORT:
+      label: Database port
+      help: Leave empty for 3306.
+    DB_NAME:
+      label: Database name
+      help: Name of the prepared database. Leave empty for teampass.
+    DB_USER:
+      label: Database user
+      help: Dedicated account for the prepared database. Leave empty for teampass.
+    DB_PASSWORD:
+      label: Database password
+      type: password
     DATA:
       label: Teampass files and configuration
       help: Keep teampass files and configuration in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   teampass:
     image: ghcr.io/nilsteampassnet/teampass:latest
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-teampass}
+      DB_USER: ${DB_USER:-teampass}
+      DB_PASSWORD: ${DB_PASSWORD}
     volumes:
     - ${DATA}:/var/www/html
     ports:

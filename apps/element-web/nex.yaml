@@ -21,13 +21,14 @@ x-nex:
   - element-web
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 8080. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   element-web:
     image: ghcr.io/element-hq/element-web:latest
     ports:
-    - ${PORT:-18108}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       ELEMENT_WEB_PORT: '8080'
     deploy:

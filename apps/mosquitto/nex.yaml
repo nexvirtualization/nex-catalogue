@@ -17,8 +17,9 @@ x-nex:
   - arm64
   options:
     MQTT_PORT:
-      label: Published MQTT port
-      help: Host-published port for the internal 1883/tcp endpoint.
+      label: MQTT port
+      help: The app listens on TCP port 1883 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Prepared broker configuration
       help: Managed directory mounted at /mosquitto/config. Choose storage readable by the application.
@@ -29,7 +30,7 @@ services:
   mosquitto:
     image: docker.io/library/eclipse-mosquitto:latest
     ports:
-    - ${MQTT_PORT:-21203}:1883/tcp
+    - ${MQTT_PORT:-1883}:1883/tcp
     volumes:
     - ${CONFIG}:/mosquitto/config:ro
     - ${DATA}:/mosquitto/data

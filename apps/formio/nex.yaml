@@ -19,11 +19,17 @@ x-nex:
     MONGO:
       label: MongoDB connection URL
       type: password
-      help: Full MongoDB URL for the prepared database.
+      help: Full MongoDB URL for the prepared database, for example mongodb://user:password@host:27017/formio.
+        Percent-encode special characters in the password, and do not use quotes or backslashes.
     JWT_SECRET:
       label: Application signing secret
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
+      help: Use Generate and preserve this secret across upgrades and restores. Use letters and digits only.
+    DB_SECRET:
+      label: Database encryption secret
+      type: password
+      help: Use Generate and preserve this secret across upgrades and restores. It protects stored form
+        settings. Use letters and digits only.
     ROOT_EMAIL:
       label: Initial administrator email
       help: Email address for the initial account.
@@ -33,14 +39,13 @@ x-nex:
       help: Use Nex Generate.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3001.
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   formio:
     image: docker.io/formio/formio:latest
     environment:
-      MONGO: ${MONGO}
-      JWT_SECRET: ${JWT_SECRET}
+      NODE_CONFIG: '{"mongo":"${MONGO}","jwt":{"secret":"${JWT_SECRET}"},"mongoSecret":"${DB_SECRET}"}'
       ROOT_EMAIL: ${ROOT_EMAIL}
       ROOT_PASSWORD: ${ROOT_PASSWORD}
     ports:

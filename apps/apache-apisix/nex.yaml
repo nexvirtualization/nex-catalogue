@@ -2,8 +2,9 @@
 x-nex:
   name: Apache APISIX
   summary: Route authorized HTTP API traffic through a gateway
-  description: Select a prepared standalone APISIX configuration folder containing config.yaml and apisix.yaml.
-    Configure routing and authentication as required. The profiles with etcd do not use this configuration.
+  description: Runs in standalone data-plane mode with no etcd. The first start writes a starter config.yaml
+    and an empty apisix.yaml to the configuration folder. Define routes and any required authentication
+    in apisix.yaml, keep "#END" as its last line, and edit config.yaml for other gateway settings.
   category: development
   website: https://github.com/apache/apisix
   source: https://github.com/apache/apisix
@@ -13,17 +14,37 @@ x-nex:
   license: Apache-2.0
   options:
     CONFIG:
-      label: Prepared gateway configuration
-      help: Keep prepared gateway configuration in this managed folder between restarts.
+      label: Gateway configuration
+      help: Select This host. Holds config.yaml and apisix.yaml, which you edit to define routes. Include
+        this folder in a stopped Nex backup.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9080.
+      help: The app listens on TCP port 9080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   apache-apisix:
     image: docker.io/apache/apisix:latest
     volumes:
-    - ${CONFIG}:/usr/local/apisix/conf
+    - ${CONFIG}:/nex-config
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /nex-config/config.yaml ]; then
+        printf 'deployment:\n  role: data_plane\n  role_data_plane:\n    config_provider: yaml\n' > /nex-config/config.yaml
+      fi
+      if [ ! -f /nex-config/apisix.yaml ]; then
+        printf 'routes: []\n#END\n' > /nex-config/apisix.yaml
+      fi
+      chown -R apisix:apisix /nex-config
+      # The gateway reopens its log streams as the apisix user, so those must be writable by it.
+      chmod 666 /proc/self/fd/1 /proc/self/fd/2
+      exec setpriv --reuid=apisix --regid=apisix --init-groups sh -ec '
+        ln -sf /nex-config/config.yaml /nex-config/apisix.yaml /usr/local/apisix/conf/
+        exec /docker-entrypoint.sh docker-start'
+    environment:
+      APISIX_STAND_ALONE: 'true'
     ports:
     - ${PORT:-9080}:9080/tcp
     deploy:

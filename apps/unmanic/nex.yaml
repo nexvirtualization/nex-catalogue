@@ -29,8 +29,8 @@ x-nex:
       help: IANA time zone for processing jobs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Transcoding configuration
       help: Select This host. Stores plugins, preferences and queue state. Include this folder in a stopped
@@ -50,7 +50,7 @@ services:
       PGID: ${PGID:-1000}
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8802}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     volumes:
     - ${DATA}:/config
     - ${LIBRARY}:/library

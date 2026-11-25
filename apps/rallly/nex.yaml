@@ -27,8 +27,10 @@ x-nex:
       type: password
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     FROM_EMAIL:
       label: From email
       help: Enter the deployment value described in the upstream setup guide.
@@ -52,13 +54,14 @@ x-nex:
       label: Admin email
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   rallly:
     image: docker.io/lukevella/rallly:latest
     ports:
-    - ${PORT:-23483}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     environment:
       NEXT_PUBLIC_BASE_URL: ${PUBLIC_URL}
       DATABASE_URL: ${DATABASE_URL}

@@ -19,11 +19,13 @@ x-nex:
       help: Vane application data, model configuration and search history.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   vane:
     image: docker.io/itzcrazykns1337/vane:latest
+    environment:
+      HOSTNAME: 0.0.0.0
     volumes:
     - ${DATA}:/home/vane/data
     ports:

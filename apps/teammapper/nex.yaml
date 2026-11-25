@@ -29,8 +29,8 @@ x-nex:
       help: Password for that application account.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   teammapper:
     image: ghcr.io/b310-digital/teammapper:latest
@@ -38,6 +38,8 @@ services:
       MODE: PROD
       BINDING: 0.0.0.0
       POSTGRES_PORT: '5432'
+      POSTGRES_QUERY_TIMEOUT: '10000'
+      POSTGRES_STATEMENT_TIMEOUT: '10000'
       POSTGRES_SSL: 'false'
       AI_ENABLED: 'false'
       POSTGRES_HOST: ${POSTGRES_HOST}

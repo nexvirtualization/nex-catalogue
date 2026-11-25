@@ -28,8 +28,8 @@ x-nex:
       help: IANA time zone for scheduled jobs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 6246.
+      help: The app listens on TCP port 6246 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Media rules and settings
       help: Select This host. Contains the database, integrations and deletion rules. Include this folder

@@ -19,8 +19,8 @@ x-nex:
       help: Ombi users, integrations and request records.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3579.
+      help: The app listens on TCP port 3579 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ombi:
     image: lscr.io/linuxserver/ombi:latest

@@ -26,18 +26,18 @@ x-nex:
       help: Keep surfsense workspace and models in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   surfsense:
     image: ghcr.io/modsetter/surfsense:latest
     stop_grace_period: 30s
     environment:
-      SURFSENSE_LOCAL_PUBLIC_PORT: ${PORT:-4929}
+      SURFSENSE_LOCAL_PUBLIC_PORT: ${PORT:-80}
       SURFSENSE_PASSWORD: ${SURFSENSE_PASSWORD}
     volumes:
     - ${DATA}:/data
     ports:
-    - ${PORT:-4929}:80/tcp
+    - ${PORT:-80}:80/tcp
     deploy:
       replicas: 1

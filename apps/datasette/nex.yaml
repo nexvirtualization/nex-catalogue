@@ -21,12 +21,13 @@ x-nex:
       help: Keep sqlite datasets in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8001.
+      help: The app listens on TCP port 8001 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   datasette:
     image: docker.io/datasetteproject/datasette:latest
     command:
+    - datasette
     - serve
     - --host
     - 0.0.0.0

@@ -24,7 +24,9 @@ x-nex:
       help: Choose This host and include this folder in stopped backups.
     HOSTING_TOKEN:
       label: Brickadia hosting token
-      help: Generate a hosted server token from your Brickadia account.
+      help: >-
+        Paste a hosting token created with a Brickadia account that owns the game. Nex Generate cannot
+        make one. With a missing or wrong token the server logs "Authentication failed" and exits.
       type: password
 services:
   brickadia:

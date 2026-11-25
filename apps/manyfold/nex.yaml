@@ -31,19 +31,28 @@ x-nex:
       help: Numeric GID of the model library owner.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3214.
+      help: The app listens on TCP port 3214 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Asset catalogue
-      help: Select This host. Stores the embedded database and plugins. Include this folder in a stopped
-        Nex backup.
+      help: Use host-local storage for the embedded database. The configured UID and GID must be able
+        to write to the folder and its data. Include this folder in a stopped Nex backup.
     MODEL_LIBRARY:
       label: 3D model library
-      help: Select This host. Stores 3D models the app scans or manages. Include this folder in a stopped
-        Nex backup.
+      help: The configured UID and GID must be able to write to the model folder and its contents.
+        Include this folder in a stopped Nex backup.
 services:
   manyfold:
     image: ghcr.io/manyfold3d/manyfold-solo:latest
+    # Managed folders start owned by root, so hand them to the configured account first: SQLite must be
+    # able to create its journal files next to the database.
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R "$${PUID}:$${PGID}" /config
+      chown "$${PUID}:$${PGID}" /models
+      exec /init
     environment:
       SECRET_KEY_BASE: ${SESSION_SECRET}
       PUID: ${PUID:-1000}

@@ -48,6 +48,12 @@ services:
       }
       mkdir -p /home/steam/ark/ShooterGame/Saved
       chown steam:steam /home/steam/ark /home/steam/ark/ShooterGame /home/steam/ark/ShooterGame/Saved
+      export HOME=/home/steam
+      # A fresh SteamCMD fails the first app_update with "Missing configuration"
+      # until it has fetched the app info, so fetch it before the image updates.
+      setpriv --reuid=steam --regid=steam --init-groups /home/steam/steamcmd/steamcmd.sh \
+        +login anonymous +app_info_update 1 +app_info_print 2430930 +quit > /dev/null \
+        || echo "SteamCMD could not fetch the app info; continuing with the update." >&2
       exec setpriv --reuid=steam --regid=steam --init-groups /home/steam/entrypoint.sh
     stop_grace_period: 90s
     deploy:

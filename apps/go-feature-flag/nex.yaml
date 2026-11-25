@@ -2,28 +2,43 @@
 x-nex:
   name: GO Feature Flag
   summary: Evaluate feature flags from an OpenFeature relay API
-  description: Select a prepared folder containing your relay configuration and flags. Set the flag
-    file retriever in goff-proxy.yaml to use /goff/flag-config.yaml or your intended backend.
+  description: Starts with no preparation. The relay reads flag definitions from flags.yaml in the
+    configuration folder and picks up changes automatically, and clients must send the API key in an
+    Authorization Bearer or X-API-Key header. Until you add flags.yaml, the relay runs and every flag
+    lookup returns an error. To change other settings, add a goff-proxy.yaml to the same folder.
   category: development
   website: https://github.com/thomaspoignant/go-feature-flag
   source: https://github.com/thomaspoignant/go-feature-flag
   docs: https://gofeatureflag.org/docs/relay-proxy/install_relay_proxy
   primary_service: go-feature-flag
+  web:
+    port: 1031
+    path: /health
   scalable: false
   license: MIT
   options:
     CONFIG:
-      label: Prepared relay configuration
-      help: Folder containing goff-proxy.yaml and the flag data files it refers to.
+      label: Configuration folder
+      help: Folder mounted at /goff. Put your flags.yaml here to define flags; an optional goff-proxy.yaml
+        here adds further relay settings.
+    API_KEY:
+      label: API key
+      help: Key that clients must send to evaluate flags. Use Generate for a strong value and keep it private.
+      type: password
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 1031.
+      help: The app listens on TCP port 1031 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   go-feature-flag:
     image: docker.io/gofeatureflag/go-feature-flag:latest
     volumes:
     - ${CONFIG}:/goff
+    environment:
+      RETRIEVER_KIND: file
+      RETRIEVER_PATH: /goff/flags.yaml
+      STARTWITHRETRIEVERERROR: 'true'
+      AUTHORIZEDKEYS_EVALUATION: ${API_KEY}
     ports:
     - ${PORT:-1031}:1031/tcp
     deploy:

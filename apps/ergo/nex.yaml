@@ -17,12 +17,12 @@ x-nex:
       help: Keep irc configuration and state in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 6667.
+      help: The app listens on TCP port 6667 on its default Docker network. Nex does not publish it on host
+        addresses.
     TLS_PORT:
       label: IRC TLS port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 6697.
+      help: The app listens on TCP port 6697 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ergo:
     image: ghcr.io/ergochat/ergo:latest

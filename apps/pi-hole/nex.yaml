@@ -3,13 +3,13 @@ x-nex:
   name: Pi-hole
   summary: Block advertising domains across your home network
   description: DNS filtering for your LAN. In Install, Network choose Primary network, a registered cluster VLAN
-    reachable by your clients, then Fixed with an unused address/prefix and Default gateway. Leave Also publish
-    ports on host addresses unchecked. Open http://APP-IP/admin/ and sign in with the generated Administrator password.
-    Set router/client DNS to APP-IP, port 53 over both TCP and UDP. The shared-network default alone cannot serve
-    LAN DNS. DNS listens on all app interfaces; attach only trusted client networks. DHCP and NTP serving are disabled.
-    On Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one copy
-    on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all
-    state folders before updates.
+    reachable by your clients, then Fixed with an unused address/prefix and Default gateway. Open
+    http://APP-IP/admin/ and sign in with the generated Administrator password. Set router/client DNS to APP-IP,
+    port 53 over both TCP and UDP. The shared-network default alone cannot serve LAN DNS. DNS listens on all app
+    interfaces; attach only trusted client networks. DHCP and NTP serving are disabled. On Basics choose Runs
+    on, Only these hosts and one host; keep state folders on This host. This keeps one copy on that host with no
+    automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all state folders
+    before updates.
   category: networking
   website: https://pi-hole.net
   source: https://github.com/pi-hole/pi-hole
@@ -30,9 +30,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Only the optional host management endpoint. On Network choose a registered cluster VLAN reachable by
-        your clients, Fixed address/prefix and Default gateway, and leave host publication off; use http://APP-IP/admin/
-        and APP-IP:53 for DNS instead.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Pi-hole configuration
       help: Keep Pi-hole configuration on This host. Nex creates its persistent /etc/pihole volume; no host directory
@@ -49,7 +48,7 @@ services:
       FTLCONF_ntp_ipv4_active: 'false'
       FTLCONF_ntp_ipv6_active: 'false'
     ports:
-    - ${PORT:-8083}:80/tcp
+    - ${PORT:-80}:80/tcp
     expose:
     - 53/tcp
     - 53/udp

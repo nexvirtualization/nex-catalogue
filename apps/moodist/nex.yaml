@@ -11,8 +11,9 @@ x-nex:
   primary_service: moodist
   options:
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8080/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8080
   post_install: Open Moodist to play and mix ambient sounds in the browser.

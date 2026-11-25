@@ -25,10 +25,9 @@ x-nex:
         does not grant permissions automatically.
     PORT:
       label: Web port
-      help: Published HTTP port. Finish the first-run wizard and create an administrator before allowing other users
-        to connect. With Network → Docker and host publishing enabled, use the chosen host web port. On a registered
-        VLAN or private Primary network with its own address, use that address and internal port 8096; host publishing
-        is a separate switch.
+      help: The app listens on TCP port 8096 on its default Docker network. Nex does not publish it on host
+        addresses. Finish the first-run wizard and create an administrator before allowing other users to
+        connect.
     CONFIG:
       label: Settings and database
       help: Persistent /config with accounts, settings and library database. Must be writable by the selected UID/GID;

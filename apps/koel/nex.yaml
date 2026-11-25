@@ -2,9 +2,9 @@
 x-nex:
   name: Koel
   summary: Stream music from a shared library
-  description: Prepare a compatible MariaDB or MySQL database. Complete the first sign-in with the upstream
-    Docker administrator and change its password. Point Koel at /music and trigger the initial library
-    scan.
+  description: Prepare a compatible MariaDB or MySQL database. The first start creates the tables and the
+    upstream default administrator; sign in with it and change its password. Point Koel at /music and
+    trigger the initial library scan. Scheduled jobs are not installed, so start later scans from Koel.
   category: media
   website: https://koel.dev/
   source: https://github.com/koel/koel
@@ -40,12 +40,15 @@ x-nex:
       help: Full URL clients will open, including scheme and any non-default port.
     APP_KEY:
       label: Laravel application key
-      help: 'Enter base64: followed by a base64-encoded random 32-byte key.'
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead.'
       type: password
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Music library
       help: Select This host. Select the managed collection of music files. Include this folder in a stopped
@@ -66,8 +69,22 @@ services:
       DB_PORT: '3306'
       APP_URL: ${PUBLIC_URL}
       APP_KEY: ${APP_KEY}
+    # The image only migrates the database and seeds the administrator when a .env file exists, and
+    # otherwise serves HTTP 500 errors. Create it from the bundled example; the settings come from the
+    # environment. The cron-based scheduler install fails here and the image runs no cron daemon, so skip it.
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      cd /var/www/html
+      if [ ! -f .env ]; then
+        cp .env.example .env
+        chown www-data:www-data .env
+      fi
+      su -s /bin/sh -c "php artisan koel:init --no-assets --no-interaction --no-scheduler" www-data
+      exec docker-php-entrypoint apache2-foreground
     ports:
-    - ${PORT:-8890}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/music:ro
     - ${ARTWORK}:/var/www/html/storage/app/public/images

@@ -29,11 +29,12 @@ x-nex:
       help: IANA time zone for program schedules.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9981.
+      help: The app listens on TCP port 9981 on its default Docker network. Nex does not publish it on host
+        addresses.
     HTSP_PORT:
       label: Htsp Port
-      help: Host-published HTSP port for compatible clients.
+      help: The app listens on TCP port 9982 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Television configuration
       help: Select This host. Stores channels, tuner settings and program guide configuration. Include

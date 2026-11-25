@@ -13,9 +13,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /var/jenkins_home.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Finish the setup wizard with the initial password from the install log or secrets/initialAdminPassword.
     Socket access is not required. Connect external build agents separately.
   web:
@@ -28,4 +28,4 @@ services:
     volumes:
     - ${DATA}:/var/jenkins_home
     ports:
-    - ${PORT:-19665}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

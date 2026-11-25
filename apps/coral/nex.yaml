@@ -29,17 +29,19 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   coral:
     image: docker.io/coralproject/talk:9.7.0
     ports:
-    - ${PORT:-23496}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     environment:
       MONGODB_URI: ${MONGODB_URI}
       REDIS_URI: ${REDIS_URL}
       SIGNING_SECRET: ${SIGNING_SECRET}
       NODE_ENV: production
+      PORT: '3000'
     deploy:
       replicas: 1

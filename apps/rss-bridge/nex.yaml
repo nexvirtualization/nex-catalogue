@@ -22,13 +22,14 @@ x-nex:
       label: Configuration
       help: Holds config.ini.php and bridge settings at /config. Use one copy; back up local settings.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   rss-bridge:
     image: ghcr.io/rss-bridge/rss-bridge:latest
     ports:
-    - ${PORT:-18103}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${CONFIG}:/config
     deploy:

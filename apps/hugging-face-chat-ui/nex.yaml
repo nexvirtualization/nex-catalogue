@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Conversations and database
       help: Select This host. Stores conversation history and MongoDB state. Include this folder in a
@@ -41,7 +41,7 @@ services:
       OPENAI_BASE_URL: ${MODEL_URL:-https://router.huggingface.co/v1}
       OPENAI_API_KEY: ${MODEL_API_KEY}
     ports:
-    - ${PORT:-8167}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/data
     deploy:

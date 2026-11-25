@@ -30,12 +30,14 @@ x-nex:
       type: password
     JWT_SECRET:
       label: Session signing secret
-      help: Use Generate to create a unique secret for this installation.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Habit and task data
       help: Select This host. Stores the application database and user data. Include this folder in a
@@ -49,7 +51,7 @@ services:
       AppSettings__Password: ${APP_PASSWORD}
       AppSettings__JwtSecret: ${JWT_SECRET}
     ports:
-    - ${PORT:-8147}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/.OpenHabitTracker
     deploy:

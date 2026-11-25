@@ -16,7 +16,10 @@ x-nex:
     SESSION_SECRET:
       label: Session secret
       type: password
-      help: Use a unique value and keep it with the application backups.
+      generate: {format: alnum, length: 64, min_length: 64}
+      help: Use Generate, which makes 64 letters and digits. It must be at least 64 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Keep it with
+        the application backups.
     SIGNING_SALT:
       label: Signing salt
       type: password
@@ -24,7 +27,10 @@ x-nex:
     VAULT_KEY:
       label: Vault key
       type: password
-      help: Use a unique value and keep it with the application backups.
+      generate: {format: base64, bytes: 32}
+      help: Use Generate, which makes 32 random bytes in Base64. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -base64 32 instead. Keep it with the application
+        backups.
     PUBLIC_URL:
       label: Public url
     GITHUB_CLIENT_ID:
@@ -34,9 +40,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 4000/tcp port
-      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 4000/tcp
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and set up a GitHub OAuth app with the appropriate callback URL. Provide
     at least 64 random characters for the session secret. Back up the database and the vault key.
   web:
@@ -55,4 +61,4 @@ services:
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
     ports:
-    - ${PORT:-19998}:4000/tcp
+    - ${PORT:-4000}:4000/tcp

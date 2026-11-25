@@ -23,8 +23,8 @@ x-nex:
       help: Model identifier supported by Tabby. Start with the default CPU-sized model.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Model and application data
       help: Select This host. Stores downloaded models, settings and accounts. Include this folder in
@@ -38,8 +38,11 @@ services:
     - ${MODEL:-StarCoder-1B}
     - --device
     - cpu
+    environment:
+      # The CUDA build of llama-server cannot load without a libcuda; this compatibility copy lets it start and fall back to the CPU.
+      LD_LIBRARY_PATH: /usr/local/cuda-12.4/compat:/usr/local/nvidia/lib:/usr/local/nvidia/lib64
     ports:
-    - ${PORT:-8158}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/data
     deploy:

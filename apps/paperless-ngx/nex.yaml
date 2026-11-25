@@ -16,10 +16,13 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port. On a dedicated Primary network with host publishing off, connect to the app address on port 8000. Use HTTPS for access beyond your trusted network.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses. Use HTTPS for access beyond your trusted network.
     PUBLIC_URL:
       label: Public web address
-      help: Full address used in your browser, including scheme and port, for example https://paperless.example.com. Use the app address and port 8000 for a dedicated Primary network, or the host endpoint and Web port. Required for proxy CSRF and allowed-host checks.
+      help: Full address used in your browser, including scheme and port, for example
+        https://paperless.example.com. Use the app address and port 8000. Required for proxy CSRF and
+        allowed-host checks.
     SECRET_KEY:
       label: Signing secret
       type: password

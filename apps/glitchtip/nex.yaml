@@ -2,15 +2,14 @@
 x-nex:
   name: GlitchTip
   summary: Capture application errors and manage issue alerts
-  description: Provision PostgreSQL and an email relay. Run the upstream migrations before the first startup,
-    then create the first organization.
+  description: Provision PostgreSQL and, for outgoing mail, an SMTP relay. GlitchTip migrates its database on
+    startup. Then create the first organization.
   category: monitoring
   website: https://glitchtip.com
   source: https://gitlab.com/glitchtip/glitchtip
   docs: https://glitchtip.com/documentation/install/
   primary_service: glitchtip
-  post_install: Provision PostgreSQL and an email relay. Run the upstream migrations before the first startup,
-    then create the first organization.
+  post_install: Open the public URL, sign up the first user and create the first organization.
   architectures:
   - amd64
   - arm64
@@ -29,14 +28,20 @@ x-nex:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     SMTP_URL:
-      label: Smtp url
-      help: Enter the deployment value described in the upstream setup guide.
+      label: SMTP URL
+      help: SMTP connection URL for your relay, such as smtp://user:password@mail.example.com:587. Leave
+        blank to write emails to the application log.
+    VALKEY_URL:
+      label: Valkey or Redis URL
+      help: Optional, such as redis://host:6379/0. Leave blank to keep the cache and background tasks in
+        PostgreSQL, which is enough for a single copy.
     FROM_EMAIL:
       label: From email
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Sender address for GlitchTip emails, such as glitchtip@example.com.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     UPLOADS:
       label: Application uploads
       help: Managed directory mounted at /code/uploads. Choose storage writable by the application.
@@ -44,14 +49,15 @@ services:
   glitchtip:
     image: docker.io/glitchtip/glitchtip:latest
     ports:
-    - ${PORT:-23520}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${UPLOADS}:/code/uploads
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SIGNING_SECRET}
       GLITCHTIP_DOMAIN: ${PUBLIC_URL}
-      EMAIL_URL: ${SMTP_URL}
+      EMAIL_URL: ${SMTP_URL:-consolemail://}
+      VALKEY_URL: ${VALKEY_URL:-}
       DEFAULT_FROM_EMAIL: ${FROM_EMAIL}
     deploy:
       replicas: 1

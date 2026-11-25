@@ -2,13 +2,22 @@
 x-nex:
   name: Bagisto
   summary: Build an ecommerce storefront and product catalogue
-  description: Set up a compatible MySQL database and finish the web installer on a trusted network.
-    Configure your public storefront and administrator credentials before launch.
+  description: >-
+    Ecommerce storefront and admin with a MySQL database bundled in the image. Store media and files
+    are kept in the Store files folder and the database in the MySQL data folder. On first start, empty
+    folders are filled with the image's ready-installed store and database. Installs made before this
+    change kept their media and database inside the container: export them before updating.
   category: management
   website: https://github.com/bagisto/bagisto
   source: https://github.com/bagisto/bagisto
-  docs: https://github.com/bagisto/bagisto-docker
+  docs: https://devdocs.bagisto.com/getting-started/installation
   primary_service: bagisto
+  post_install: >-
+    Sign in at /admin with the image's default admin@example.com and admin123, then change both at
+    once. Make backups of both folders only while the app is stopped. If this install was made before the
+    folders were mounted at /var/www/bagisto/storage and /var/lib/mysql, dump the MySQL database and
+    archive /var/www/bagisto/storage/app from the running container before updating, then restore both
+    into the updated app.
   scalable: false
   license: MIT
   web:
@@ -16,17 +25,54 @@ x-nex:
   options:
     DATA:
       label: Store files and media
-      help: Keep store files and media in this managed folder between restarts.
+      help: Mounted at /var/www/bagisto/storage. Choose This host and include this folder in stopped
+        backups.
+    DB_DATA:
+      label: MySQL data
+      help: Mounted at /var/lib/mysql for the bundled database. Choose This host and include this folder
+        in stopped backups.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bagisto:
     image: docker.io/webkul/bagisto:latest
+    # Wait until storage-init has filled empty folders, then run the image's own startup.
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |-
+      until [ -e /var/www/bagisto/storage/.nex-ready ] && [ -e /var/lib/mysql/.nex-ready ]; do sleep 2; done
+      exec /usr/local/bin/entrypoint.sh /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
     volumes:
-    - ${DATA}:/var/www/html/storage
+    - ${DATA}:/var/www/bagisto/storage
+    - ${DB_DATA}:/var/lib/mysql
     ports:
     - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1
+  # Copies the image's installed store files and database into empty folders, hands the folders to
+  # the users the image runs them as, then waits without root.
+  storage-init:
+    image: docker.io/webkul/bagisto:latest
+    entrypoint:
+    - /bin/bash
+    - -ec
+    - |-
+      seed() {
+        if [ -z "$$(ls -A "$$2")" ]; then
+          echo "Filling empty $$1 from the image"
+          cp -a "$$1/." "$$2/"
+        fi
+        chown -R "$$3" "$$2"
+        touch "$$2/.nex-ready"
+      }
+      seed /var/www/bagisto/storage /nex/storage www-data:www-data
+      seed /var/lib/mysql /nex/mysql mysql:mysql
+      exec setpriv --reuid=65534 --regid=65534 --clear-groups sleep infinity
+    volumes:
+    - ${DATA}:/nex/storage
+    - ${DB_DATA}:/nex/mysql
     deploy:
       replicas: 1

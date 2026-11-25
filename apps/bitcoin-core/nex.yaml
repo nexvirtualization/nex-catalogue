@@ -17,8 +17,9 @@ x-nex:
   - arm64
   options:
     P2P_PORT:
-      label: Published Bitcoin peer port
-      help: Host-published port for the internal 8333/tcp endpoint.
+      label: Bitcoin peer port
+      help: The app listens on TCP port 8333 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Blockchain and node configuration
       help: Managed directory mounted at /data/.bitcoin. Choose storage writable by the application.
@@ -26,7 +27,7 @@ services:
   bitcoin-core:
     image: docker.io/lncm/bitcoind:v28.0
     ports:
-    - ${P2P_PORT:-24587}:8333/tcp
+    - ${P2P_PORT:-8333}:8333/tcp
     volumes:
     - ${DATA}:/data/.bitcoin
     deploy:

@@ -2,9 +2,9 @@
 x-nex:
   name: Kong Gateway
   summary: Route APIs through a declaratively configured gateway
-  description: Prepare kong.yml in a managed folder before installation, with your services, routes and
-    authentication plugins. Forward authorized client requests to port 8000. Keep the Admin API off in
-    this DB-less deployment.
+  description: Kong starts with a built-in status route that answers on port 8000. To publish your own
+    services, routes and authentication plugins, put kong.yml in the Configuration folder and restart;
+    that file replaces the built-in one. Keep the Admin API off in this DB-less deployment.
   category: networking
   website: https://konghq.com/kong/
   source: https://github.com/Kong/kong
@@ -17,11 +17,12 @@ x-nex:
   options:
     GATEWAY_PORT:
       label: Gateway Port
-      help: Host-published gateway port.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
-      label: Prepared API configuration
-      help: Select This host. Select a managed folder with kong.yml. Include this folder in a stopped
-        Nex backup.
+      label: Configuration folder
+      help: Select This host. Optional kong.yml at the folder root (read-only) replaces the built-in
+        status route. Include this folder in a stopped Nex backup.
 services:
   kong:
     image: kong:latest
@@ -32,6 +33,25 @@ services:
       KONG_PROXY_LISTEN: 0.0.0.0:8000
     ports:
     - ${GATEWAY_PORT:-8000}:8000/tcp
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /settings/kong.yml ]; then
+        cat > /tmp/kong-default.yml <<'KONG'
+      _format_version: "3.0"
+      routes:
+      - name: nex-status
+        paths: ["/"]
+        plugins:
+        - name: request-termination
+          config:
+            status_code: 200
+            message: Kong Gateway is running. Add services and routes in kong.yml.
+      KONG
+        export KONG_DECLARATIVE_CONFIG=/tmp/kong-default.yml
+      fi
+      exec /docker-entrypoint.sh kong docker-start
     volumes:
     - ${DATA}:/settings:ro
     deploy:

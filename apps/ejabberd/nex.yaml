@@ -11,35 +11,49 @@ x-nex:
   options:
     CONFIG:
       label: Config folder
-      help: Choose the Nex-managed folder mounted at /opt/ejabberd/conf.
+      help: Choose the Nex-managed folder mounted at /nex-conf. The default ejabberd.yml, certificates and
+        ejabberdctl.cfg are copied here on first start when ejabberd.yml is missing; edit them here.
     DATABASE:
       label: Database folder
-      help: Choose the Nex-managed folder mounted at /opt/ejabberd/database.
+      help: Nex-managed folder for the Mnesia database, mounted at /home/ejabberd/database inside the app.
     PORT:
-      label: Published 5280/tcp port
-      help: Host port for application listener 5280/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 5280/tcp
+      help: The app listens on TCP port 5280 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 5222/tcp port
-      help: Host port for application listener 5222/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 5222/tcp
+      help: The app listens on TCP port 5222 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published 5269/tcp port
-      help: Host port for application listener 5269/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Configure ejabberd.yml and certificates for your XMPP domain. Open /admin on the HTTP listener
-    and use the upstream CLI to register the administrator on first install.
+      label: Port 5269/tcp
+      help: The app listens on TCP port 5269 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: The first start copies the image defaults (host localhost, self-signed certificate) into the
+    Config folder. Edit ejabberd.yml and the certificates there for your XMPP domain, then restart. Register
+    the administrator with ejabberdctl register in the ejabberd service and open /admin on the HTTP listener.
   web:
     port: 5280
+    path: /admin/
 services:
   ejabberd:
     image: docker.io/ejabberd/ecs:latest
+    environment:
+      ETC_DIR: /nex-conf
+    # Start as root only to seed the config and hand both folders to the ejabberd user, then drop to it.
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      [ -s /nex-conf/ejabberd.yml ] || cp -pn /home/ejabberd/conf/* /nex-conf/
+      chown -R ejabberd:ejabberd /nex-conf /home/ejabberd/database
+      exec su -s /bin/sh ejabberd -c 'exec /sbin/tini -- /home/ejabberd/bin/ejabberdctl foreground'
     deploy:
       replicas: 1
     volumes:
-    - ${CONFIG}:/opt/ejabberd/conf
-    - ${DATABASE}:/opt/ejabberd/database
+    - ${CONFIG}:/nex-conf
+    - ${DATABASE}:/home/ejabberd/database
     ports:
-    - ${PORT:-19886}:5280/tcp
-    - ${PORT_2:-20886}:5222/tcp
-    - ${PORT_3:-21886}:5269/tcp
+    - ${PORT:-5280}:5280/tcp
+    - ${PORT_2:-5222}:5222/tcp
+    - ${PORT_3:-5269}:5269/tcp

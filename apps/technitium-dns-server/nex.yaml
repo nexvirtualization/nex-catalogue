@@ -18,14 +18,17 @@ x-nex:
       label: Dns folder
       help: Nex-managed folder mounted at /var/log/technitium/dns. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 5380/tcp.
+      label: TCP port
+      help: The app listens on TCP port 5380 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published UDP port
-      help: Host port for the listener on 53/udp.
+      label: UDP port
+      help: The app listens on UDP port 53 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published TCP port
-      help: Host port for the listener on 53/tcp.
+      label: TCP port
+      help: The app listens on TCP port 53 on its default Docker network. Nex does not publish it on host
+        addresses.
     DNS_ADMIN_PASSWORD:
       label: DNS administrator password
       type: password
@@ -47,5 +50,5 @@ services:
       replicas: 1
     ports:
     - ${PORT:-5380}:5380/tcp
-    - ${PORT_2:-20053}:53/udp
+    - ${PORT_2:-53}:53/udp
     - ${PORT_3:-20056}:53/tcp

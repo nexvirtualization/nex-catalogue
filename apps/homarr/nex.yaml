@@ -17,14 +17,16 @@ x-nex:
     ENCRYPTION_KEY:
       label: Encryption key
       type: password
-      help: Enter exactly 64 hexadecimal characters. Retain this key for restore.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Retain this key for restore.
     DATA:
       label: Homarr application data
       help: Dashboards, users and settings.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7575.
+      help: The app listens on TCP port 7575 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   homarr:
     image: ghcr.io/homarr-labs/homarr:latest

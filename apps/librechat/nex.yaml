@@ -28,11 +28,15 @@ x-nex:
     CREDS_KEY:
       label: Credential encryption key
       type: password
-      help: Provide 64 hexadecimal characters as required by LibreChat.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead.
     CREDS_IV:
       label: Credential encryption IV
       type: password
-      help: Provide 32 hexadecimal characters as required by LibreChat.
+      generate: {format: hex, length: 32}
+      help: Use Generate, which makes 32 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 16 instead.
     PUBLIC_URL:
       label: Public web address
       help: Full browser-facing URL, including scheme and any port.
@@ -47,8 +51,8 @@ x-nex:
       help: Keep application logs in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3080.
+      help: The app listens on TCP port 3080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   librechat:
     image: ghcr.io/danny-avila/librechat:latest

@@ -23,8 +23,9 @@ x-nex:
       help: Require this key on model API requests.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     MODELS:
       label: Local models
       help: Managed directory mounted at /models. Choose storage writable by the application.
@@ -32,7 +33,7 @@ services:
   localai:
     image: docker.io/localai/localai:latest
     ports:
-    - ${PORT:-20199}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${MODELS}:/models
     environment:

@@ -36,8 +36,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Matomo installation
       help: Select This host. Stores configuration, plugins and other application files. Include this
@@ -51,7 +51,7 @@ services:
       MATOMO_DATABASE_PASSWORD: ${DB_PASSWORD}
       MATOMO_DATABASE_DBNAME: ${DB_NAME:-matomo}
     ports:
-    - ${PORT:-8420}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html
     deploy:

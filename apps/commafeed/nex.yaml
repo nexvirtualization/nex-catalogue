@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8082.
+      help: The app listens on TCP port 8082 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Subscriptions and data
       help: Select This host. Stores the H2 database, feed subscriptions and user accounts. Include this
@@ -30,7 +30,7 @@ services:
   commafeed:
     image: athou/commafeed:latest-h2
     ports:
-    - ${PORT:-8113}:8082/tcp
+    - ${PORT:-8082}:8082/tcp
     volumes:
     - ${DATA}:/commafeed/data
     deploy:

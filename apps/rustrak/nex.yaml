@@ -13,7 +13,10 @@ x-nex:
     SESSION_SECRET:
       label: Session signing secret
       type: password
-      help: Use at least 64 random characters and keep this value with your backups.
+      generate: {format: alnum, length: 64, min_length: 64}
+      help: Use Generate, which makes 64 letters and digits. It must be at least 64 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Keep this
+        value with your backups.
     ADMIN_EMAIL:
       label: Initial administrator email
     ADMIN_PASSWORD:
@@ -27,9 +30,9 @@ x-nex:
       label: Application data
       help: Stores the SQLite database and uploaded source maps. Keep on This host.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Use the administrator email and password to sign in. Clients must be able to reach the configured
     public URL. Back up the data folder while the app is stopped.
   web:
@@ -46,7 +49,7 @@ services:
       RUSTRAK_TELEMETRY: 'off'
       RUSTRAK_METRICS: 'off'
     ports:
-    - ${PORT:-19471}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/data
     stop_grace_period: 30s

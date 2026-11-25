@@ -24,8 +24,8 @@ x-nex:
       help: Remote Dozzle agent host and port, or a comma-separated list of agents.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   dozzle:
     image: amir20/dozzle:latest
@@ -34,6 +34,6 @@ services:
       DOZZLE_NO_ANALYTICS: 'true'
       DOZZLE_ENABLE_ACTIONS: 'false'
     ports:
-    - ${PORT:-8783}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     deploy:
       replicas: 1

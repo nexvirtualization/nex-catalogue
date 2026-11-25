@@ -24,8 +24,8 @@ x-nex:
       help: Files and upload history served by Copyparty.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3923.
+      help: The app listens on TCP port 3923 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   copyparty:
     image: ghcr.io/9001/copyparty-ac:latest

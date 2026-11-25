@@ -18,9 +18,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 3000/tcp port
-      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3000/tcp
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Use your own model provider API key and choose a strong site access code before sharing the
     URL.
   web:
@@ -31,7 +31,8 @@ services:
     deploy:
       replicas: 1
     environment:
+      HOSTNAME: 0.0.0.0
       CODE: ${ACCESS_CODE}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
-    - ${PORT:-19544}:3000/tcp
+    - ${PORT:-3000}:3000/tcp

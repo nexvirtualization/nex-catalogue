@@ -2,7 +2,7 @@
 x-nex:
   name: Zulip
   summary: Host persistent team chat organized into streams and topics
-  description: Provision the supported PostgreSQL, RabbitMQ, Redis and Memcached services. Use an HTTPS
+  description: Runs with its own PostgreSQL, RabbitMQ, Redis and Memcached services. Use an HTTPS
     reverse proxy and complete Zulip’s organization and SMTP setup before inviting users.
   category: communication
   website: https://github.com/zulip/zulip
@@ -16,49 +16,29 @@ x-nex:
   options:
     SETTING_EXTERNAL_HOST:
       label: Public Zulip hostname
-      help: Hostname of the client-facing HTTPS address.
+      help: Hostname of the client-facing HTTPS address, without scheme.
     SETTING_ZULIP_ADMINISTRATOR:
       label: Administrator email
       help: Email address for the initial organizer.
-    SETTING_REMOTE_POSTGRES_HOST:
-      label: Database hostname
-      help: Reachable Zulip PostgreSQL service.
-    SETTING_RABBITMQ_HOST:
-      label: RabbitMQ hostname
-      help: Reachable private RabbitMQ server.
-    SETTING_REDIS_HOST:
-      label: Redis hostname
-      help: Reachable private Redis service.
-    SETTING_MEMCACHED_LOCATION:
-      label: Memcached address
-      help: Reachable hostname and port.
-    SECRETS_POSTGRES_PASSWORD:
-      label: Database password
+    SERVICES_PASSWORD:
+      label: Internal services password
       type: password
-      help: Supply the configured Zulip database password.
-    SECRETS_RABBITMQ_PASSWORD:
-      label: RabbitMQ password
-      type: password
-      help: Supply the configured Zulip RabbitMQ password.
-    SECRETS_REDIS_PASSWORD:
-      label: Redis password
-      type: password
-      help: Supply the configured Zulip Redis password.
-    SECRETS_MEMCACHED_PASSWORD:
-      label: Memcached password
-      type: password
-      help: Supply the configured Zulip Memcached password.
+      help: Use Generate. Letters and digits only. Shared by Zulip's own database, RabbitMQ, Redis and
+        Memcached, which are reachable only inside this application.
     SECRETS_SECRET_KEY:
       label: Application signing secret
       type: password
       help: Use Nex Generate and preserve this secret across upgrades and restores.
+    DB_DATA:
+      label: Zulip database
+      help: Select This host. Stores the PostgreSQL database. Include this folder in a stopped Nex backup.
     DATA:
       label: Zulip uploads and configuration
-      help: Keep zulip uploads and configuration in this managed folder between restarts.
+      help: Select This host. Keeps Zulip uploads and configuration between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   zulip:
     image: ghcr.io/zulip/zulip-server:latest
@@ -66,18 +46,71 @@ services:
       CONFIG_application_server__http_only: 'true'
       SETTING_EXTERNAL_HOST: ${SETTING_EXTERNAL_HOST}
       SETTING_ZULIP_ADMINISTRATOR: ${SETTING_ZULIP_ADMINISTRATOR}
-      SETTING_REMOTE_POSTGRES_HOST: ${SETTING_REMOTE_POSTGRES_HOST}
-      SETTING_RABBITMQ_HOST: ${SETTING_RABBITMQ_HOST}
-      SETTING_REDIS_HOST: ${SETTING_REDIS_HOST}
-      SETTING_MEMCACHED_LOCATION: ${SETTING_MEMCACHED_LOCATION}
-      SECRETS_postgres_password: ${SECRETS_POSTGRES_PASSWORD}
-      SECRETS_rabbitmq_password: ${SECRETS_RABBITMQ_PASSWORD}
-      SECRETS_redis_password: ${SECRETS_REDIS_PASSWORD}
-      SECRETS_memcached_password: ${SECRETS_MEMCACHED_PASSWORD}
+      SETTING_REMOTE_POSTGRES_HOST: database
+      SETTING_RABBITMQ_HOST: rabbitmq
+      SETTING_REDIS_HOST: redis
+      SETTING_MEMCACHED_LOCATION: memcached:11211
+      SECRETS_postgres_password: ${SERVICES_PASSWORD}
+      SECRETS_rabbitmq_password: ${SERVICES_PASSWORD}
+      SECRETS_redis_password: ${SERVICES_PASSWORD}
+      SECRETS_memcached_password: ${SERVICES_PASSWORD}
       SECRETS_secret_key: ${SECRETS_SECRET_KEY}
     volumes:
     - ${DATA}:/data
     ports:
     - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1
+      # Retry quickly: Zulip may start before its database and queue services accept connections.
+      restart_policy:
+        condition: any
+        delay: 5s
+  database:
+    image: docker.io/zulip/zulip-postgresql:14
+    environment:
+      POSTGRES_DB: zulip
+      POSTGRES_USER: zulip
+      POSTGRES_PASSWORD: ${SERVICES_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+  memcached:
+    image: docker.io/library/memcached:latest
+    command:
+    - sh
+    - -euc
+    - |
+      echo 'mech_list: plain' > "$$SASL_CONF_PATH"
+      echo "zulip@$$HOSTNAME:$$MEMCACHED_PASSWORD" > "$$MEMCACHED_SASL_PWDB"
+      echo "zulip@localhost:$$MEMCACHED_PASSWORD" >> "$$MEMCACHED_SASL_PWDB"
+      exec memcached -S
+    environment:
+      SASL_CONF_PATH: /tmp/memcached.conf
+      MEMCACHED_SASL_PWDB: /tmp/memcached-sasl-db
+      MEMCACHED_PASSWORD: ${SERVICES_PASSWORD}
+    deploy:
+      replicas: 1
+  rabbitmq:
+    image: docker.io/library/rabbitmq:latest
+    command:
+    - sh
+    - -euc
+    - |
+      echo 'default_user = zulip' >> /etc/rabbitmq/rabbitmq.conf
+      echo "default_pass = $$RABBITMQ_PASSWORD" >> /etc/rabbitmq/rabbitmq.conf
+      exec docker-entrypoint.sh rabbitmq-server
+    environment:
+      RABBITMQ_PASSWORD: ${SERVICES_PASSWORD}
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
+    command:
+    - sh
+    - -euc
+    - exec docker-entrypoint.sh redis-server --requirepass "$$REDIS_PASSWORD"
+    environment:
+      REDIS_PASSWORD: ${SERVICES_PASSWORD}
     deploy:
       replicas: 1

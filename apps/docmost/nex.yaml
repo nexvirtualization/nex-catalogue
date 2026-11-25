@@ -14,7 +14,10 @@ x-nex:
     APP_SECRET:
       label: App secret
       type: password
-      help: Use a unique value and keep it with the application backups.
+      generate: {format: alnum, length: 32, min_length: 32}
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead. Keep it with
+        the application backups.
     DATABASE_URL:
       label: Database url
       type: password
@@ -25,9 +28,9 @@ x-nex:
       label: Storage folder
       help: Choose the Nex-managed folder mounted at /app/data/storage.
     PORT:
-      label: Published 3000/tcp port
-      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3000/tcp
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and Redis before installing. Use their Nex application names in the connection
     URLs. Create the workspace and administrator on first open.
   web:
@@ -45,4 +48,4 @@ services:
     volumes:
     - ${STORAGE}:/app/data/storage
     ports:
-    - ${PORT:-19475}:3000/tcp
+    - ${PORT:-3000}:3000/tcp

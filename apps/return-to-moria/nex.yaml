@@ -27,6 +27,18 @@ x-nex:
 services:
   return-to-moria:
     image: docker.io/andrewsav/moria:latest
+    # On first start the server only writes MoriaServerConfig.ini, then waits for a key press and
+    # exits. Run that once, then start the server for real without checking Steam a second time.
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |-
+        if [ ! -s /server/MoriaServerConfig.ini ]; then
+          /entrypoint.sh || true
+          [ -s /server/MoriaServerConfig.ini ] || exit 1
+          export SKIP_UPDATE=1
+        fi
+        exec /entrypoint.sh
     expose:
       - 7777/udp
     volumes:

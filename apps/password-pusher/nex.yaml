@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5100.
+      help: The app listens on TCP port 5100 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Password Pusher state
       help: Select This host. Holds the SQLite database, generated keys and local uploads. Include this
@@ -31,6 +31,8 @@ services:
     image: pglombardo/pwpush:latest
     environment:
       HTTP_PORT: '5100'
+      PORT: '5101'
+      BINDING: 127.0.0.1
       PWP__FILES__STORAGE: local
     ports:
     - ${PORT:-5100}:5100/tcp

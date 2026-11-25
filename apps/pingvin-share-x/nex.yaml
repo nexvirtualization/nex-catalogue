@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Shares and uploads
       help: Select This host. Holds account information, share metadata and uploads. Include this folder
@@ -36,7 +36,7 @@ services:
     environment:
       TRUST_PROXY: 'false'
     ports:
-    - ${PORT:-8137}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/opt/app/backend/data
     - ${IMAGES}:/opt/app/frontend/public/img

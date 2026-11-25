@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9999.
+      help: The app listens on TCP port 9999 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Download manager data
       help: Select This host. Stores settings, transfers and job history. Include this folder in a stopped

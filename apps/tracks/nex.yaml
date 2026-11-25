@@ -16,16 +16,28 @@ x-nex:
   web:
     port: 3000
   options:
+    SESSION_SECRET:
+      label: Rails session signing secret
+      type: password
+      help: Generate a unique random secret for this installation. Keep it stable across restarts and restores.
     DATA:
       label: Task database and settings
       help: Keep task database and settings in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   tracks:
     image: ghcr.io/tracksapp/tracks:latest
+    environment:
+      SECRET_KEY_BASE: ${SESSION_SECRET}
+      DATABASE_TYPE: sqlite3
+      DATABASE_NAME: /var/lib/tracks/tracks.sqlite3
+    command:
+    - bash
+    - -ec
+    - ./bin/rails db:migrate && exec ./bin/rails server -b 0.0.0.0
     volumes:
     - ${DATA}:/var/lib/tracks
     ports:

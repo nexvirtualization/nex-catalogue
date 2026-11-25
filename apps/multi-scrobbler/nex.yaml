@@ -24,8 +24,8 @@ x-nex:
       help: IANA time zone for logs and timestamps.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9078.
+      help: The app listens on TCP port 9078 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Scrobbling settings
       help: Select This host. Stores integrations, account state, local configuration and backups. Include

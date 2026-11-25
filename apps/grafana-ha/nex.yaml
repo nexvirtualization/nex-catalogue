@@ -21,7 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Publish through the Docker network so each available Swarm node can forward traffic to a Grafana copy.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PUBLIC_URL:
       label: Public web URL
       help: Full browser URL with scheme and port as needed. Use the TLS-terminating proxy URL when one is configured.
@@ -76,6 +77,6 @@ services:
       GF_UNIFIED_ALERTING_ENABLED: "false"
       GF_LIVE_MAX_CONNECTIONS: "0"
     ports:
-      - "${PORT:-3012}:3000/tcp"
+      - "${PORT:-3000}:3000/tcp"
     deploy:
       replicas: 1

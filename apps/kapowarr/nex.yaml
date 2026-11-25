@@ -23,8 +23,8 @@ x-nex:
       help: IANA time zone for downloads and import history.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5656.
+      help: The app listens on TCP port 5656 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Comic catalogue
       help: Select This host. Stores the catalogue database and app settings. Include this folder in a

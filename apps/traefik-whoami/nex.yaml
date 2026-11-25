@@ -23,11 +23,12 @@ x-nex:
   options:
     PORT:
       label: Diagnostic port
-      help: Published HTTP port for the Swarm ingress endpoint. The container listens on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   whoami:
     image: docker.io/traefik/whoami:latest
     ports:
-      - "${PORT:-8089}:80/tcp"
+      - "${PORT:-80}:80/tcp"
     deploy:
       replicas: 1

@@ -36,8 +36,9 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     LIBRARY:
       label: Game library
       help: Managed directory mounted at /romm/library. Choose storage readable by the application.
@@ -54,7 +55,7 @@ services:
   romm:
     image: ghcr.io/rommapp/romm:latest
     ports:
-    - ${PORT:-23478}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${LIBRARY}:/romm/library:ro
     - ${ASSETS}:/romm/assets

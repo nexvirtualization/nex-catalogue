@@ -20,29 +20,37 @@ x-nex:
   options:
     DATABASE_URL:
       label: Database url
-      help: Connection URL for the database. Percent-encode special characters in credentials.
+      help: 'PostgreSQL connection URL, for example postgresql://user:password@host:5432/prefect. Prefect connects with its asyncpg driver, so a postgresql:// or postgresql+asyncpg:// scheme both work. Percent-encode special characters in credentials.'
       type: password
+    AUTH_USER:
+      label: Sign-in user
+      help: User name for the basic authentication that protects the API and web interface. Leave empty for admin.
     AUTH_SECRET:
-      label: Auth secret
-      help: Use the credential or secret required by the upstream configuration.
+      label: Sign-in password
+      help: Use Generate. Workers and the Prefect CLI authenticate with the user and password as user:password.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 4200 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 4200 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   prefect:
     image: docker.io/prefecthq/prefect:3-latest
     ports:
-    - ${PORT:-23555}:4200/tcp
+    - ${PORT:-4200}:4200/tcp
     environment:
       PREFECT_SERVER_API_HOST: 0.0.0.0
-      PREFECT_API_DATABASE_CONNECTION_URL: ${DATABASE_URL}
-      PREFECT_SERVER_API_AUTH_STRING: ${AUTH_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      PREFECT_SERVER_API_AUTH_STRING: ${AUTH_USER:-admin}:${AUTH_SECRET}
     command:
-    - prefect
-    - server
-    - start
-    - --host
-    - 0.0.0.0
+    - /bin/sh
+    - -ec
+    - |
+      case "$$DATABASE_URL" in
+        postgresql://*) DATABASE_URL="postgresql+asyncpg://$${DATABASE_URL#postgresql://}" ;;
+        postgres://*) DATABASE_URL="postgresql+asyncpg://$${DATABASE_URL#postgres://}" ;;
+      esac
+      export PREFECT_API_DATABASE_CONNECTION_URL="$$DATABASE_URL"
+      exec prefect server start --host 0.0.0.0
     deploy:
       replicas: 1

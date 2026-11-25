@@ -41,8 +41,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 1337.
+      help: The app listens on TCP port 1337 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Board files
       help: Select This host. Stores board assets and user uploads outside the database. Include this
@@ -59,7 +59,7 @@ services:
       DEFAULT_ADMIN_NAME: Administrator
       DEFAULT_ADMIN_USERNAME: admin
     ports:
-    - ${PORT:-8413}:1337/tcp
+    - ${PORT:-1337}:1337/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

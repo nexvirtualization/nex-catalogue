@@ -2,14 +2,14 @@
 x-nex:
   name: Nginx Proxy Manager
   summary: Manage reverse proxies and HTTPS certificates in a web UI
-  description: HTTPS reverse proxy using SQLite. In Network choose a registered cluster VLAN reachable by your clients,
-    Fixed address/prefix and Default gateway; leave Also publish ports on host addresses unchecked. Open http://APP-IP:81
-    and complete admin setup. Public DNS/router forwarding should reach APP-IP ports 80 and 443. In Proxy Hosts
-    use the destination Nex app's Name inside applications from its Review/Summary and its internal port, such as
-    a Grafana installation's name with port 3000. The shared Nex app network already connects these apps. Enable
-    WebSockets where the upstream needs them. On Basics choose Runs on, Only these hosts and one host; keep state
-    folders on This host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now
-    with the stopped-copy option and select all state folders before updates.
+  description: HTTPS reverse proxy using SQLite. In Network choose a registered cluster VLAN reachable by your
+    clients, Fixed address/prefix and Default gateway. Open http://APP-IP:81 and complete admin setup. Public
+    DNS/router forwarding should reach APP-IP ports 80 and 443. In Proxy Hosts use the destination Nex app's
+    Name inside applications from its Review/Summary and its internal port, such as a Grafana installation's
+    name with port 3000. The shared Nex app network already connects these apps. Enable WebSockets where the
+    upstream needs them. On Basics choose Runs on, Only these hosts and one host; keep state folders on This
+    host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the
+    stopped-copy option and select all state folders before updates.
   category: networking
   website: https://nginxproxymanager.com
   source: https://github.com/NginxProxyManager/nginx-proxy-manager
@@ -25,17 +25,16 @@ x-nex:
       help: IANA time zone for logs and certificate tasks, such as Etc/UTC.
     PORT:
       label: Administration port
-      help: With an own a registered cluster VLAN primary and host publishing off, open http://APP-IP:81 for admin.
-        This answer applies only when Also publish ports on host addresses is enabled.
+      help: The app listens on TCP port 81 on its default Docker network. Nex does not publish it on host
+        addresses.
     HTTP_PORT:
       label: Proxy HTTP port
-      help: Optional host-published HTTP port. With an own primary address use APP-IP:80 directly; public port 80
-        must reach it for HTTP-01 certificate challenges. For upstreams use Nex Name inside applications plus the
-        internal app port.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. For upstreams use Nex Name inside applications plus the internal app port.
     HTTPS_PORT:
       label: Proxy HTTPS port
-      help: Optional host-published HTTPS port. With an own primary address and host publishing off, HTTPS listens
-        on APP-IP:443. Forward public port 443 to that address if remote access is intended.
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses. Forward public port 443 to that address if remote access is intended.
     DATA:
       label: Proxy configuration and database
       help: Keep Proxy configuration and database on This host. Nex initializes /data without host directory setup.

@@ -31,9 +31,9 @@ x-nex:
       label: Import folder
       help: Choose the Nex-managed folder mounted at /opt/app/import.
     PORT:
-      label: Published 4000/tcp port
-      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 4000/tcp
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a PostgreSQL database before installing. Keep the UI behind authentication and store
     backups of the encryption key. MQTT integration and Grafana dashboards are separate.
   web:
@@ -55,4 +55,4 @@ services:
     volumes:
     - ${IMPORT}:/opt/app/import
     ports:
-    - ${PORT:-19878}:4000/tcp
+    - ${PORT:-4000}:4000/tcp

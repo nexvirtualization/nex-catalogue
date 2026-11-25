@@ -34,7 +34,8 @@ x-nex:
       help: Use a writable folder on This host for the SQLite database. Back up this folder.
     PORT:
       label: Web port
-      help: Host-published HTTP port when host publishing is enabled.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   booklogr:
     image: docker.io/library/caddy:latest
@@ -52,7 +53,7 @@ services:
         }
         CADDYFILE
     ports:
-      - ${PORT:-23389}:80/tcp
+      - ${PORT:-80}:80/tcp
     deploy:
       replicas: 1
   web:

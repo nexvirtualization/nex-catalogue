@@ -35,9 +35,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /mnt/data.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision compatible MariaDB and Redis instances. Apply the correct public hostname and back
     up Data and the database together.
   web:
@@ -63,4 +63,4 @@ services:
     volumes:
     - ${DATA}:/mnt/data
     ports:
-    - ${PORT:-19574}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

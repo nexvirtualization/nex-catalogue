@@ -23,7 +23,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port for the Swarm ingress endpoint. NGINX listens on container port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   nginx:
     image: docker.io/library/nginx:latest
@@ -50,6 +51,6 @@ services:
         NGINX
         exec nginx -g 'daemon off;'
     ports:
-      - "${PORT:-8088}:80/tcp"
+      - "${PORT:-80}:80/tcp"
     deploy:
       replicas: 1

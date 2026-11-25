@@ -20,10 +20,9 @@ x-nex:
       help: IANA time zone for the feed refresh scheduler, such as Etc/UTC.
     PORT:
       label: Web port
-      help: Published HTTP port. Finish the installer and create the administrator immediately on a trusted network;
-        choose SQLite as the database. With Network → Docker and host publishing enabled, use the chosen host web
-        port. On a registered VLAN or private Primary network with its own address, use that address and internal
-        port 80; host publishing is a separate switch.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. Finish the installer and create the administrator immediately on a trusted network; choose
+        SQLite as the database.
     DATA:
       label: Accounts, feeds and database
       help: Persistent /var/www/FreshRSS/data with settings, accounts and the SQLite database. The image uses www-data
@@ -40,7 +39,7 @@ services:
       TZ: ${TZ:-Etc/UTC}
       CRON_MIN: 1,31
     ports:
-    - ${PORT:-8086}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/FreshRSS/data
     - ${EXTENSIONS}:/var/www/FreshRSS/extensions

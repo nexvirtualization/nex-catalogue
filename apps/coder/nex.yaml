@@ -26,13 +26,18 @@ x-nex:
       help: Create the database and its dedicated user first. Supply a complete PostgreSQL URI with a
         percent-encoded password. Nex applications can use the database app connection name and port 5432.
       type: password
+    DB_SSLMODE:
+      label: Database TLS mode
+      help: PostgreSQL sslmode used when the connection string does not set one. Leave empty for disable
+        (no TLS, suitable for a database on the Nex application network). Enter require or verify-full when
+        the database is reached over an untrusted network.
     PUBLIC_URL:
       label: Public web address
       help: Full URL clients will open, including scheme and any non-default port.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7080.
+      help: The app listens on TCP port 7080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   coder:
     image: ghcr.io/coder/coder:latest
@@ -40,7 +45,8 @@ services:
       CODER_PG_CONNECTION_URL: ${DATABASE_URL}
       CODER_HTTP_ADDRESS: 0.0.0.0:7080
       CODER_ACCESS_URL: ${PUBLIC_URL}
+      PGSSLMODE: ${DB_SSLMODE:-disable}
     ports:
-    - ${PORT:-8807}:7080/tcp
+    - ${PORT:-7080}:7080/tcp
     deploy:
       replicas: 1

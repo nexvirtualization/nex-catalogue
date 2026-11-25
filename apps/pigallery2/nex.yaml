@@ -23,9 +23,9 @@ x-nex:
       label: Thumbnails folder
       help: Choose the Nex-managed folder mounted at /app/data/tmp.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Configure the images folder as a Nex share and change the initial administrator password. Back
     up the Config and database folders together.
   web:
@@ -43,4 +43,4 @@ services:
     - ${IMAGES}:/app/data/images:ro
     - ${THUMBNAILS}:/app/data/tmp
     ports:
-    - ${PORT:-19962}:80/tcp
+    - ${PORT:-80}:80/tcp

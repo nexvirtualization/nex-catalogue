@@ -20,24 +20,30 @@ x-nex:
     port: 6791
   options:
     API_URL:
-      label: Api url
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Public API address
+      help: Full address clients use to reach the API, for example https://convex-api.example.com, or
+        http://<host address>:24513 when published on the default port. Leave empty for http://localhost:24513.
     ACTIONS_URL:
-      label: Actions url
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Public HTTP actions address
+      help: Full address clients use to reach HTTP actions, for example https://convex-site.example.com, or
+        http://<host address>:25513 when published on the default port. Leave empty for http://localhost:25513.
     INSTANCE_SECRET:
       label: Instance secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate and keep it. A 64-character hexadecimal key is used as entered; any other value
+        is turned into a 64-character key with SHA-256.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 6791 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 6791 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
-      label: Published public API port
-      help: Host-published port for the internal 3210/tcp endpoint.
+      label: Public API port
+      help: The app listens on TCP port 3210 on its default Docker network. Nex does not publish it on host
+        addresses.
     ACTIONS_PORT:
-      label: Published HTTP actions port
-      help: Host-published port for the internal 3211/tcp endpoint.
+      label: HTTP actions port
+      help: The app listens on TCP port 3211 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Convex data
       help: Managed directory mounted at /convex/data. Choose storage writable by the backend.
@@ -45,9 +51,9 @@ services:
   convex:
     image: docker.io/library/caddy:latest
     ports:
-    - ${PORT:-23513}:6791/tcp
-    - ${API_PORT:-24513}:3210/tcp
-    - ${ACTIONS_PORT:-25513}:3211/tcp
+    - ${PORT:-6791}:6791/tcp
+    - ${API_PORT:-3210}:3210/tcp
+    - ${ACTIONS_PORT:-3211}:3211/tcp
     entrypoint:
     - /bin/sh
     command:
@@ -69,9 +75,20 @@ services:
       replicas: 1
   backend:
     image: ghcr.io/convex/convex-backend:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      case "$$INSTANCE_SECRET" in
+        *[!0-9a-fA-F]*|"") INSTANCE_SECRET=$$(printf '%s' "$$INSTANCE_SECRET" | sha256sum | cut -d' ' -f1) ;;
+        ????????????????????????????????????????????????????????????????) ;;
+        *) INSTANCE_SECRET=$$(printf '%s' "$$INSTANCE_SECRET" | sha256sum | cut -d' ' -f1) ;;
+      esac
+      export INSTANCE_SECRET
+      exec ./run_backend.sh
     environment:
-      CONVEX_CLOUD_ORIGIN: ${API_URL}
-      CONVEX_SITE_ORIGIN: ${ACTIONS_URL}
+      CONVEX_CLOUD_ORIGIN: ${API_URL:-http://localhost:24513}
+      CONVEX_SITE_ORIGIN: ${ACTIONS_URL:-http://localhost:25513}
       INSTANCE_SECRET: ${INSTANCE_SECRET}
       DISABLE_BEACON: 'true'
     volumes:
@@ -81,6 +98,6 @@ services:
   dashboard:
     image: ghcr.io/convex/convex-dashboard:latest
     environment:
-      NEXT_PUBLIC_DEPLOYMENT_URL: ${API_URL}
+      NEXT_PUBLIC_DEPLOYMENT_URL: ${API_URL:-http://localhost:24513}
     deploy:
       replicas: 1

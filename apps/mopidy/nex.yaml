@@ -29,11 +29,12 @@ x-nex:
       help: IANA time zone for logging.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 6680.
+      help: The app listens on TCP port 6680 on its default Docker network. Nex does not publish it on host
+        addresses.
     MPD_PORT:
       label: Mpd Port
-      help: Host-published MPD control port for trusted clients.
+      help: The app listens on TCP port 6600 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Mopidy configuration
       help: Select This host. Stores player and audio-output configuration. Include this folder in a stopped

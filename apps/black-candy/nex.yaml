@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Music library database
       help: Select This host. Stores application data and settings. Include this folder in a stopped Nex
@@ -37,7 +37,7 @@ services:
     environment:
       MEDIA_PATH: /media_data
     ports:
-    - ${PORT:-8378}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/app/storage
     - ${MEDIA}:/media_data:ro

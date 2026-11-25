@@ -17,8 +17,8 @@ x-nex:
       help: ZNC configuration, accounts and runtime state.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 6501.
+      help: The app listens on TCP port 6501 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   znc:
     image: lscr.io/linuxserver/znc:latest

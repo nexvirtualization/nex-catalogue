@@ -14,10 +14,14 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port; Gitea still listens on container port 3000. Until the install page is finished, anyone who opens it can claim the administrator account, so complete it straight after deploying on a trusted network. Open sign-up stays disabled; the administrator adds other users.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses. Until the install page is finished, anyone who opens it can claim the administrator account,
+        so complete it straight after deploying on a trusted network. Open sign-up stays disabled; the
+        administrator adds other users.
     SSH_PORT:
       label: SSH port
-      help: Published TCP port for git over SSH, shown in clone URLs. Use an unused port; the host's own SSH normally holds 22.
+      help: The app listens on TCP port 22 on its default Docker network. Nex does not publish it on host
+        addresses.
     USER_UID:
       label: User ID
       help: Numeric UID that owns repository and database files. The data folder must be writable by this UID or the group below.
@@ -39,11 +43,11 @@ services:
       USER_UID: "${USER_UID:-1000}"
       USER_GID: "${USER_GID:-1000}"
       GITEA__database__DB_TYPE: sqlite3
-      GITEA__server__SSH_PORT: "${SSH_PORT:-2222}"
+      GITEA__server__SSH_PORT: "${SSH_PORT:-22}"
       GITEA__service__DISABLE_REGISTRATION: "true"
     ports:
       - "${PORT:-3000}:3000/tcp"
-      - "${SSH_PORT:-2222}:22/tcp"
+      - "${SSH_PORT:-22}:22/tcp"
     volumes:
       - "${DATA}:/data"
     deploy:

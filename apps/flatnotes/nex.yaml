@@ -29,8 +29,9 @@ x-nex:
       help: Generate and retain a random secret for this deployment.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notes and search index
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -38,7 +39,7 @@ services:
   flatnotes:
     image: docker.io/dullage/flatnotes:latest
     ports:
-    - ${PORT:-20201}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/data
     environment:

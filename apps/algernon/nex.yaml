@@ -2,8 +2,9 @@
 x-nex:
   name: Algernon
   summary: Serve Lua applications and static web files
-  description: Put your application files in the managed site folder. Follow the upstream configuration
-    documentation if you need a proxy, custom Lua modules or a backing database.
+  description: Put your application files in the managed site folder. A first start writes a placeholder
+    index.html there when the folder has no index file, so replace it with your own site. Follow the upstream
+    configuration documentation if you need a proxy, custom Lua modules or a backing database.
   category: development
   website: https://github.com/xyproto/algernon
   source: https://github.com/xyproto/algernon
@@ -21,14 +22,31 @@ x-nex:
       help: Keep website files in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 4000.
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   algernon:
     image: docker.io/xyproto/algernon:latest
+    entrypoint: [/bin/algernon, --dev, --autorefresh, --noninteractive, /srv/algernon, ":4000"]
     volumes:
     - ${SITE}:/srv/algernon
     ports:
     - ${PORT:-4000}:4000/tcp
+    deploy:
+      replicas: 1
+  # The Algernon image has no shell, so this helper writes a placeholder page into an empty site folder.
+  # Algernon serves files as they appear.
+  site-init:
+    image: docker.io/library/busybox:latest
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if ! ls /site/index.* /site/main.* >/dev/null 2>&1; then
+        echo '<!doctype html><title>Algernon</title><h1>Algernon is running</h1><p>Replace this file with your own site.</p>' > /site/index.html
+      fi
+      exec sleep infinity
+    volumes:
+    - ${SITE}:/site
     deploy:
       replicas: 1

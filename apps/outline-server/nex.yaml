@@ -2,10 +2,10 @@
 x-nex:
   name: Outline Server
   summary: Manage Outline access keys for a private proxy
-  description: Select a registered Primary network reachable by intended clients. Prepare the Outline
-    server config and TLS keypair in the state folder before first start. Configure the public hostname
-    and the access-keys port 4530 in shadowbox_server_config.json, and add the HTTPS API address and certificate
-    fingerprint to Outline Manager.
+  description: Select a registered Primary network reachable by intended clients. On first start the
+    server creates its own self-signed TLS certificate and a default access-key port of 4530 in the
+    state folder. Add the HTTPS API address and the certificate fingerprint printed in the task logs to
+    Outline Manager. The server needs internet access at first start to install openssl.
   category: networking
   website: https://getoutline.org/
   source: https://github.com/OutlineFoundation/outline-server
@@ -17,14 +17,19 @@ x-nex:
       label: Management API path secret
       help: Use Generate to produce a random URL-safe path prefix. Keep it private.
       type: password
+    PUBLIC_HOST:
+      label: Public hostname or IP
+      help: Optional. Address given to clients in new access keys. Leave empty to detect the server's
+        public IP address at start.
     API_PORT:
       label: Api Port
-      help: Host-published HTTPS management API port. Restrict it to authorized administrators.
+      help: The app listens on TCP port 34331 on its default Docker network. Nex does not publish it on host
+        addresses. Restrict it to authorized administrators.
     DATA:
       label: Outline state and certificates
-      help: Select This host. Choose a prepared folder with shadowbox_server_config.json, shadowbox-selfsigned.crt
-        and shadowbox-selfsigned.key. Preserve the generated access keys. Include this folder in a stopped
-        Nex backup.
+      help: Select This host. Choose a writable folder. The server creates its certificate, key and
+        config here if missing, and keeps access keys here. Do not delete the certificate or Outline
+        Manager will stop trusting the server. Include this folder in a stopped Nex backup.
 services:
   outline-server:
     image: quay.io/outline/shadowbox:stable
@@ -34,6 +39,19 @@ services:
       SB_API_PREFIX: ${API_PREFIX}
       SB_CERTIFICATE_FILE: /state/shadowbox-selfsigned.crt
       SB_PRIVATE_KEY_FILE: /state/shadowbox-selfsigned.key
+      SB_PUBLIC_IP: ${PUBLIC_HOST:-}
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /state/shadowbox-selfsigned.crt ] || [ ! -f /state/shadowbox-selfsigned.key ]; then
+        command -v openssl >/dev/null || apk add --no-cache openssl >/dev/null
+        openssl req -x509 -nodes -days 3650 -newkey rsa:4096 -subj /CN=outline \
+          -keyout /state/shadowbox-selfsigned.key -out /state/shadowbox-selfsigned.crt
+      fi
+      [ -f /state/shadowbox_server_config.json ] || echo '{"portForNewAccessKeys":4530}' > /state/shadowbox_server_config.json
+      node -e 'const c=new (require("crypto").X509Certificate)(require("fs").readFileSync("/state/shadowbox-selfsigned.crt"));console.log("Outline certSha256 for Outline Manager: "+c.fingerprint256.replace(/:/g,""))'
+      exec /cmd.sh
     ports:
     - ${API_PORT:-34331}:34331/tcp
     expose:

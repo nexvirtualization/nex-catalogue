@@ -22,16 +22,16 @@ x-nex:
       help: Keep integration key material in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3333.
+      help: The app listens on TCP port 3333 on its default Docker network. Nex does not publish it on host
+        addresses.
     EVENTS_PORT:
       label: Analytics service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9696.
+      help: The app listens on TCP port 9696 on its default Docker network. Nex does not publish it on host
+        addresses.
     SYNC_PORT:
       label: Synchronization service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9697.
+      help: The app listens on TCP port 9697 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   middleware:
     image: docker.io/middlewareeng/middleware:latest

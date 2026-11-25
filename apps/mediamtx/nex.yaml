@@ -12,17 +12,17 @@ x-nex:
   primary_service: mediamtx
   options:
     PORT:
-      label: Published 8554/tcp port
-      help: Host port for application listener 8554/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8554/tcp
+      help: The app listens on TCP port 8554 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 1935/tcp port
-      help: Host port for application listener 1935/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 1935/tcp
+      help: The app listens on TCP port 1935 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published 8888/tcp port
-      help: Host port for application listener 8888/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8888/tcp
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Publish and read streams over TCP RTSP or RTMP. The HLS endpoint is on 8888. Place this profile
     on a trusted network or configure access controls before publication.
 services:
@@ -35,6 +35,6 @@ services:
       MTX_WEBRTC: 'no'
       MTX_SRT: 'no'
     ports:
-    - ${PORT:-19866}:8554/tcp
-    - ${PORT_2:-20866}:1935/tcp
-    - ${PORT_3:-21866}:8888/tcp
+    - ${PORT:-8554}:8554/tcp
+    - ${PORT_2:-1935}:1935/tcp
+    - ${PORT_3:-8888}:8888/tcp

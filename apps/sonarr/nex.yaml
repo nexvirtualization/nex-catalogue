@@ -22,7 +22,8 @@ x-nex:
       help: IANA time zone name, such as Etc/UTC.
     PORT:
       label: Web port
-      help: Published HTTP port. Set up application authentication before allowing other users to connect.
+      help: The app listens on TCP port 8989 on its default Docker network. Nex does not publish it on host
+        addresses. Set up application authentication before allowing other users to connect.
     CONFIG:
       label: Configuration
       help: Persistent settings, database and credentials at /config. Must be writable by the selected UID/GID; back up this folder.

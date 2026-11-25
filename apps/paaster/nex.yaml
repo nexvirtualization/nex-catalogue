@@ -42,13 +42,14 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   paaster:
     image: docker.io/wardpearce/paaster:latest
     ports:
-    - ${PORT:-23512}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     environment:
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_REGION: ${S3_REGION}

@@ -39,11 +39,12 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
       label: Api Port
-      help: HTTP endpoint for the GrowthBook API, used by HTTPS reverse proxies.
+      help: The app listens on TCP port 3100 on its default Docker network. Nex does not publish it on host
+        addresses. HTTP endpoint for the GrowthBook API, used by HTTPS reverse proxies.
     DATA:
       label: GrowthBook uploads
       help: Select This host. Stores image and attachment uploads outside MongoDB. Include this folder
@@ -58,7 +59,7 @@ services:
       JWT_SECRET: ${SESSION_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
     ports:
-    - ${PORT:-8388}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     - ${API_PORT:-3100}:3100/tcp
     volumes:
     - ${DATA}:/usr/local/src/app/packages/back-end/uploads

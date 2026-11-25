@@ -41,13 +41,19 @@ x-nex:
       label: Admin user
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 6253 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 6253 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   budget-board:
     image: ghcr.io/teelur/budget-board/client:v3
+    # nginx resolves the API host once at start and exits if it is not registered yet.
+    entrypoint:
+    - /bin/sh
+    - -c
+    - until getent hosts budget-board-server >/dev/null; do sleep 2; done; exec /bin/sh nginx-substitute.sh
     ports:
-    - ${PORT:-23554}:6253/tcp
+    - ${PORT:-6253}:6253/tcp
     environment:
       PORT: '6253'
       VITE_SERVER_ADDRESS: budget-board-server
@@ -69,5 +75,10 @@ services:
       AUTO_UPDATE_DB: 'true'
       OIDC_ENABLED: 'false'
       DISABLE_NEW_USERS: ${DISABLE_SIGNUP:-false}
+    # The server runs its migrations at once and exits if the database is not reachable yet.
+    entrypoint:
+    - /bin/bash
+    - -c
+    - until (exec 3<>/dev/tcp/$${POSTGRES_HOST}/$${POSTGRES_PORT}) 2>/dev/null; do sleep 2; done; exec dotnet BudgetBoard.WebAPI.dll
     deploy:
       replicas: 1

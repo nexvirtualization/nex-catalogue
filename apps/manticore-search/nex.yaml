@@ -17,12 +17,12 @@ x-nex:
       help: Keep search indexes in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9308.
+      help: The app listens on TCP port 9308 on its default Docker network. Nex does not publish it on host
+        addresses.
     SQL_PORT:
       label: SQL API port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9306.
+      help: The app listens on TCP port 9306 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   manticore-search:
     image: docker.io/manticoresearch/manticore:latest

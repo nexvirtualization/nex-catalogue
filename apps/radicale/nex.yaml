@@ -23,8 +23,8 @@ x-nex:
       help: Radicale collection files and the authentication database.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5232.
+      help: The app listens on TCP port 5232 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   radicale:
     image: ghcr.io/kozea/radicale:stable
@@ -37,7 +37,7 @@ services:
 
       unset RADICALE_PASSWORD
 
-      exec /app/bin/radicale --hosts 0.0.0.0:5232 --auth-type htpasswd --auth-htpasswd-filename /var/lib/radicale/nex-htpasswd
+      exec /app/bin/python /app/bin/radicale --hosts 0.0.0.0:5232 --auth-type htpasswd --auth-htpasswd-filename /var/lib/radicale/nex-htpasswd
       --auth-htpasswd-encryption bcrypt --storage-filesystem-folder /var/lib/radicale/collections'
     entrypoint:
     - /bin/sh

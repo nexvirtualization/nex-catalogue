@@ -24,8 +24,8 @@ x-nex:
       help: IANA time zone for Wake-on-LAN and status events.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8090.
+      help: The app listens on TCP port 8090 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Device configuration
       help: Select This host. Stores device addresses, schedules and accounts. Include this folder in
@@ -37,7 +37,7 @@ services:
       TZ: ${TZ:-Etc/UTC}
       UPSNAP_PING_PRIVILEGED: 'false'
     ports:
-    - ${PORT:-8779}:8090/tcp
+    - ${PORT:-8090}:8090/tcp
     volumes:
     - ${DATA}:/app/pb_data
     deploy:

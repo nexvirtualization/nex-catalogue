@@ -24,8 +24,9 @@ x-nex:
       label: Public object-store URL
       help: Browser-reachable endpoint for attachments.
     API_PORT:
-      label: Backend publication port
-      help: Host port for the browser-facing API reverse proxy upstream.
+      label: Backend API port
+      help: The app listens on TCP port 8201 on its default Docker network. Nex does not publish it on host
+        addresses.
     JWT_SECRET:
       label: JWT signing secret
       type: password
@@ -55,8 +56,8 @@ x-nex:
       help: Secret for the selected object-store access key.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8200.
+      help: The app listens on TCP port 8200 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   alexandrie:
     image: ghcr.io/smaug6739/alexandrie-frontend:latest

@@ -18,6 +18,9 @@ x-nex:
       label: Secret key
       type: password
       help: Use a unique value and keep it with the application backups.
+    S3_ENDPOINT:
+      label: S3 endpoint hostname
+      help: Hostname used by S3 clients (without scheme or port), for example s3.example.com.
     DATA:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /usr/src/app/localData.
@@ -25,9 +28,9 @@ x-nex:
       label: Metadata folder
       help: Choose the Nex-managed folder mounted at /usr/src/app/localMetadata.
     PORT:
-      label: Published 8000/tcp port
-      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8000/tcp
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Set the endpoint host used by S3 clients and use path-style addressing when connecting through
     an app address. Back up object data and metadata together.
 services:
@@ -44,4 +47,4 @@ services:
     - ${DATA}:/usr/src/app/localData
     - ${METADATA}:/usr/src/app/localMetadata
     ports:
-    - ${PORT:-19976}:8000/tcp
+    - ${PORT:-8000}:8000/tcp

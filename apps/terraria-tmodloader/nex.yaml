@@ -5,8 +5,8 @@ x-nex:
   description: >-
     Keep the game folders on This host and choose a registered primary network that players can reach.
     The first boot creates a world. Use the tModLoader client on the same release and join by the
-    app’s Primary address on TCP 7777. To add mods, stop the app and follow the image’s guide to install
-    a modpack in the managed folder. Make a stopped backup before applying game updates.
+    app’s Primary address on TCP 7777. To add mods, stop the app and copy them into the modpack folder
+    named in the options. Make a stopped backup before applying game updates.
   category: games
   website: https://www.tmodloader.net/
   source: https://github.com/PassiveLemon/terraria-docker
@@ -26,20 +26,28 @@ x-nex:
       type: password
       help: Choose a password and share it with your players.
     MODPACK:
-      label: Modpack directory
-      required: false
-      help: Optional name of a modpack directory in the managed folder.
+      label: Modpack name
+      help: Name of the modpack folder in the managed folder's ModPacks directory. Leave empty for Default.
+        An empty modpack with this name is created on first start. To add mods, stop the app and copy them
+        into its Mods folder.
     DATA:
       label: Server data
       help: Choose This host and include this folder in stopped backups.
 services:
   terraria-tmodloader:
     image: docker.io/passivelemon/terraria-docker:tmodloader-latest
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        mkdir -p "/opt/terraria/config/ModPacks/$$MODPACK/Mods"
+        [ -e "/opt/terraria/config/ModPacks/$$MODPACK/Mods/enabled.json" ] || echo '[]' > "/opt/terraria/config/ModPacks/$$MODPACK/Mods/enabled.json"
+        exec /opt/terraria/entrypoint.sh
     environment:
       WORLDNAME: ${WORLD_NAME:-World}
       PASSWORD: ${JOIN_PASSWORD}
       AUTOCREATE: '2'
-      MODPACK: ${MODPACK:-}
+      MODPACK: ${MODPACK:-Default}
     expose:
       - 7777/tcp
     volumes:

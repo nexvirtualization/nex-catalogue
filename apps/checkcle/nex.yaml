@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8090.
+      help: The app listens on TCP port 8090 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Monitoring state
       help: Select This host. Stores the monitoring database, checks and accounts. Include this folder
@@ -31,7 +31,7 @@ services:
   checkcle:
     image: operacle/checkcle:latest
     ports:
-    - ${PORT:-8181}:8090/tcp
+    - ${PORT:-8090}:8090/tcp
     volumes:
     - ${DATA}:/mnt/pb_data
     ulimits:

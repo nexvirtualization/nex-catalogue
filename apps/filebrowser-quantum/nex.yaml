@@ -19,8 +19,9 @@ x-nex:
     port: 80
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Application data
       help: Holds the app data. Choose storage writable by the application.
@@ -31,7 +32,7 @@ services:
   filebrowser-quantum:
     image: ghcr.io/gtsteffaniak/filebrowser:stable
     ports:
-    - ${PORT:-20204}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/home/filebrowser/data
     - ${FILES}:/srv

@@ -18,9 +18,9 @@ x-nex:
     REDIS_URL:
       label: Redis url
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision the application RPC endpoint and a Redis instance. Configure WebSocket forwarding
     to /cable and use the correct secret for your application.
 services:
@@ -35,4 +35,4 @@ services:
       ANYCABLE_SECRET: ${SERVER_SECRET}
       ANYCABLE_REDIS_URL: ${REDIS_URL}
     ports:
-    - ${PORT:-19959}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

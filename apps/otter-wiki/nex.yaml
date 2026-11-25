@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Wiki repository
       help: Select This host. Stores the wiki Git repository and application state. Include this folder
@@ -30,7 +30,7 @@ services:
   otter-wiki:
     image: redimp/otterwiki:latest
     ports:
-    - ${PORT:-8134}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/app-data
     deploy:

@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 x-nex:
   name: Janus WebRTC Gateway
-  summary: Host a WebRTC gateway with a prepared configuration
-  description: Prepare the supported Janus gateway configuration and configure its HTTP or WebSocket control
-    listener on port 8088. Use a client-reachable dedicated network and configure authorized media ranges
-    and NAT addresses.
+  summary: Host a WebRTC gateway with a ready-made configuration
+  description: >-
+    Janus starts with the image's default plugin and transport settings, copied into the Configuration
+    folder on first start, with its HTTP control listener on port 8088. Your API and admin secrets are
+    written into janus.jcfg then; clients must send the API secret. Edit the files in that folder to
+    change plugins, media ranges or NAT addresses; your own files are never overwritten. Use a
+    client-reachable dedicated network.
   category: communication
   website: https://janus.conf.meetecho.com/
   source: https://github.com/meetecho/janus-gateway
@@ -17,24 +20,48 @@ x-nex:
     service: janus
     scheme: http
     port: 8088
+    path: /janus/info
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8088.
+      help: The app listens on TCP port 8088 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
-      label: Prepared Janus configuration
-      help: Select This host. Contains janus.jcfg, transport plugin settings and access configuration.
-        Include this folder in a stopped Nex backup.
+      label: Janus configuration
+      help: Select This host. Holds janus.jcfg and the plugin and transport settings, filled with the
+        defaults on first start. Include this folder in a stopped Nex backup.
+    API_SECRET:
+      label: API secret
+      help: Clients must send this as the apisecret of every request. Use Generate. Letters and digits only.
+      type: password
+    ADMIN_SECRET:
+      label: Admin secret
+      help: Required by the admin API, which is off by default. Use Generate. Letters and digits only.
+      type: password
 services:
   janus:
     image: canyan/janus-gateway:latest
     command:
-    - --configs-folder=/settings
-    - --config=/settings/janus.jcfg
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -e /settings/janus.jcfg ]; then
+        case "$$API_SECRET$$ADMIN_SECRET" in
+          *[!A-Za-z0-9]*) echo "API_SECRET and ADMIN_SECRET may contain letters and digits only" >&2; exit 1 ;;
+        esac
+        cp /usr/local/etc/janus/*.jcfg /settings/
+        sed -i \
+          -e "s|^\([[:space:]]*\)#api_secret = .*|\1api_secret = \"$$API_SECRET\"|" \
+          -e "s|^\([[:space:]]*\)admin_secret = .*|\1admin_secret = \"$$ADMIN_SECRET\"|" \
+          /settings/janus.jcfg
+      fi
+      exec /usr/local/bin/janus --configs-folder=/settings --config=/settings/janus.jcfg
+    environment:
+      API_SECRET: ${API_SECRET}
+      ADMIN_SECRET: ${ADMIN_SECRET}
     ports:
-    - ${PORT:-8926}:8088/tcp
+    - ${PORT:-8088}:8088/tcp
     volumes:
-    - ${DATA}:/settings:ro
+    - ${DATA}:/settings
     deploy:
       replicas: 1

@@ -24,8 +24,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5244.
+      help: The app listens on TCP port 5244 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: OpenList data
       help: Select This host. Holds the SQLite index, settings and provider credentials. Include this
@@ -33,11 +33,20 @@ x-nex:
 services:
   openlist:
     image: openlistteam/openlist:latest
+    user: '0:0'
+    command:
+    - /bin/sh
+    - -ec
+    - |
+      if ! su -s /bin/sh -c 'test -w /opt/openlist/data && test -x /opt/openlist/data' openlist; then
+        chown openlist:openlist /opt/openlist/data
+      fi
+      exec su -s /bin/sh -c 'exec /entrypoint.sh' openlist
     environment:
       OPENLIST_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       UMASK: '022'
     ports:
-    - ${PORT:-8144}:5244/tcp
+    - ${PORT:-5244}:5244/tcp
     volumes:
     - ${DATA}:/opt/openlist/data
     deploy:

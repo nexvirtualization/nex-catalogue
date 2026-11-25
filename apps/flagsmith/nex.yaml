@@ -25,13 +25,19 @@ x-nex:
     FLAGSMITH_DOMAIN:
       label: Flagsmith hostname
       help: Client-facing domain and optional port, without a scheme.
+    ALLOWED_HOSTS:
+      label: Allowed host names
+      help: Comma-separated host names Flagsmith answers to. Leave empty for *, which accepts any name;
+        list your hostname and the application address to restrict it.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   flagsmith:
     image: docker.io/flagsmith/flagsmith:latest
+    healthcheck:
+      start_period: 10m
     environment:
       USE_POSTGRES_FOR_ANALYTICS: 'true'
       ENVIRONMENT: production
@@ -39,6 +45,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       FLAGSMITH_DOMAIN: ${FLAGSMITH_DOMAIN}
+      DJANGO_ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
     ports:
     - ${PORT:-8000}:8000/tcp
     deploy:

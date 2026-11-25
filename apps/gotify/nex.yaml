@@ -27,8 +27,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notifications and configuration
       help: Select This host. Stores the SQLite database, notifications and plugin data. Include this
@@ -40,7 +40,7 @@ services:
       GOTIFY_DEFAULTUSER_NAME: ${ADMIN_USERNAME:-admin}
       GOTIFY_DEFAULTUSER_PASS: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8399}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

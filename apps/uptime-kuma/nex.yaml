@@ -2,13 +2,13 @@
 x-nex:
   name: Uptime Kuma
   summary: Monitor service uptime and send outage notifications
-  description: Service uptime checks, notifications and status pages. In Install keep Docker as Primary network
-    for host access, then open the host endpoint on port 3001 and create the first administrator immediately. For
-    a monitor targeting another Nex app, enter that app's Name inside applications from Review/Summary and its internal
-    listener port; published host ports are unnecessary. Host Docker socket access is not included. Upstream does
-    not support NFS for this database. On Basics choose Runs on, Only these hosts and one host; keep state folders
-    on This host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the
-    stopped-copy option and select all state folders before updates.
+  description: Service uptime checks, notifications and status pages. In Install keep Docker as Primary network,
+    then open the app address on port 3001 and create the first administrator immediately. For a monitor
+    targeting another Nex app, enter that app's Name inside applications from Review/Summary and its internal
+    listener port. Host Docker socket access is not included. Upstream does not support NFS for this database.
+    On Basics choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one
+    copy on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and
+    select all state folders before updates.
   category: monitoring
   website: https://uptime.kuma.pet
   source: https://github.com/louislam/uptime-kuma
@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host HTTP port with Docker. After install use Summary, Network, Host-published endpoints; create the
-        initial administrator immediately. With an own primary address and publishing off, use APP-IP:3001.
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Monitoring database
       help: Keep Monitoring database on This host; do not select an NFS share. Nex initializes the persistent /app/data

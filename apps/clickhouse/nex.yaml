@@ -24,12 +24,12 @@ x-nex:
       help: Tables and database state.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8123.
+      help: The app listens on TCP port 8123 on its default Docker network. Nex does not publish it on host
+        addresses.
     NATIVE_PORT:
       label: Native SQL port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9000.
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   clickhouse:
     image: docker.io/clickhouse/clickhouse-server:latest

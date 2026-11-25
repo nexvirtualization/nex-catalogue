@@ -27,7 +27,8 @@ x-nex:
     PACK_ID:
       label: Feed The Beast modpack ID
       help: >-
-        Enter the numeric pack ID shown in its Feed The Beast modpack page URL.
+        Enter the numeric pack ID shown in its Feed The Beast modpack page URL. Leave empty for 126,
+        FTB Presents Direwolf20 1.21 (Java 21).
     PACK_VERSION:
       label: Feed The Beast version ID
       help: >-
@@ -50,7 +51,7 @@ services:
       ENFORCE_WHITELIST: 'true'
       EXISTING_WHITELIST_FILE: SYNCHRONIZE
       WHITELIST: ${PLAYERS}
-      FTB_MODPACK_ID: ${PACK_ID}
+      FTB_MODPACK_ID: ${PACK_ID:-126}
       FTB_MODPACK_VERSION_ID: ${PACK_VERSION:-}
     expose:
       - 25565/tcp

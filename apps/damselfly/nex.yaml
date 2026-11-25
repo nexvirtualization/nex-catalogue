@@ -20,9 +20,9 @@ x-nex:
       label: Thumbnails folder
       help: Choose the Nex-managed folder mounted at /thumbs.
     PORT:
-      label: Published 6363/tcp port
-      help: Host port for application listener 6363/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 6363/tcp
+      help: The app listens on TCP port 6363 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Mount the Pictures library, then configure access to the web UI. Back up Config. Thumbnail generation
     uses Thumbnails as a working folder.
   web:
@@ -37,4 +37,4 @@ services:
     - ${PICTURES}:/pictures
     - ${THUMBNAILS}:/thumbs
     ports:
-    - ${PORT:-19981}:6363/tcp
+    - ${PORT:-6363}:6363/tcp

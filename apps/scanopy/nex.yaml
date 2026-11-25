@@ -30,8 +30,8 @@ x-nex:
       help: Full URL clients will open, including scheme and any non-default port.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 60072.
+      help: The app listens on TCP port 60072 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Scanopy state
       help: Select This host. Stores application data outside PostgreSQL. Include this folder in a stopped
@@ -44,7 +44,7 @@ services:
       SCANOPY_WEB_EXTERNAL_PATH: /app/static
       SCANOPY_PUBLIC_URL: ${PUBLIC_URL}
     ports:
-    - ${PORT:-8833}:60072/tcp
+    - ${PORT:-60072}:60072/tcp
     volumes:
     - ${DATA}:/data
     deploy:

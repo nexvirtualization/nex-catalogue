@@ -27,7 +27,8 @@ x-nex:
       type: password
     IRC_TLS_PORT:
       label: Irc Tls Port
-      help: IRC client TLS port. Clients on a dedicated network use the app address and port 6697.
+      help: The app listens on TCP port 6697 on its default Docker network. Nex does not publish it on host
+        addresses. IRC client TLS port.
     DATA:
       label: IRC server configuration
       help: Select This host. Holds the IRC configuration and certificate materials. Include this folder

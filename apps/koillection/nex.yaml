@@ -27,9 +27,9 @@ x-nex:
       label: Uploads folder
       help: Choose the Nex-managed folder mounted at /uploads.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL before installation. Match the database major-version setting to that server
     and create your user on first access.
   web:
@@ -52,4 +52,4 @@ services:
     volumes:
     - ${UPLOADS}:/uploads
     ports:
-    - ${PORT:-19551}:80/tcp
+    - ${PORT:-80}:80/tcp

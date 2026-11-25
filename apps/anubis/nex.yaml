@@ -14,19 +14,25 @@ x-nex:
   web:
     port: 8923
   options:
+    USE_REMOTE_ADDRESS:
+      label: Use connection address
+      help: Leave empty for true, which takes the client address from the connection. Enter false only behind a
+        reverse proxy that sends X-Real-IP, otherwise Anubis refuses every request.
     TARGET:
       label: Upstream website URL
-      help: Full URL of your service, reachable from the application network.
+      help: Full http:// or https:// URL of the service Anubis protects, reachable from the application network.
+        Verified visitors are proxied there; Anubis answers with an error while it is unreachable.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8923.
+      help: The app listens on TCP port 8923 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   anubis:
     image: ghcr.io/techarohq/anubis:latest
     environment:
       TARGET: ${TARGET}
       BIND: :8923
+      USE_REMOTE_ADDRESS: ${USE_REMOTE_ADDRESS:-true}
     ports:
     - ${PORT:-8923}:8923/tcp
     deploy:

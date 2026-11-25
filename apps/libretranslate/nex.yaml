@@ -3,7 +3,8 @@ x-nex:
   name: LibreTranslate
   summary: Translate text with a locally hosted API and browser interface
   description: This instance can use memory and CPU intensively. Restrict its unauthenticated API to
-    a trusted network. The initial startup can take time while models become available.
+    a trusted network. The first start downloads translation models for the chosen languages, so the
+    interface answers a minute or two later; the models are kept in the model folder.
   category: tools
   website: https://github.com/LibreTranslate/LibreTranslate
   source: https://github.com/LibreTranslate/LibreTranslate
@@ -14,14 +15,33 @@ x-nex:
   web:
     port: 5000
   options:
+    LANGUAGES:
+      label: Languages to load
+      help: Comma-separated language codes to download and serve, for example en,es,fr,de. Each language
+        adds download time and memory. Leave empty for en,es.
+    MODELS:
+      label: Model folder
+      help: Select This host. Keeps the downloaded translation models between restarts. It is handed to
+        the application user on every start.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5000.
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   libretranslate:
     image: docker.io/libretranslate/libretranslate:latest
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R 1032:65534 /home/libretranslate/.local
+      exec setpriv --reuid=1032 --regid=65534 --clear-groups ./scripts/entrypoint.sh
+    environment:
+      LT_LOAD_ONLY: ${LANGUAGES:-en,es}
     ports:
     - ${PORT:-5000}:5000/tcp
+    volumes:
+    - ${MODELS}:/home/libretranslate/.local
     deploy:
       replicas: 1

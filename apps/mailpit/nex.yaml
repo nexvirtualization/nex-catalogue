@@ -19,17 +19,18 @@ x-nex:
     port: 8025
   options:
     SMTP_PORT:
-      label: Published SMTP port
-      help: Set the port used by clients outside Nex when host port publishing is enabled. The internal SMTP
-        listener is 1025.
+      label: SMTP port
+      help: The app listens on TCP port 1025 on its default Docker network. Nex does not publish it on host
+        addresses. The internal SMTP listener is 1025.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 8025. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 8025 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   mailpit:
     image: docker.io/axllent/mailpit:latest
     ports:
-    - ${PORT:-18120}:8025/tcp
-    - ${SMTP_PORT:-18152}:1025/tcp
+    - ${PORT:-8025}:8025/tcp
+    - ${SMTP_PORT:-1025}:1025/tcp
     deploy:
       replicas: 1

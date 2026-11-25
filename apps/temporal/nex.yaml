@@ -28,9 +28,9 @@ x-nex:
       label: Config folder
       help: Choose the Nex-managed folder mounted at /etc/temporal/config/dynamicconfig.
     PORT:
-      label: Published 7233/tcp port
-      help: Host port for application listener 7233/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 7233/tcp
+      help: The app listens on TCP port 7233 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Initialize the PostgreSQL workflow and visibility schemas for this server version. Supply a
     dynamic configuration file named profile.yaml in Configuration before installation. Connect workers on a
     private Nex network and register a namespace.
@@ -52,4 +52,4 @@ services:
     volumes:
     - ${CONFIG}:/etc/temporal/config/dynamicconfig:ro
     ports:
-    - ${PORT:-19966}:7233/tcp
+    - ${PORT:-7233}:7233/tcp

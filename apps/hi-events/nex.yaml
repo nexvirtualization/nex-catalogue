@@ -23,8 +23,11 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     APP_KEY:
       label: App key
-      help: Use the credential or secret required by the upstream configuration.
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead.'
       type: password
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
     JWT_SECRET:
       label: Jwt secret
       help: Use the credential or secret required by the upstream configuration.
@@ -44,20 +47,24 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Event uploads
       help: Managed directory mounted at /app/backend/storage/app. Choose storage writable by the application.
 services:
   hi-events:
     image: docker.io/daveearley/hi.events-all-in-one:v2.2.0
+    healthcheck:
+      start_period: 10m
     ports:
-    - ${PORT:-23536}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/app/backend/storage/app
     environment:
       VITE_FRONTEND_URL: ${PUBLIC_URL}
+      VITE_STRIPE_PUBLISHABLE_KEY: ''
       VITE_API_URL_CLIENT: ${PUBLIC_URL}/api
       VITE_API_URL_SERVER: http://localhost:80/api
       APP_FRONTEND_URL: ${PUBLIC_URL}

@@ -37,8 +37,8 @@ x-nex:
       help: IANA time zone for the desktop session.
     PORT:
       label: Web port
-      help: Host-published HTTPS port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3001.
+      help: The app listens on TCP port 3001 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Application settings
       help: Select This host. Stores desktop and application preferences. Include this folder in a stopped
@@ -57,7 +57,7 @@ services:
       PGID: ${PGID:-1000}
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8128}:3001/tcp
+    - ${PORT:-3001}:3001/tcp
     volumes:
     - ${DATA}:/config
     - ${GAME_FILES}:/games

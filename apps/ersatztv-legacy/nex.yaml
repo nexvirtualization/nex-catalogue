@@ -5,7 +5,7 @@ x-nex:
   summary: Server for creating custom live TV channels from a personal media library
   category: media
   description: Server for creating custom live TV channels from a personal media library. Back up the application
-    folders together and keep them writable by the container.
+    folders together.
   source: https://github.com/ersatztv/legacy
   website: https://ersatztv.org/
   docs: https://ersatztv.org/
@@ -19,10 +19,11 @@ x-nex:
       help: Nex-managed folder mounted at /transcode. Select storage with suitable access permissions.
     FOLDER_3:
       label: Media folder
-      help: Nex-managed folder mounted at /media. Select storage with suitable access permissions.
+      help: Nex-managed folder mounted read-only at /media. It must be readable by UID 1000.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8409/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8409 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8409
   post_install: Complete setup in ErsatzTV and choose /media for local libraries. The transcode folder is working
@@ -32,11 +33,18 @@ services:
     image: ghcr.io/ersatztv/legacy:v26.12.0
     environment:
       HOME: /config
+    # Start as root only to hand the config and transcode folders to UID 1000, then drop to it.
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R 1000:1000 /config /transcode
+      exec setpriv --reuid=1000 --regid=1000 --clear-groups ./ErsatzTV
     volumes:
     - ${FOLDER_1}:/config
     - ${FOLDER_2}:/transcode
     - ${FOLDER_3}:/media:ro
-    user: 1000:1000
     deploy:
       replicas: 1
     ports:

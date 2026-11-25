@@ -28,8 +28,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Application stack data
       help: Select This host. Holds the embedded databases, server state and application configuration.
@@ -41,7 +41,7 @@ services:
       LOWCODER_DB_ENCRYPTION_PASSWORD: ${ENCRYPTION_PASSWORD}
       LOWCODER_DB_ENCRYPTION_SALT: ${ENCRYPTION_SALT}
     ports:
-    - ${PORT:-8179}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/lowcoder-stacks
     deploy:

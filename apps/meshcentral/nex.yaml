@@ -23,8 +23,8 @@ x-nex:
       help: Keep server backups in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 443.
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   meshcentral:
     image: ghcr.io/ylianst/meshcentral:latest

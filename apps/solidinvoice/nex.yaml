@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8765.
+      help: The app listens on TCP port 8765 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Billing application state
       help: Select This host. Stores configuration and generated application state. Include this folder
@@ -29,8 +29,14 @@ x-nex:
 services:
   solidinvoice:
     image: solidinvoice/solidinvoice:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+    - |
+      # SQLite needs its parent directory on a fresh managed volume.
+      mkdir -p -m 0700 /etc/solidinvoice/db
+      exec /usr/local/bin/solidinvoice run --disable-https
     ports:
-    - ${PORT:-8390}:8765/tcp
+    - ${PORT:-8765}:8765/tcp
     volumes:
     - ${DATA}:/etc/solidinvoice
     deploy:

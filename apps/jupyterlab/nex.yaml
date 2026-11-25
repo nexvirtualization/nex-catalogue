@@ -23,8 +23,8 @@ x-nex:
       help: Use the work directory for projects and files that must survive restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   jupyterlab:
     image: quay.io/jupyter/base-notebook:latest

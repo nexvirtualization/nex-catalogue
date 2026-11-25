@@ -14,14 +14,16 @@ x-nex:
   options:
     BROKER_ADDRESS:
       label: Broker address
-      help: Client-resolvable broker hostname and port, for example broker.example.test:9092.
+      help: Client-resolvable broker hostname and port, for example broker.example.test:9092. Port
+        9092 is added when you enter only a hostname.
     DATA:
       label: Broker records and metadata
-      help: Keep broker records and metadata in this managed folder between restarts.
+      help: Choose This host. The broker takes ownership of this folder at start, so a share must allow
+        ownership changes.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9092.
+      help: The app listens on TCP port 9092 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   kafka:
     image: docker.io/apache/kafka:latest
@@ -32,13 +34,22 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${BROKER_ADDRESS}
+      BROKER_ADDRESS: ${BROKER_ADDRESS}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_LOG_DIRS: /usr/logs
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R appuser:appuser /usr/logs
+      case "$$BROKER_ADDRESS" in *:*) ;; *) BROKER_ADDRESS="$$BROKER_ADDRESS:9092" ;; esac
+      export KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://$$BROKER_ADDRESS"
+      exec su -p appuser -s /bin/sh -c 'exec /__cacert_entrypoint.sh /etc/kafka/docker/run'
     volumes:
-    - ${DATA}:/tmp/kraft-combined-logs
+    - ${DATA}:/usr/logs
     ports:
     - ${PORT:-9092}:9092/tcp
     deploy:

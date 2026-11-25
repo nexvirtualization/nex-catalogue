@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Bytebase state
       help: Select This host. Holds the embedded database, settings and migration history. Include this
@@ -31,7 +31,7 @@ services:
   bytebase:
     image: bytebase/bytebase:latest
     ports:
-    - ${PORT:-8372}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/var/opt/bytebase
     deploy:

@@ -3,12 +3,13 @@ x-nex:
   name: Authelia
   summary: Reverse-proxy login and multifactor authentication with shared sessions
   description: >-
-    An authentication portal for self-hosted web apps. Prepare configuration.yml on a registered
-    share before installing. Configure your HTTPS reverse proxy for Authelia and verify a login
-    with one copy before increasing Copies on the Docker network. Every copy reads the same
-    configuration and uses external LDAP, Redis and PostgreSQL. If your proxy is on the shared
-    application network, leave host publishing off. Back up the configuration and external database
-    independently.
+    An authentication portal for self-hosted web apps. On first start it writes a working
+    configuration.yml (one administrator in a local user file, sqlite storage, in-memory sessions,
+    two-factor required for every subdomain of your cookie domain, one-time codes written to
+    notifications.txt) into the configuration folder, and never overwrites an existing file. Edit that
+    file to add rules, LDAP, SMTP, Redis or PostgreSQL. Configure your HTTPS reverse proxy for
+    Authelia and verify a login with one copy. Before raising Copies, move storage and sessions
+    to PostgreSQL and Redis in configuration.yml. Back up the configuration folder.
   category: security
   website: https://www.authelia.com/
   source: https://github.com/authelia/authelia
@@ -19,36 +20,119 @@ x-nex:
   primary_service: authelia
   web: {port: 9091}
   tags: [identity, single-sign-on, multifactor]
+  post_install: >-
+    Sign in with the administrator name and password you set. The first two-factor registration
+    sends a one-time link to notifications.txt in the configuration folder; open that file to read it.
   options:
     CONFIG:
-      label: Prepared Authelia configuration
+      label: Configuration folder
       help: >-
-        Select a protected shared folder reachable from every selected host. Include configuration.yml
-        with your HTTPS portal URL and session cookie domain, access rules, LDAP authentication, Redis
-        sessions, PostgreSQL storage, SMTP notifications and identical persistent secrets for all copies.
-        Leave the listener at port 9091. Make the configuration readable by the container's user and group.
+        Folder for configuration.yml, the user file, the sqlite database and notifications.txt. A default
+        configuration.yml is created on first start if none is present; replace or edit it freely.
+    SECRET:
+      label: Secret key
+      type: password
+      help: >-
+        Use Generate once and keep it. It derives the session, password-reset and database encryption
+        secrets, so changing it makes the stored database unreadable. At least 20 characters.
+    PORTAL_URL:
+      label: Portal URL
+      help: >-
+        Public HTTPS address of this portal, such as https://auth.example.com. Set it: the
+        https://auth.example.com default only lets the portal start. Used only the first time the default
+        configuration is written; later edit configuration.yml.
+    COOKIE_DOMAIN:
+      label: Cookie domain
+      help: >-
+        Parent domain shared by the portal and the sites it protects, such as example.com. The portal
+        address must be inside it. Set it: the example.com default only lets the portal start. Used only
+        when the default configuration is written.
+    ADMIN_USERNAME:
+      label: Administrator name
+      help: Login name of the first user. Leave empty for admin. Used only when the user file does not exist yet.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      type: password
+      help: Use Generate or enter at least 8 characters. Used only when the user file does not exist yet.
+    ADMIN_EMAIL:
+      label: Administrator email
+      help: Address recorded for the first user. Leave empty for admin@example.com. Used only when the user
+        file does not exist yet.
     USER_UID:
-      label: Configuration reader user ID
-      help: Non-root numeric UID that can read the prepared files.
+      label: Run as user ID
+      help: Non-root numeric UID Authelia runs as. Leave empty for 1000. The configuration folder is handed
+        to it at start.
     USER_GID:
-      label: Configuration reader group ID
-      help: Non-root numeric GID that can read the prepared files.
+      label: Run as group ID
+      help: Non-root numeric GID Authelia runs as. Leave empty for 1000.
     PORT:
       label: HTTP backend port
-      help: >-
-        Keep this published port private. A reverse proxy on Nex's shared application network uses
-        the app connection name and internal port 9091. Configure the proxy to send the forwarded headers
-        required by the Authelia integration.
+      help: The app listens on TCP port 9091 on its default Docker network. Nex does not publish it on host
+        addresses. Configure the proxy to send the forwarded headers required by the Authelia integration.
 services:
   authelia:
     image: authelia/authelia:latest
-    user: "${USER_UID:-1000}:${USER_GID:-1000}"
-    entrypoint: [/app/authelia]
-    command: [--config, /config/configuration.yml]
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        cd /config
+        if [ ! -f configuration.yml ]; then
+          cat > configuration.yml <<CONF
+        server:
+          address: 'tcp://:9091/'
+        log:
+          level: info
+        authentication_backend:
+          file:
+            path: /config/users_database.yml
+        access_control:
+          default_policy: deny
+          rules:
+            - domain: '*.$$COOKIE_DOMAIN'
+              policy: two_factor
+        session:
+          cookies:
+            - domain: '$$COOKIE_DOMAIN'
+              authelia_url: '$$PORTAL_URL'
+        storage:
+          local:
+            path: /config/db.sqlite3
+        notifier:
+          filesystem:
+            filename: /config/notifications.txt
+        CONF
+        fi
+        if [ ! -f users_database.yml ]; then
+          hash=$$(/app/authelia crypto hash generate argon2 --password "$$ADMIN_PASSWORD" | sed -n 's/^Digest: //p')
+          cat > users_database.yml <<USERS
+        users:
+          $$ADMIN_USERNAME:
+            disabled: false
+            displayname: Administrator
+            password: '$$hash'
+            email: '$$ADMIN_EMAIL'
+            groups: [admins]
+        USERS
+        fi
+        derive() { printf '%s:%s' "$$SECRET" "$$1" | sha256sum | cut -d' ' -f1; }
+        export AUTHELIA_SESSION_SECRET=$$(derive session)
+        export AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=$$(derive reset-password)
+        export AUTHELIA_STORAGE_ENCRYPTION_KEY=$$(derive storage)
+        exec /app/entrypoint.sh --config /config/configuration.yml
+    environment:
+      SECRET: "${SECRET}"
+      PORTAL_URL: "${PORTAL_URL:-https://auth.example.com}"
+      COOKIE_DOMAIN: "${COOKIE_DOMAIN:-example.com}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
+      PUID: "${USER_UID:-1000}"
+      PGID: "${USER_GID:-1000}"
     ports:
       - "${PORT:-9091}:9091/tcp"
     volumes:
-      - "${CONFIG}:/config:ro"
+      - "${CONFIG}:/config"
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:9091/api/health"]
       interval: 15s

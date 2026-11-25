@@ -30,8 +30,9 @@ x-nex:
       help: Generate and retain a random secret for this deployment.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9119 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 9119 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Hermes state and configuration
       help: Managed directory mounted at /opt/data. Choose storage writable by the application.
@@ -39,7 +40,7 @@ services:
   hermes-agent:
     image: docker.io/nousresearch/hermes-agent:latest
     ports:
-    - ${PORT:-20198}:9119/tcp
+    - ${PORT:-9119}:9119/tcp
     volumes:
     - ${DATA}:/opt/data
     environment:

@@ -24,8 +24,8 @@ x-nex:
       help: IANA time zone for schedules in Gladys.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Home automation database
       help: Select This host. Stores settings, devices and automations. Include this folder in a stopped
@@ -39,7 +39,7 @@ services:
       SQLITE_FILE_PATH: /var/lib/gladysassistant/gladys-production.db
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8828}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/lib/gladysassistant
     deploy:

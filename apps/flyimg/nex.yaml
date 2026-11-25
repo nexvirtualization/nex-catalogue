@@ -13,29 +13,33 @@ x-nex:
   architectures:
   - amd64
   - arm64
-  post_install: Put a complete Flyimg parameters.yml in the Configuration folder. Enable restricted_domains
-    and set whitelist_domains with hostnames you control. Keep the service accessible only to trusted callers.
+  post_install: If the folder was created during install, upload parameters.yml under Files → Prepared configuration,
+    then restart Flyimg. Start from the upstream parameters.yml, enable restricted_domains and set whitelist_domains
+    to hostnames you control. Keep the service accessible only to trusted callers.
   web:
     port: 80
   options:
     CONFIG:
       label: Prepared configuration
-      help: Read-only folder containing the upstream parameters.yml. Make the file readable by the container.
+      help: Choose a folder containing a complete, readable Flyimg parameters.yml. An empty folder prevents startup.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   flyimg:
     image: docker.io/flyimg/flyimg:latest
     ports:
-    - ${PORT:-18121}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${CONFIG}:/nex-config:ro
     entrypoint:
     - /bin/sh
     - -ec
     command:
-    - test -s /nex-config/parameters.yml; cp /nex-config/parameters.yml /var/www/html/config/parameters.yml;
+    - |
+      test -s /nex-config/parameters.yml || { echo 'Provide a non-empty parameters.yml in Prepared configuration.' >&2; exit 1; }
+      cp /nex-config/parameters.yml /var/www/html/config/parameters.yml
       exec docker-entrypoint /init
     deploy:
       replicas: 1

@@ -2,8 +2,13 @@
 x-nex:
   name: Routr
   summary: Route SIP traffic for your own phone infrastructure
-  description: Select a prepared routr.yaml configuration directory and migrate the PostgreSQL schema
-    upstream before starting. Use a reachable SIP address and restrict gateway access to permitted trunks.
+  description: >-
+    SIP proxy and router with a PostgreSQL data store and an API-key-protected management API. On first start
+    Routr writes a default routr.yaml (SIP on TCP and UDP 5060, in-memory location, PostgreSQL data) into the
+    configuration folder and never overwrites an existing file; edit it to add local networks, TLS or other
+    settings. The database URL, API key and public address come from the install form and are not written to
+    the file. The PostgreSQL schema must already be migrated with the upstream tools. Use a reachable SIP
+    address and restrict gateway access to permitted trunks.
   category: communication
   website: https://github.com/fonoster/routr
   source: https://github.com/fonoster/routr
@@ -19,28 +24,76 @@ x-nex:
     ROUTR_API_KEY:
       label: Management API key
       type: password
-      help: Supply the key referenced by the prepared configuration.
+      help: Use Generate and keep it. Callers of the management API send it as a bearer token.
     DOCKER_HOST_ADDRESS:
       label: Public SIP address
-      help: Client-reachable IP address for your phone infrastructure.
+      help: Client-reachable IP address for your phone infrastructure. Used as the external address in the
+        default configuration.
     CONFIG:
-      label: Prepared SIP routing configuration
-      help: Keep prepared sip routing configuration in this managed folder between restarts.
+      label: Configuration folder
+      help: Holds routr.yaml and the generated certificates. A default routr.yaml is written on first start
+        if none is present; edit it freely. Routr runs as UID 1000 and GID 3000; the folder is handed to
+        that user at start.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 51907.
+      help: The app listens on TCP port 51907 on its default Docker network. Nex does not publish it on host
+        addresses.
     SIP_TCP_PORT:
       label: SIP TCP endpoint
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5060.
+      help: The app listens on TCP port 5060 on its default Docker network. Nex does not publish it on host
+        addresses.
     SIP_UDP_PORT:
       label: SIP UDP endpoint
-      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5060.
+      help: The app listens on UDP port 5060 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   routr:
     image: docker.io/fonoster/routr-one:latest
+    user: "0:0"
+    command:
+    - sh
+    - -ec
+    - |
+      grep -q '^routr:' /etc/group || echo 'routr:x:3000:' >> /etc/group
+      grep -q '^routr:' /etc/passwd || echo 'routr:x:1000:3000::/opt/routr:/bin/sh' >> /etc/passwd
+      chown 1000:3000 /etc/routr
+      if [ ! -f /etc/routr/routr.yaml ]; then
+        cat > /etc/routr/routr.yaml <<'ROUTR'
+      apiVersion: v3
+      kind: Routr
+      ref: routr-01
+      metadata:
+        region: default
+      logLevel: info
+      spec:
+        edgeport:
+          unknownMethodAction: Discard
+          externalAddrs:
+            - "$${DOCKER_HOST_ADDRESS}"
+          localnets:
+            - 127.0.0.1/8
+          methods: [REGISTER, INVITE, ACK, BYE, CANCEL, REFER, NOTIFY, OPTIONS]
+          transport:
+            - protocol: tcp
+              port: 5060
+            - protocol: udp
+              port: 5060
+        dispatcher: {}
+        connect:
+          nonceMaxAge: 300
+          registerDefaultExpires: 3600
+        location:
+          cache:
+            provider: memory
+        data:
+          apiKeys:
+            - "$${ROUTR_API_KEY}"
+          backend: postgres
+          url: "$${DATABASE_URL}"
+      ROUTR
+        chown 1000:3000 /etc/routr/routr.yaml
+      fi
+      exec su routr -c 'if [ ! -f "$$PATH_TO_CERTS/server.crt" ] || [ ! -f "$$PATH_TO_CERTS/server.key" ]; then ./generate-certs.sh "$$PATH_TO_CERTS"; fi; exec /opt/routr/routr-one'
     environment:
       DATABASE_URL: ${DATABASE_URL}
       ROUTR_API_KEY: ${ROUTR_API_KEY}

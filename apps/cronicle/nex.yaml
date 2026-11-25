@@ -21,9 +21,9 @@ x-nex:
       label: Plugins folder
       help: Choose the Nex-managed folder mounted at /opt/cronicle/plugins.
     PORT:
-      label: Published 3012/tcp port
-      help: Host port for application listener 3012/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3012/tcp
+      help: The app listens on TCP port 3012 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Start a single scheduler on a trusted network. Change the initial administrator password and
     avoid sharing the interface with untrusted users.
   web:
@@ -40,4 +40,4 @@ services:
     - ${LOGS}:/opt/cronicle/logs
     - ${PLUGINS}:/opt/cronicle/plugins
     ports:
-    - ${PORT:-19968}:3012/tcp
+    - ${PORT:-3012}:3012/tcp

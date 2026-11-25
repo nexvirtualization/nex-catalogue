@@ -11,13 +11,13 @@ x-nex:
   options:
     LEDGER:
       label: Ledger folder
-      help: Choose the Nex-managed folder mounted at /data.
+      help: Before installing, put a readable index.beancount at the root of the folder mounted at /data.
     PORT:
-      label: Published 5000/tcp port
-      help: Host port for application listener 5000/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Place your main ledger at /data/index.beancount before you install. The web interface holds
-    private financial data. Use a dedicated trusted network or put it behind an authenticating proxy.
+      label: Port 5000/tcp
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: The web interface holds private financial data. Use a dedicated trusted network or put it
+    behind an authenticating proxy.
   web:
     port: 5000
 services:
@@ -28,6 +28,6 @@ services:
     volumes:
     - ${LEDGER}:/data
     ports:
-    - ${PORT:-19948}:5000/tcp
+    - ${PORT:-5000}:5000/tcp
     command:
     - /data/index.beancount

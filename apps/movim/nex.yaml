@@ -31,9 +31,9 @@ x-nex:
       label: Emojis folder
       help: Choose the Nex-managed folder mounted at /var/www/movim/public/emojis.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision PostgreSQL and a compatible XMPP server. Place Movim behind an HTTPS proxy with WebSocket
     forwarding. Sign in with an XMPP address.
   web:
@@ -54,4 +54,4 @@ services:
     - ${IMAGES}:/var/www/movim/public/images
     - ${EMOJIS}:/var/www/movim/public/emojis
     ports:
-    - ${PORT:-19974}:80/tcp
+    - ${PORT:-80}:80/tcp

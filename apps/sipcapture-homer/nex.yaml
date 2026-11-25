@@ -20,18 +20,26 @@ x-nex:
       help: Capture data, local catalogue, accounts and configuration.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     HEP_PORT:
       label: HEP UDP ingest port
-      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9060.
+      help: The app listens on UDP port 9060 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   sipcapture-homer:
     image: ghcr.io/sipcapture/homer:latest
     command:
-    - "if [ ! -s /data/homer/homer.json ]; then\n  /homer wizard --profile all-in-one --output /data/homer/homer.json\n\
-      fi\nexec /homer --config-path /data/homer/homer.json"
+    - |
+      if [ ! -s /data/homer/homer.json ]; then
+        /homer wizard --profile all-in-one --output /data/homer/homer.json
+      fi
+      if [ ! -w /var/lib/homer ] &&
+         [ "$$(/homer config show --config-path /data/homer/homer.json \
+           --section coordinator.settings_db_path)" = '"/var/lib/homer/homer_settings.duckdb"' ]; then
+        export HOMER_COORDINATOR_SETTINGS_DB_PATH=/data/homer/homer_settings.duckdb
+      fi
+      exec /homer --config-path /data/homer/homer.json
     entrypoint:
     - /bin/sh
     - -ec

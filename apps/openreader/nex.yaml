@@ -33,11 +33,13 @@ x-nex:
       label: Playback url
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3003 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3003 on its default Docker network. Nex does not publish it on host
+        addresses.
     PLAYBACK_PORT:
-      label: Published playback port
-      help: Host-published port for the internal 8081/tcp endpoint.
+      label: Playback port
+      help: The app listens on TCP port 8081 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Documents, metadata and audio
       help: Managed directory mounted at /app/docstore. Choose storage writable by the application.
@@ -45,8 +47,8 @@ services:
   openreader:
     image: ghcr.io/richardr1126/openreader:latest
     ports:
-    - ${PORT:-23510}:3003/tcp
-    - ${PLAYBACK_PORT:-24510}:8081/tcp
+    - ${PORT:-3003}:3003/tcp
+    - ${PLAYBACK_PORT:-8081}:8081/tcp
     volumes:
     - ${DATA}:/app/docstore
     environment:

@@ -2,113 +2,109 @@
 x-nex:
   name: Glitchsoc
   summary: Run a federated social server with Mastodon Glitch Edition
-  description: Provision PostgreSQL, Redis, and SMTP, then run the upstream database initialization and create
-    the first administrator. Route the federation hostname over HTTPS and retain all signing keys. Keep web
-    and worker on one host or use shared storage.
+  description: Runs Mastodon Glitch Edition with its own PostgreSQL and Redis. Supply a mail server (SMTP) and
+    a set of signing and encryption keys; the database tables are created on first start. Create the first
+    administrator afterwards with tootctl in the web service, route your federation host name over HTTPS
+    and retain all keys. Keep web and worker on one host or use shared storage.
   category: communication
   website: https://glitch-soc.github.io/docs/
   source: https://github.com/glitch-soc/mastodon
   docs: https://github.com/glitch-soc/mastodon/blob/main/docker-compose.yml
   primary_service: glitchsoc
-  post_install: Provision PostgreSQL, Redis, and SMTP, then run the upstream database initialization and
-    create the first administrator. Route the federation hostname over HTTPS and retain all signing keys.
-    Keep web and worker on one host or use shared storage.
+  post_install: Create the first administrator with tootctl accounts create in the web service, route the
+    federation hostname over HTTPS and retain all keys. Keep web and worker on one host or use shared
+    storage.
   license: AGPL-3.0
   architectures:
   - amd64
   - arm64
   web:
+    scheme: https
     port: 3000
   options:
     PUBLIC_HOST:
       label: Public host
-      help: Enter the deployment value described in the upstream setup guide.
-    REDIS_HOST:
-      label: Redis host
-      help: Enter the deployment value described in the upstream setup guide.
-    REDIS_PORT:
-      label: Redis port
-      help: Enter the deployment value described in the upstream setup guide.
-    REDIS_PASSWORD:
-      label: Redis password
-      help: Use the credential or secret required by the upstream configuration.
-      type: password
-    DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
-    DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Domain name of this server as people and other servers see it, such as social.example.com.
+        It cannot be changed after the first user is created.
     DB_PASSWORD:
       label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Password for the bundled PostgreSQL database. Use Generate and keep it with the database folder.
       type: password
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate once and keep it. Changing it signs every user out.
       type: password
     DETERMINISTIC_KEY:
       label: Deterministic key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Database encryption key. Use Generate, give each of the three encryption values its own
+        value, and keep them, because lost keys make encrypted fields unreadable.
       type: password
     KEY_SALT:
       label: Key salt
-      help: Use the credential or secret required by the upstream configuration.
+      help: Database encryption salt. Use Generate and keep it with the other encryption values.
       type: password
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Primary database encryption key. Use Generate and keep it with the other encryption values.
       type: password
     VAPID_PRIVATE_KEY:
       label: Vapid private key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Web Push private key. Create the pair with bundle exec rails mastodon:webpush:generate_vapid_key
+        in the Mastodon image and paste the private half here.
       type: password
     VAPID_PUBLIC_KEY:
       label: Vapid public key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Web Push public key printed together with the private key; it must match.
       type: password
     SMTP_HOST:
       label: Smtp host
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Mail server used for sign-up and notification emails.
     SMTP_PORT:
       label: Smtp port
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Mail server port (587 if left empty).
     SMTP_USER:
       label: Smtp user
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Mail account name.
     SMTP_PASSWORD:
       label: Smtp password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Mail account password.
       type: password
     FROM_EMAIL:
       label: From email
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Sender address for emails, authorized at the mail server.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
+    DB_DATA:
+      label: PostgreSQL data
+      help: Select This host. Holds the bundled PostgreSQL database, so include it in a stopped Nex backup.
+    REDIS_DATA:
+      label: Redis data
+      help: Select This host. Holds queued background jobs and caches of the bundled Redis service.
     MEDIA:
       label: Shared uploaded media
-      help: Managed directory mounted at /mastodon/public/system. Choose storage writable by the application.
+      help: Select This host, or shared storage if the services run on different hosts. Holds uploaded media;
+        it is handed to the Mastodon user on every start.
 services:
   glitchsoc:
     image: docker.io/library/caddy:latest
     ports:
-    - ${PORT:-23519}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     entrypoint:
     - /bin/sh
     command:
     - -ec
     - |-
       printf '%s\n' '{
-        auto_https off
+        local_certs
+        auto_https disable_redirects
+        skip_install_trust
       }
-      :3000 {
+      https://:3000 {
+        tls internal {
+          on_demand
+        }
         @stream path /api/v1/streaming /api/v1/streaming/*
         handle @stream {
           reverse_proxy streaming:4000
@@ -125,13 +121,11 @@ services:
       RAILS_ENV: production
       NODE_ENV: production
       LOCAL_DOMAIN: ${PUBLIC_HOST}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-mastodon_production}
-      DB_USER: ${DB_USER}
+      REDIS_HOST: redis
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: mastodon_production
+      DB_USER: mastodon
       DB_PASS: ${DB_PASSWORD}
       SECRET_KEY_BASE: ${SIGNING_SECRET}
       ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
@@ -145,13 +139,19 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_ADDRESS: ${FROM_EMAIL}
     volumes: &id001
-    - ${MEDIA}:/mastodon/public/system
+    - ${MEDIA}:/opt/mastodon/public/system
+    # Start as root only to hand the media folder to the Mastodon user (UID 991), then drop to it.
+    user: 0:0
     command:
-    - bundle
-    - exec
-    - puma
-    - -C
-    - config/puma.rb
+    - sh
+    - -ec
+    - |
+      export HOME=/opt/mastodon
+      chown -R 991:991 /opt/mastodon/public/system
+      # The first start of the bundled database and Redis takes a moment; wait for both.
+      until ruby -rsocket -e 'TCPSocket.new("db", 5432); TCPSocket.new("redis", 6379)' 2>/dev/null; do sleep 2; done
+      setpriv --reuid=991 --regid=991 --init-groups bundle exec rails db:prepare
+      exec setpriv --reuid=991 --regid=991 --init-groups bundle exec puma -C config/puma.rb
     deploy:
       replicas: 1
   worker:
@@ -160,13 +160,11 @@ services:
       RAILS_ENV: production
       NODE_ENV: production
       LOCAL_DOMAIN: ${PUBLIC_HOST}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-mastodon_production}
-      DB_USER: ${DB_USER}
+      REDIS_HOST: redis
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: mastodon_production
+      DB_USER: mastodon
       DB_PASS: ${DB_PASSWORD}
       SECRET_KEY_BASE: ${SIGNING_SECRET}
       ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
@@ -180,10 +178,16 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_ADDRESS: ${FROM_EMAIL}
     volumes: *id001
+    user: 0:0
     command:
-    - bundle
-    - exec
-    - sidekiq
+    - sh
+    - -ec
+    - |
+      export HOME=/opt/mastodon
+      chown -R 991:991 /opt/mastodon/public/system
+      # The web service prepares the database first; sidekiq cannot start before its tables exist.
+      until wget -q -O /dev/null http://web:3000/health; do sleep 5; done
+      exec setpriv --reuid=991 --regid=991 --init-groups bundle exec sidekiq
     deploy:
       replicas: 1
   streaming:
@@ -192,13 +196,11 @@ services:
       RAILS_ENV: production
       NODE_ENV: production
       LOCAL_DOMAIN: ${PUBLIC_HOST}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-mastodon_production}
-      DB_USER: ${DB_USER}
+      REDIS_HOST: redis
+      DB_HOST: db
+      DB_PORT: '5432'
+      DB_NAME: mastodon_production
+      DB_USER: mastodon
       DB_PASS: ${DB_PASSWORD}
       SECRET_KEY_BASE: ${SIGNING_SECRET}
       ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: ${DETERMINISTIC_KEY}
@@ -212,7 +214,30 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM_ADDRESS: ${FROM_EMAIL}
     command:
-    - node
-    - ./streaming/index.js
+    - sh
+    - -ec
+    - |
+      until node -e 'const n=require("net");let c=0;for(const [h,p] of [["db",5432],["redis",6379]])n.connect(p,h).on("connect",function(){this.end();if(++c==2)process.exit(0)}).on("error",()=>process.exit(1))'; do sleep 2; done
+      exec node ./streaming/index.js
+    deploy:
+      replicas: 1
+  db:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: mastodon
+      POSTGRES_DB: mastodon_production
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
+    command:
+    - redis-server
+    - --appendonly
+    - 'yes'
+    volumes:
+    - ${REDIS_DATA}:/data
     deploy:
       replicas: 1

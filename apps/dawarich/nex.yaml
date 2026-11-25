@@ -2,15 +2,15 @@
 x-nex:
   name: Dawarich
   summary: Review location history on an interactive map
-  description: Provision PostgreSQL with PostGIS and Redis. Keep app and worker on the same eligible host
-    or use shared storage. Create the first account on a trusted network.
+  description: PostgreSQL with PostGIS and Redis run inside this app. Keep app and worker on the same eligible
+    host or use shared storage. Create the first account on a trusted network.
   category: productivity
   website: https://dawarich.app/
   source: https://github.com/Freika/dawarich
   docs: https://dawarich.app/docs/tutorials/complete-setup/
   primary_service: dawarich
-  post_install: Provision PostgreSQL with PostGIS and Redis. Keep app and worker on the same eligible host
-    or use shared storage. Create the first account on a trusted network.
+  post_install: Create the first account on a trusted network. Keep app and worker on the same eligible
+    host or use shared storage.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -18,35 +18,30 @@ x-nex:
   web:
     port: 3000
   options:
-    REDIS_URL:
-      label: Redis url
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
-    DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Database password
+      help: Use Generate to create a unique secret for the PostgreSQL database that runs inside this app.
       type: password
-    DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
+    DB_DATA:
+      label: Database folder
+      help: Select This host. Stores the PostgreSQL data. Include this folder in a stopped Nex backup.
     PUBLIC_HOST:
       label: Public host
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Host name people use to open the app, without a scheme, for example dawarich.example.com. Use
+        a trusted HTTPS reverse proxy for internet access.
+    PROTOCOL:
+      label: Public protocol
+      help: Use http to open the app directly on a trusted network. Set https only when a trusted HTTPS
+        reverse proxy fronts the app, because https makes the app redirect every plain http request.
+        Leave empty for http.
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret. Keep it unchanged, or every user is signed out.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PUBLIC:
       label: Static files and exports
       help: Managed directory mounted at /var/app/public. Choose storage writable by the application.
@@ -60,21 +55,21 @@ services:
   dawarich:
     image: docker.io/freikin/dawarich:latest
     ports:
-    - ${PORT:-23579}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${PUBLIC}:/var/app/public
     - ${WATCHED}:/var/app/tmp/imports/watched
     - ${DATA}:/var/app/storage
     environment:
       RAILS_ENV: production
-      REDIS_URL: ${REDIS_URL}
-      DATABASE_HOST: ${DB_HOST}
-      DATABASE_PORT: ${DB_PORT:-5432}
-      DATABASE_USERNAME: ${DB_USER}
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_HOST: db
+      DATABASE_PORT: '5432'
+      DATABASE_USERNAME: dawarich
       DATABASE_PASSWORD: ${DB_PASSWORD}
-      DATABASE_NAME: ${DB_NAME:-dawarich}
+      DATABASE_NAME: dawarich
       APPLICATION_HOSTS: ${PUBLIC_HOST}
-      APPLICATION_PROTOCOL: https
+      APPLICATION_PROTOCOL: ${PROTOCOL:-http}
       SECRET_KEY_BASE: ${SIGNING_SECRET}
       SELF_HOSTED: 'true'
       STORE_GEODATA: 'true'
@@ -93,14 +88,14 @@ services:
     image: docker.io/freikin/dawarich:latest
     environment:
       RAILS_ENV: production
-      REDIS_URL: ${REDIS_URL}
-      DATABASE_HOST: ${DB_HOST}
-      DATABASE_PORT: ${DB_PORT:-5432}
-      DATABASE_USERNAME: ${DB_USER}
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_HOST: db
+      DATABASE_PORT: '5432'
+      DATABASE_USERNAME: dawarich
       DATABASE_PASSWORD: ${DB_PASSWORD}
-      DATABASE_NAME: ${DB_NAME:-dawarich}
+      DATABASE_NAME: dawarich
       APPLICATION_HOSTS: ${PUBLIC_HOST}
-      APPLICATION_PROTOCOL: https
+      APPLICATION_PROTOCOL: ${PROTOCOL:-http}
       SECRET_KEY_BASE: ${SIGNING_SECRET}
       SELF_HOSTED: 'true'
       STORE_GEODATA: 'true'
@@ -114,3 +109,19 @@ services:
     - ${DATA}:/var/app/storage
     entrypoint:
     - sidekiq-entrypoint.sh
+  db:
+    image: docker.io/postgis/postgis:16-3.5
+    environment:
+      POSTGRES_USER: dawarich
+      POSTGRES_DB: dawarich
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    tmpfs:
+    - /dev/shm:size=134217728
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/valkey/valkey:latest
+    deploy:
+      replicas: 1

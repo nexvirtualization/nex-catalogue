@@ -2,9 +2,8 @@
 x-nex:
   name: RustDesk Server OSS
   summary: Connect authorized RustDesk clients through a rendezvous and relay service
-  description: Choose a client-reachable dedicated Primary network address and leave host publishing
-    off. Set the relay address to that address on port 21117. Configure clients with the app address
-    and the public key from the managed folder.
+  description: Choose a client-reachable dedicated Primary network address. Set the relay address to that
+    address on port 21117. Configure clients with the app address and the public key from the managed folder.
   category: networking
   website: https://github.com/rustdesk/rustdesk-server
   source: https://github.com/rustdesk/rustdesk-server

@@ -2,32 +2,54 @@
 x-nex:
   name: Libredesk
   summary: Manage customer conversations and shared support queues
-  description: Provision PostgreSQL and Redis, add a valid config.toml to Configuration, then start the app.
-    Sign in through trusted HTTPS.
+  description: Provision PostgreSQL and Redis first. Libredesk starts with its built-in configuration and the
+    settings below, so no config.toml needs preparing; the database is installed and upgraded on
+    each start. The first start creates a random System password that meets Libredesk's password
+    policy and prints it once in the app log. Sign in through trusted HTTPS.
   category: communication
   website: https://libredesk.io/
   source: https://github.com/abhinavxd/libredesk
   docs: https://github.com/abhinavxd/libredesk/blob/main/docker-compose.yml
   primary_service: libredesk
-  post_install: Provision PostgreSQL and Redis, add a valid config.toml to Configuration, then start the
-    app. Sign in through trusted HTTPS.
+  post_install: Open the app log and copy the System password printed on the first start, sign in as System
+    and change the password in your profile. Use trusted HTTPS for remote access.
   license: AGPL-3.0
   architectures:
   - amd64
   - arm64
   web:
     port: 9000
+  works_with:
+  - postgresql
+  - valkey
   options:
-    ADMIN_PASSWORD:
-      label: Admin password
-      help: Use the credential or secret required by the upstream configuration.
+    DB_HOST:
+      label: Database host
+      help: Host or Nex application name of the prepared PostgreSQL service, reachable on port 5432.
+    DB_USER:
+      label: Database user
+      help: Dedicated PostgreSQL account that owns the database.
+    DB_PASSWORD:
+      label: Database password
+      help: Password for the dedicated database account.
+      type: password
+    DB_NAME:
+      label: Database name
+      help: Empty PostgreSQL database owned by that user. Libredesk creates its tables on first start.
+        Leave empty for libredesk.
+    REDIS_HOST:
+      label: Redis host
+      help: Host or Nex application name of the prepared Redis or Valkey service, reachable on port 6379
+        without a password.
+    ENCRYPTION_SECRET:
+      label: Encryption secret
+      help: Use Generate. Libredesk derives its 32-character encryption key from this value, so keep it
+        unchanged or stored credentials become unreadable.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9000 inside Nex.
-    CONFIG:
-      label: Prepared Libredesk configuration
-      help: Managed directory mounted at /nex-config. Choose storage readable by the application.
+      label: HTTP port
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     UPLOADS:
       label: Uploaded support files
       help: Managed directory mounted at /libredesk/uploads. Choose storage writable by the application.
@@ -35,17 +57,32 @@ services:
   libredesk:
     image: docker.io/libredesk/libredesk:latest
     ports:
-    - ${PORT:-23501}:9000/tcp
+    - ${PORT:-9000}:9000/tcp
     volumes:
-    - ${CONFIG}:/nex-config:ro
     - ${UPLOADS}:/libredesk/uploads
     environment:
-      LIBREDESK_SYSTEM_USER_PASSWORD: ${ADMIN_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-libredesk}
+      REDIS_HOST: ${REDIS_HOST}
+      ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
+      LIBREDESK_DB__PORT: '5432'
+      LIBREDESK_APP__ENV: prod
+      LIBREDESK_APP__LOG_LEVEL: info
     entrypoint:
     - /bin/sh
     - -ec
     command:
-    - ./libredesk --install --idempotent-install --yes --config /nex-config/config.toml && ./libredesk --upgrade
-      --yes --config /nex-config/config.toml && exec ./libredesk --config /nex-config/config.toml
+    - |
+      export LIBREDESK_DB__HOST="$$DB_HOST" LIBREDESK_DB__USER="$$DB_USER" LIBREDESK_DB__PASSWORD="$$DB_PASSWORD"
+      export LIBREDESK_DB__DATABASE="$$DB_NAME" LIBREDESK_REDIS__ADDRESS="$$REDIS_HOST:6379"
+      export LIBREDESK_APP__ENCRYPTION_KEY="$$(printf %s "$$ENCRYPTION_SECRET" | sha256sum | cut -c1-32)"
+      pw="$$(head -c 2048 /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)aA1!"
+      export LIBREDESK_SYSTEM_USER_PASSWORD="$$pw"
+      out="$$(./libredesk --install --idempotent-install --yes 2>&1)" || { echo "$$out"; exit 1; }
+      echo "$$out"
+      case "$$out" in *"installed successfully"*) echo "Libredesk System password (shown once, change it after signing in): $$pw" ;; esac
+      ./libredesk --upgrade --yes && exec ./libredesk
     deploy:
       replicas: 1

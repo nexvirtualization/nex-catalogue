@@ -2,11 +2,10 @@
 x-nex:
   name: SearXNG HA
   summary: Run load-balanced metasearch on a private network
-  description: >-
-    SearXNG copies use the same secret and read configuration from a cluster share on startup. Each copy
-    keeps its favicon cache and generated defaults in its own container. Use the Docker network and
-    host publishing for load balancing. The optional Valkey endpoint is shared when a custom settings.yml
-    enables rate limiting. For this package, use a trusted network or an authenticating reverse proxy.
+  description: SearXNG copies use the same secret and read configuration from a cluster share on startup. Each
+    copy keeps its favicon cache and generated defaults in its own container. Use the Docker network and a
+    reverse proxy for load balancing. The optional Valkey endpoint is shared when a custom settings.yml enables
+    rate limiting. For this package, use a trusted network or an authenticating reverse proxy.
   category: tools
   website: https://docs.searxng.org
   source: https://github.com/searxng/searxng
@@ -19,7 +18,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Publish through the Docker network so each available Swarm node can forward traffic to a search copy.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Shared search configuration
       help: Choose a cluster share for multiple copies. Start with an empty folder for defaults, or add settings.yml and any companion configuration files. After editing the share, restart all copies.
@@ -47,7 +47,7 @@ services:
       SEARXNG_BASE_URL: "${SEARCH_PUBLIC_URL:-}"
       SEARXNG_VALKEY_URL: "${VALKEY_URL:-}"
     ports:
-      - "${PORT:-8889}:8080/tcp"
+      - "${PORT:-8080}:8080/tcp"
     volumes:
       - "${CONFIG}:/nex-config:ro"
     deploy:

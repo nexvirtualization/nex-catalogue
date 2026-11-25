@@ -18,12 +18,11 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port. Finish the first-run web installer on a trusted network, create an administrator
-        and select SQLite. Add each access hostname to trusted_domains in config/config.php; use a TLS reverse proxy
-        for remote access. With Network → Docker and host publishing enabled, use the chosen host web port. On a
-        registered VLAN or private Primary network with its own address, use that address and internal port 80;
-        host publishing is a separate switch. Use Nex File Browser → Files, settings and database → config/config.php
-        to edit trusted_domains, then restart from ACTIONS.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. Finish the first-run web installer on a trusted network, create an administrator and select
+        SQLite. Add each access hostname to trusted_domains in config/config.php; use a TLS reverse proxy for
+        remote access. Use Nex File Browser → Files, settings and database → config/config.php to edit
+        trusted_domains, then restart from ACTIONS.
     DATA:
       label: Files, settings and database
       help: Persistent /var/www/html holds the application, uploads, config and SQLite database. The image initializes
@@ -34,7 +33,7 @@ services:
   nextcloud:
     image: nextcloud:latest
     ports:
-    - ${PORT:-8085}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html
     deploy:

@@ -12,7 +12,9 @@ x-nex:
   scalable: false
   license: AGPL-3.0
   web:
+    scheme: http
     port: 3000
+    path: /up
   options:
     DATABASE_URL:
       label: PostgreSQL connection URL
@@ -41,8 +43,8 @@ x-nex:
       help: Password of the selected mail relay account.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   loomio:
     image: docker.io/loomio/loomio:latest

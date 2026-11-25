@@ -18,23 +18,38 @@ x-nex:
     scheme: http
     port: 80
   options:
+    MYSQL_ROOT_PASSWORD:
+      label: MySQL root password
+      help: For a new database, generate and save an alphanumeric password in your password manager.
+        Enter it here and in the web installer for the bundled qloapps database. When reusing Hotel
+        database storage, enter its existing MySQL root password.
+      type: password
+    USER_PASSWORD:
+      label: Container SSH user password
+      help: Generate and save a separate alphanumeric password for the qloapps SSH account inside the
+        container. The image applies it on every startup. The web installer creates the hotel
+        administrator login.
+      type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Hotel website
-      help: Select This host. Stores booking files, themes and application configuration. Include this
-        folder in a stopped Nex backup.
+      help: Select This host. Stores the website files, uploads, themes and application configuration.
+        Include this folder in a stopped Nex backup.
     DB_DATA:
       label: Hotel database
-      help: Select This host. Stores the bundled database when using the upstream all-in-one image. Include
+      help: Select This host. Stores the bundled MySQL data and database accounts. Include
         this folder in a stopped Nex backup.
 services:
   qloapps:
     image: webkul/qloapps_docker:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      USER_PASSWORD: ${USER_PASSWORD}
     ports:
-    - ${PORT:-8870}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html
     - ${DB_DATA}:/var/lib/mysql

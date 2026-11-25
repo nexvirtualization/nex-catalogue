@@ -2,9 +2,12 @@
 x-nex:
   name: Snapcast
   summary: Synchronize a network audio stream across rooms
-  description: Prepare snapserver.conf with a network audio source and client-visible settings. Connect
-    Snapclients to the application network address on port 1704. Use the web interface on port 1780 and
-    keep administrative controls private.
+  description: >-
+    Snapcast starts with the stock snapserver.conf, copied into the Configuration folder on first
+    start, with the default pipe source /tmp/snapfifo. Edit that file to add real sources in the
+    [stream] section, such as a reachable network audio feed, then restart. An existing file is
+    never overwritten. Connect Snapclients to the application network address on port 1704. Use the web
+    interface on port 1780 and keep administrative controls private.
   category: media
   website: https://github.com/snapcast/snapcast
   source: https://github.com/snapcast/snapcast
@@ -24,30 +27,33 @@ x-nex:
       help: IANA time zone for administrative logs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 1780.
+      help: The app listens on TCP port 1780 on its default Docker network. Nex does not publish it on host
+        addresses.
     STREAM_PORT:
       label: Stream Port
-      help: Audio stream port when host publication is enabled.
+      help: The app listens on TCP port 1704 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
-      label: Prepared audio server configuration
-      help: Select This host. Choose the managed folder containing snapserver.conf. Include this folder
-        in a stopped Nex backup.
+      label: Audio server configuration
+      help: Select This host and choose a writable folder. Snapcast creates snapserver.conf in it on
+        first start if it is missing. Include it in a stopped Nex backup.
 services:
   snapcast:
     image: ghcr.io/kerta1n/snapserver-docker:latest
     environment:
       TZ: ${TZ:-Etc/UTC}
     command:
-    - snapserver
-    - -c
-    - /config/snapserver.conf
+    - /bin/sh
+    - -ec
+    - |
+      [ -f /config/snapserver.conf ] || cp /etc/snapserver.conf /config/snapserver.conf
+      exec snapserver -c /config/snapserver.conf
     ports:
     - ${PORT:-1780}:1780/tcp
     - ${STREAM_PORT:-1704}:1704/tcp
     expose:
     - 1705/tcp
     volumes:
-    - ${DATA}:/config:ro
+    - ${DATA}:/config
     deploy:
       replicas: 1

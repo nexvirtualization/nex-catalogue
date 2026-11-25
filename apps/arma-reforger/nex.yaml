@@ -24,11 +24,13 @@ x-nex:
     JOIN_PASSWORD:
       label: Join password
       type: password
-      help: Use Generate and share this password with your players.
+      help: Use Generate and share this password with your players. Arma Reforger allows at most 32
+        characters and no spaces, and refuses to start with a longer password.
     ADMIN_PASSWORD:
       label: Admin password
       type: password
-      help: Use Generate and keep this password private.
+      help: Use Generate and keep this password private. It has the same limit as the join password, 32
+        characters and no spaces.
     PROFILE:
       label: Server profile
       help: Keeps player and scenario saves. Include this folder in stopped backups.

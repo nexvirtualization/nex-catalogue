@@ -34,8 +34,8 @@ x-nex:
       help: Keep tts engine dependencies in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 7860.
+      help: The app listens on TCP port 7860 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ebook2audiobook:
     image: docker.io/athomasson2/ebook2audiobook:cpu

@@ -19,13 +19,14 @@ x-nex:
     port: 3000
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 3000. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   pairdrop:
     image: lscr.io/linuxserver/pairdrop:latest
     ports:
-    - ${PORT:-18104}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     environment:
       RATE_LIMIT: 'true'
       WS_FALLBACK: 'false'

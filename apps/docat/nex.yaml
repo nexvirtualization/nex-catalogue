@@ -19,8 +19,8 @@ x-nex:
       help: Keep documentation and settings in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   docat:
     image: ghcr.io/docat-org/docat:latest

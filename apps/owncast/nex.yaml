@@ -19,12 +19,12 @@ x-nex:
       help: Configuration, stream state and persistent assets.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     RTMP_PORT:
       label: RTMP ingest port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 1935.
+      help: The app listens on TCP port 1935 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   owncast:
     image: docker.io/owncast/owncast:latest

@@ -2,15 +2,15 @@
 x-nex:
   name: Plausible Analytics
   summary: Collect privacy-focused website traffic statistics
-  description: Provision PostgreSQL and ClickHouse at the upstream-supported versions. Create the first account
-    and add the tracking script to your site after setup.
+  description: Provision PostgreSQL first. A private ClickHouse service for the event data runs with the app.
+    Create the first account and add the tracking script to your site after setup.
   category: monitoring
   website: https://plausible.io/
   source: https://github.com/plausible/analytics/
   docs: https://github.com/plausible/community-edition
   primary_service: plausible-analytics
-  post_install: Provision PostgreSQL and ClickHouse at the upstream-supported versions. Create the first
-    account and add the tracking script to your site after setup.
+  post_install: Create the first account and add the tracking script to your site after setup. Back up
+    the PostgreSQL database and the ClickHouse folder together.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -23,31 +23,54 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. Plausible needs 64 characters, so a hash of this value is used as the key.
+        Keep it unchanged.
       type: password
     DATABASE_URL:
       label: Database url
       help: Connection URL for the database. Percent-encode special characters in credentials.
       type: password
-    CLICKHOUSE_URL:
-      label: Clickhouse url
-      help: Enter the deployment value described in the upstream setup guide.
+    CLICKHOUSE_PASSWORD:
+      label: ClickHouse password
+      help: Use Generate. Letters and digits only, because it is placed in a URL. Keep it unchanged
+        after the first start.
+      type: password
+    DATA:
+      label: ClickHouse event data
+      help: Select This host. Stores the analytics events. Include this folder in a stopped Nex backup.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   plausible-analytics:
     image: ghcr.io/plausible/community-edition:v3.2.1
     ports:
-    - ${PORT:-23490}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     environment:
       BASE_URL: ${PUBLIC_URL}
-      SECRET_KEY_BASE: ${SIGNING_SECRET}
+      SIGNING_SECRET: ${SIGNING_SECRET}
       DATABASE_URL: ${DATABASE_URL}
-      CLICKHOUSE_DATABASE_URL: ${CLICKHOUSE_URL}
+      CLICKHOUSE_DATABASE_URL: http://plausible:${CLICKHOUSE_PASSWORD}@clickhouse:8123/plausible_events_db
     command:
     - sh
     - -c
-    - /entrypoint.sh db createdb && /entrypoint.sh db migrate && exec /entrypoint.sh run
+    - |
+      export SECRET_KEY_BASE=$$(printf '%s' "$$SIGNING_SECRET" | sha512sum | cut -c1-128)
+      until /entrypoint.sh db createdb && /entrypoint.sh db migrate; do
+        echo "Waiting for PostgreSQL and ClickHouse..."
+        sleep 5
+      done
+      exec /entrypoint.sh run
+    deploy:
+      replicas: 1
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_DB: plausible_events_db
+      CLICKHOUSE_USER: plausible
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+    - ${DATA}:/var/lib/clickhouse
     deploy:
       replicas: 1

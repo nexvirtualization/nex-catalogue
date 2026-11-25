@@ -19,16 +19,16 @@ x-nex:
       help: Keep time-series database in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9000.
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PG_PORT:
       label: PostgreSQL protocol port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8812.
+      help: The app listens on TCP port 8812 on its default Docker network. Nex does not publish it on host
+        addresses.
     LINE_PORT:
       label: Line-protocol ingest port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9009.
+      help: The app listens on TCP port 9009 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   questdb:
     image: docker.io/questdb/questdb:latest

@@ -20,9 +20,9 @@ x-nex:
     CLIENT_ORIGINS:
       label: Client origins
     PORT:
-      label: Published 8000/tcp port
-      help: Host port for application listener 8000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8000/tcp
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Configure your application to use the HTTP API and mint signed client tokens. Supply the origin
     of the client application. This package uses the single-instance in-memory engine.
   web:
@@ -37,4 +37,4 @@ services:
       CENTRIFUGO_HTTP_API_KEY: ${SERVER_API_KEY}
       CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: ${CLIENT_ORIGINS}
     ports:
-    - ${PORT:-19703}:8000/tcp
+    - ${PORT:-8000}:8000/tcp

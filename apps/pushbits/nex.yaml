@@ -2,15 +2,15 @@
 x-nex:
   name: PushBits
   summary: Send application notifications through Matrix
-  description: Place the upstream config.yml in the managed Data folder. Connect an authenticated Matrix
-    user and verify notification delivery.
+  description: Needs a reachable Matrix homeserver and a dedicated Matrix account for PushBits to sign
+    in with. PushBits exits at start if it cannot sign in.
   category: communication
   website: https://github.com/pushbits/server
   source: https://github.com/pushbits/server
   docs: https://github.com/pushbits/server
   primary_service: pushbits
-  post_install: Place the upstream config.yml in the managed Data folder. Connect an authenticated Matrix
-    user and verify notification delivery.
+  post_install: Sign in to PushBits with the administrator name and password, create an application and
+    verify notification delivery in the Matrix room it creates.
   license: ISC
   architectures:
   - amd64
@@ -18,17 +18,58 @@ x-nex:
   web:
     port: 8080
   options:
+    MATRIX_HOMESERVER:
+      label: Matrix homeserver URL
+      help: Full URL of the Matrix homeserver, for example https://matrix.example.org. It must be reachable
+        from this host.
+    MATRIX_USERNAME:
+      label: PushBits Matrix account
+      help: Name of a dedicated Matrix account, without the leading @ or the server part. PushBits signs
+        in as this account to create rooms.
+    MATRIX_PASSWORD:
+      label: PushBits Matrix account password
+      help: Password of that Matrix account.
+      type: password
+    ADMIN_MATRIXID:
+      label: Administrator Matrix ID
+      help: Matrix ID that receives the administrator's notifications, for example @you:matrix.example.org.
+    ADMIN_NAME:
+      label: PushBits administrator name
+      help: Name used to sign in to PushBits. The default is admin.
+    ADMIN_PASSWORD:
+      label: PushBits administrator password
+      help: Use Generate to create a unique password for the PushBits administrator.
+      type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
-      label: Prepared configuration and application state
-      help: Managed directory mounted at /data. Choose storage writable by the application.
+      label: Application state
+      help: Select This host. Nex mounts it at /data and keeps the PushBits database there. Include this
+        folder in a stopped Nex backup.
 services:
   pushbits:
     image: ghcr.io/pushbits/server:latest
+    # Starts as root only to give the unprivileged nobody user Nex's root-owned Data folder.
+    user: '0'
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |-
+      chown -R nobody /data
+      cd /app
+      exec su -s /bin/sh nobody -c 'exec ./run'
+    environment:
+      PUSHBITS_MATRIX_HOMESERVER: ${MATRIX_HOMESERVER}
+      PUSHBITS_MATRIX_USERNAME: ${MATRIX_USERNAME}
+      PUSHBITS_MATRIX_PASSWORD: ${MATRIX_PASSWORD}
+      PUSHBITS_ADMIN_MATRIXID: ${ADMIN_MATRIXID}
+      PUSHBITS_ADMIN_NAME: ${ADMIN_NAME:-admin}
+      PUSHBITS_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PUSHBITS_DATABASE_CONNECTION: /data/pushbits.db
     ports:
-    - ${PORT:-23590}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/data
     deploy:

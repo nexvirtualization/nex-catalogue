@@ -2,14 +2,14 @@
 x-nex:
   name: Home Assistant
   summary: Control your smart home with local automations
-  description: Home Assistant Container with dashboards, automations and IP integrations. Install from Applications,
-    Catalogue. On Network keep Docker and open the host endpoint on port 8123, or choose a registered cluster VLAN
-    reachable by your clients, Fixed address and Default gateway; leave Also publish ports on host addresses unchecked
-    and open http://APP-IP:8123. An own address can provide reachability to devices on that network; multicast discovery
-    still needs lab verification. Complete owner onboarding immediately. This package includes no Supervisor/add-ons
-    or USB/Bluetooth setup. On Basics choose Runs on, Only these hosts and one host; keep state folders on This
-    host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy
-    option and select all state folders before updates.
+  description: Home Assistant Container with dashboards, automations and IP integrations. Install from
+    Applications, Catalogue. On Network keep Docker and open the app address on port 8123, or choose a
+    registered cluster VLAN reachable by your clients, Fixed address and Default gateway, and open
+    http://APP-IP:8123. An own address can provide reachability to devices on that network; multicast discovery
+    still needs lab verification. Complete owner onboarding immediately. This package includes no
+    Supervisor/add-ons or USB/Bluetooth setup. On Basics choose Runs on, Only these hosts and one host; keep
+    state folders on This host. This keeps one copy on that host with no automatic failover. Use ACTIONS, Back
+    up now with the stopped-copy option and select all state folders before updates.
   category: home-automation
   website: https://www.home-assistant.io
   source: https://github.com/home-assistant/core
@@ -25,9 +25,8 @@ x-nex:
       help: IANA time zone, such as Australia/Sydney or Etc/UTC.
     PORT:
       label: Web port
-      help: HTTP host endpoint when Also publish ports on host addresses is checked. With an own primary address
-        and host publishing unchecked, use http://APP-IP:8123 instead; changing this answer does not change the
-        internal listener.
+      help: The app listens on TCP port 8123 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Configuration and history
       help: Keep Configuration and history on This host for the default single-host install. Nex creates its persistent

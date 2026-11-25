@@ -2,13 +2,16 @@
 x-nex:
   name: Scrutiny Web
   summary: View drive health reports from outside collectors
-  description: Provision a compatible InfluxDB backend and prepare the Scrutiny web configuration. Install
-    SMART collectors on the hosts whose drives you monitor and point them at the web API. Restrict the
-    API and dashboard to authorized devices.
+  description: >-
+    Scrutiny Web starts with its own InfluxDB 2 database, created and wired up automatically from the
+    two secrets below, so no configuration file is needed. Install SMART collectors on the hosts whose
+    drives you monitor and point them at the web API. Scrutiny has no sign-in, so restrict the API
+    and dashboard to authorized devices. To change other settings, add a scrutiny.yaml (upstream
+    example) to the Configuration folder; the secrets below still take precedence.
   category: monitoring
   website: https://github.com/AnalogJ/scrutiny
   source: https://github.com/AnalogJ/scrutiny
-  docs: https://github.com/AnalogJ/scrutiny#installation
+  docs: https://github.com/AnalogJ/scrutiny/blob/master/example.scrutiny.yaml
   scalable: false
   primary_service: scrutiny
   architectures:
@@ -21,17 +24,57 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
-      label: Prepared web configuration
-      help: Select This host. Choose a managed folder containing the Scrutiny configuration and InfluxDB
-        settings. Include this folder in a stopped Nex backup.
+      label: Web configuration and database
+      help: Select This host. Scrutiny keeps its local database here and reads an optional scrutiny.yaml
+        from it. Include the folder in a stopped Nex backup.
+    INFLUX:
+      label: InfluxDB storage
+      help: Select This host. Holds the drive health history. Include the folder in a stopped Nex backup.
+    INFLUXDB_TOKEN:
+      label: InfluxDB access token
+      help: Lets Scrutiny reach its database. Use Generate. Keep it private.
+      type: password
+    INFLUXDB_PASSWORD:
+      label: InfluxDB admin password
+      help: Password of the database's admin account, which is not published. Use Generate. At least 8 characters.
+      type: password
 services:
+  influxdb:
+    image: docker.io/library/influxdb:2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: scrutiny
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: scrutiny
+      DOCKER_INFLUXDB_INIT_BUCKET: metrics
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+      INFLUXD_REPORTING_DISABLED: "true"
+    volumes:
+    - ${INFLUX}:/var/lib/influxdb2
+    deploy:
+      replicas: 1
   scrutiny:
     image: ghcr.io/analogj/scrutiny:latest-web
+    command:
+    - /bin/bash
+    - -ec
+    - |
+      until curl -fsS -o /dev/null -H "Authorization: Token $$SCRUTINY_WEB_INFLUXDB_TOKEN" "http://influxdb:8086/api/v2/buckets?name=metrics"; do
+        echo "Waiting for InfluxDB"
+        sleep 3
+      done
+      exec /opt/scrutiny/bin/scrutiny start
+    environment:
+      SCRUTINY_WEB_INFLUXDB_HOST: influxdb
+      SCRUTINY_WEB_INFLUXDB_PORT: "8086"
+      SCRUTINY_WEB_INFLUXDB_ORG: scrutiny
+      SCRUTINY_WEB_INFLUXDB_BUCKET: metrics
+      SCRUTINY_WEB_INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
     ports:
-    - ${PORT:-8797}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/opt/scrutiny/config
     deploy:

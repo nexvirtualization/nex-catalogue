@@ -36,8 +36,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Joomla website
       help: Select This host. Stores themes, media, installed extensions and local configuration. Include
@@ -51,7 +51,7 @@ services:
       JOOMLA_DB_PASSWORD: ${DB_PASSWORD}
       JOOMLA_DB_NAME: ${DB_NAME:-joomla}
     ports:
-    - ${PORT:-8431}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html
     deploy:

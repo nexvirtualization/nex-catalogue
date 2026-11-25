@@ -2,67 +2,63 @@
 x-nex:
   name: Movary
   summary: Track movies watched and ratings
-  description: Provision a MySQL database and obtain a TMDB key. Create your first user using the upstream
-    CLI if registration is disabled.
+  description: Obtain a TMDB API key. Movary keeps its SQLite database in the application storage folder,
+    so back that folder up. Create your first user using the upstream CLI if registration is disabled.
   category: media
   website: https://github.com/leepeuker/movary
   source: https://github.com/leepeuker/movary
   docs: https://movary.org/installation/docker/
   primary_service: movary
-  post_install: Provision a MySQL database and obtain a TMDB key. Create your first user using the upstream
-    CLI if registration is disabled.
+  scalable: false
+  post_install: Create your first user using the upstream CLI if registration is disabled.
   license: MIT
   architectures:
   - amd64
   - arm64
   web:
-    port: 80
+    port: 8080
   options:
     TMDB_API_KEY:
       label: Tmdb api key
       help: Use the credential or secret required by the upstream configuration.
       type: password
-    DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
-    DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+    APPLICATION_SECRET:
+      label: Application secret
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Do not change it after first use.
       type: password
+      generate: {format: hex, length: 64}
     PUBLIC_URL:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Application storage
-      help: Managed directory mounted at /app/storage. Choose storage writable by the application.
+      help: Managed directory mounted at /app/storage. It holds the SQLite database (movary.sqlite) and
+        poster images. A start-up step hands it to the application user.
 services:
   movary:
     image: docker.io/leepeuker/movary:latest
     ports:
-    - ${PORT:-23497}:80/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/storage
     environment:
       TMDB_API_KEY: ${TMDB_API_KEY}
-      DATABASE_MODE: mysql
-      DATABASE_MYSQL_HOST: ${DB_HOST}
-      DATABASE_MYSQL_PORT: ${DB_PORT:-3306}
-      DATABASE_MYSQL_NAME: ${DB_NAME:-movary}
-      DATABASE_MYSQL_USER: ${DB_USER}
-      DATABASE_MYSQL_PASSWORD: ${DB_PASSWORD}
+      APPLICATION_SECRET: ${APPLICATION_SECRET}
+      DATABASE_MODE: sqlite
       APP_ENV: production
       APP_URL: ${PUBLIC_URL}
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R application:application /app/storage
+      chmod a+rw /dev/stdout /dev/stderr
+      exec su -m -s /bin/sh application -c 'exec /usr/local/bin/entrypoint.sh /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf'
     deploy:
       replicas: 1

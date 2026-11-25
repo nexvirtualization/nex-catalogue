@@ -2,15 +2,15 @@
 x-nex:
   name: Chatwoot
   summary: Manage helpdesk and live chat conversations
-  description: Provision PostgreSQL with pgvector and Redis. Run the upstream database bootstrap before starting.
-    Keep web and worker on one host or on shared storage.
+  description: PostgreSQL with pgvector and Redis run inside this app, and the database is prepared
+    automatically on every start. Keep web and worker on one host or on shared storage.
   category: communication
   website: https://www.chatwoot.com
   source: https://github.com/chatwoot/chatwoot
   docs: https://developers.chatwoot.com/self-hosted/deployment/docker
   primary_service: chatwoot
-  post_install: Provision PostgreSQL with pgvector and Redis. Run the upstream database bootstrap before
-    starting. Keep web and worker on one host or on shared storage.
+  post_install: Open the web address and create the first administrator account on the onboarding page.
+    Keep web and worker on one host or on shared storage.
   license: MIT Expat core; enterprise features separately licensed
   architectures:
   - amd64
@@ -23,30 +23,19 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret. Keep it unchanged, or every user is signed out.
       type: password
-    DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
-    DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Database password
+      help: Use Generate to create a unique secret for the PostgreSQL database that runs inside this app.
       type: password
-    REDIS_URL:
-      label: Redis url
-      help: Enter the deployment value described in the upstream setup guide.
+    DB_DATA:
+      label: Database folder
+      help: Select This host. Stores the PostgreSQL data. Include this folder in a stopped Nex backup.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     STORAGE:
       label: Conversation attachments
       help: Managed directory mounted at /app/storage. Choose storage writable by the application.
@@ -54,7 +43,7 @@ services:
   chatwoot:
     image: docker.io/chatwoot/chatwoot:latest
     ports:
-    - ${PORT:-23599}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${STORAGE}:/app/storage
     environment:
@@ -63,24 +52,19 @@ services:
       RAILS_ENV: production
       NODE_ENV: production
       INSTALLATION_ENV: docker
-      POSTGRES_HOST: ${DB_HOST}
-      POSTGRES_PORT: ${DB_PORT:-5432}
-      POSTGRES_DATABASE: ${DB_NAME:-chatwoot}
-      POSTGRES_USERNAME: ${DB_USER}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: chatwoot
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      REDIS_URL: ${REDIS_URL}
+      REDIS_URL: redis://redis:6379
       ACTIVE_STORAGE_SERVICE: local
     entrypoint:
     - docker/entrypoints/rails.sh
     command:
-    - bundle
-    - exec
-    - rails
-    - s
-    - -p
-    - '3000'
-    - -b
-    - 0.0.0.0
+    - sh
+    - -c
+    - bundle exec rails db:chatwoot_prepare && exec bundle exec rails s -p 3000 -b 0.0.0.0
     deploy:
       replicas: 1
   worker:
@@ -91,15 +75,19 @@ services:
       RAILS_ENV: production
       NODE_ENV: production
       INSTALLATION_ENV: docker
-      POSTGRES_HOST: ${DB_HOST}
-      POSTGRES_PORT: ${DB_PORT:-5432}
-      POSTGRES_DATABASE: ${DB_NAME:-chatwoot}
-      POSTGRES_USERNAME: ${DB_USER}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: chatwoot
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      REDIS_URL: ${REDIS_URL}
+      REDIS_URL: redis://redis:6379
       ACTIVE_STORAGE_SERVICE: local
     deploy:
       replicas: 1
+      # The web service prepares the database on first start; retry until its tables exist.
+      restart_policy:
+        condition: any
+        delay: 10s
     command:
     - bundle
     - exec
@@ -108,3 +96,19 @@ services:
     - config/sidekiq.yml
     volumes:
     - ${STORAGE}:/app/storage
+  db:
+    image: docker.io/pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: chatwoot
+      POSTGRES_DB: chatwoot
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    tmpfs:
+    - /dev/shm:size=134217728
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/valkey/valkey:latest
+    deploy:
+      replicas: 1

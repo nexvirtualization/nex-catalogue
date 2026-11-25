@@ -2,13 +2,15 @@
 x-nex:
   name: Seafile
   summary: Sync personal files and collaborate on a shared library
-  description: Prepare an accessible MariaDB server and a Redis-compatible cache. Use a client-facing
-    HTTPS hostname and keep the initial administrator credentials private.
+  description: MariaDB and Redis run inside this app; the Seafile databases are created on first start. Use a
+    client-facing HTTPS hostname and keep the initial administrator credentials private.
   category: documents
   website: https://github.com/haiwen/seafile
   source: https://github.com/haiwen/seafile
   docs: https://manual.seafile.com/latest/setup/setup_ce_by_docker/
   primary_service: seafile
+  post_install: Sign in with the initial administrator email and password, then change the password. Keep the
+    Seafile and database folders on one host and include both in stopped backups.
   scalable: false
   license: GPL-2.0-only
   web:
@@ -24,30 +26,29 @@ x-nex:
       label: Initial administrator password
       type: password
       help: Use Nex Generate.
-    SEAFILE_MYSQL_DB_HOST:
-      label: MariaDB hostname
-      help: Reachable MariaDB server.
-    SEAFILE_MYSQL_DB_USER:
-      label: MariaDB user
-      help: Dedicated Seafile database user.
-    SEAFILE_MYSQL_DB_PASSWORD:
-      label: MariaDB password
+    DB_ROOT_PASSWORD:
+      label: Database root password
       type: password
-      help: Supply the password for this account.
+      help: Use Generate. Root password of the MariaDB service inside this app; Seafile uses it once to create
+        its databases. Keep it unchanged after the first start.
+    SEAFILE_MYSQL_DB_PASSWORD:
+      label: Database password
+      type: password
+      help: Use Generate. Password of the seafile database user. Keep it unchanged after the first start.
     JWT_PRIVATE_KEY:
       label: Application signing secret
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
-    REDIS_HOST:
-      label: Redis hostname
-      help: Reachable cache service.
+      help: Use Generate and keep this secret across upgrades and restores.
     DATA:
       label: Libraries and Seafile state
-      help: Keep libraries and seafile state in this managed folder between restarts.
+      help: Choose This host. Stores libraries, configuration and logs.
+    DB_DATA:
+      label: Database data
+      help: Choose This host. Stores the MariaDB databases.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   seafile:
     image: docker.io/seafileltd/seafile-mc:14.0.9
@@ -58,14 +59,32 @@ services:
       SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
       INIT_SEAFILE_ADMIN_EMAIL: ${INIT_SEAFILE_ADMIN_EMAIL}
       INIT_SEAFILE_ADMIN_PASSWORD: ${INIT_SEAFILE_ADMIN_PASSWORD}
-      SEAFILE_MYSQL_DB_HOST: ${SEAFILE_MYSQL_DB_HOST}
-      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      SEAFILE_MYSQL_DB_HOST: db
+      SEAFILE_MYSQL_DB_PORT: '3306'
+      SEAFILE_MYSQL_DB_USER: seafile
       SEAFILE_MYSQL_DB_PASSWORD: ${SEAFILE_MYSQL_DB_PASSWORD}
+      INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      SEAFILE_MYSQL_DB_CCNET_DB_NAME: ccnet_db
+      SEAFILE_MYSQL_DB_SEAFILE_DB_NAME: seafile_db
+      SEAFILE_MYSQL_DB_SEAHUB_DB_NAME: seahub_db
       JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: redis
     volumes:
     - ${DATA}:/shared
     ports:
     - ${PORT:-80}:80/tcp
+    deploy:
+      replicas: 1
+  db:
+    image: docker.io/library/mariadb:latest
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_AUTO_UPGRADE: '1'
+    volumes:
+    - ${DB_DATA}:/var/lib/mysql
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
     deploy:
       replicas: 1

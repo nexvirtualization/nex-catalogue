@@ -2,61 +2,116 @@
 x-nex:
   name: Open Archiver
   summary: Search and manage an independent mail archive
-  description: Provision PostgreSQL, a Redis-compatible queue and Meilisearch before starting. Keep
-    mail ingestion and archive access on a trusted HTTPS endpoint.
+  description: Needs an external PostgreSQL database and a Redis-compatible service. Meilisearch runs inside
+    this app. Keep mail ingestion and archive access on a trusted HTTPS endpoint.
   category: communication
   website: https://github.com/LogicLabs-OU/OpenArchiver
   source: https://github.com/LogicLabs-OU/OpenArchiver
   docs: https://docs.openarchiver.com/
   primary_service: open-archiver
+  post_install: Open the web address and create the first administrator account. Keep the archive and search
+    folders on one host, and include both in stopped backups.
   scalable: false
   license: AGPL-3.0
   web:
     port: 3000
   options:
+    APP_URL:
+      label: Public URL
+      help: Full browser-facing URL, including scheme and any nonstandard port, for example
+        https://archive.example.com. Form submissions from any other address are refused.
     DATABASE_URL:
       label: PostgreSQL connection URL
       type: password
-      help: Supply the full connection URL for a prepared database on a reachable network.
+      help: Full URL of an empty, prepared database, for example postgresql://user:password@db-host:5432/archive.
+        Tables are created on first start.
     REDIS_URL:
       label: Redis connection URL
       type: password
-      help: Supply the full connection URL for the prepared Redis-compatible service.
-    MEILI_HOST:
-      label: Search service address
-      help: Reachable Meilisearch URL.
+      help: URL of a Redis-compatible service, for example redis://:password@redis-host:6379. Use rediss:// for
+        TLS. Use a password made of letters and digits only.
     MEILI_MASTER_KEY:
-      label: Search access key
+      label: Search master key
       type: password
-      help: Use a scoped key where supported.
+      help: Use Generate. Master key of the Meilisearch service that runs inside this app.
     JWT_SECRET:
-      label: Application signing secret
+      label: Session signing secret
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
+      help: Use Generate and keep this secret across upgrades and restores.
     ENCRYPTION_KEY:
-      label: Application signing secret
+      label: Credential encryption secret
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
+      help: Use Generate. Encrypts stored mailbox credentials; keep it unchanged, or saved ingestion sources can
+        no longer be read.
     DATA:
       label: Mail archive content
-      help: Keep mail archive content in this managed folder between restarts.
+      help: Choose This host. Stores archived mail. Include this folder in stopped backups.
+    SEARCH_DATA:
+      label: Search index
+      help: Choose This host. Stores the Meilisearch index. Include this folder in stopped backups.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   open-archiver:
     image: docker.io/logiclabshq/open-archiver:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    command:
+    - |-
+      # The app reads REDIS_HOST/REDIS_PORT/REDIS_PASSWORD, not a URL; split the URL.
+      case "$$REDIS_URL" in rediss://*) export REDIS_TLS_ENABLED=true ;; esac
+      rest="$${REDIS_URL#*://}"
+      rest="$${rest%%/*}"
+      case "$$rest" in
+        *@*) auth="$${rest%@*}"; rest="$${rest##*@}" ;;
+        *) auth="" ;;
+      esac
+      case "$$auth" in
+        *:*) [ -n "$${auth%%:*}" ] && export REDIS_USER="$${auth%%:*}"; export REDIS_PASSWORD="$${auth#*:}" ;;
+        ?*) export REDIS_PASSWORD="$$auth" ;;
+      esac
+      export REDIS_HOST="$${rest%:*}"
+      case "$$rest" in *:*) export REDIS_PORT="$${rest##*:}" ;; *) export REDIS_PORT=6379 ;; esac
+      unset REDIS_URL
+      # The backend exits if Meilisearch is not answering yet.
+      i=0
+      until wget -q -O /dev/null http://search:7700/health; do
+        i=$$((i + 1))
+        [ "$$i" -ge 60 ] && break
+        sleep 2
+      done
+      exec docker-entrypoint.sh pnpm docker-start:oss
     environment:
+      NODE_ENV: production
+      PORT_BACKEND: '4000'
+      APP_URL: ${APP_URL}
+      ORIGIN: ${APP_URL}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
-      MEILI_HOST: ${MEILI_HOST}
+      MEILI_HOST: http://search:7700
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: 7d
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_ROOT_PATH: /data
+      BODY_SIZE_LIMIT: 100M
     volumes:
     - ${DATA}:/data
     ports:
     - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1
+  search:
+    image: docker.io/getmeili/meilisearch:latest
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: 'true'
+    volumes:
+    - ${SEARCH_DATA}:/meili_data
     deploy:
       replicas: 1

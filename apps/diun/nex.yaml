@@ -2,9 +2,10 @@
 x-nex:
   name: Diun
   summary: Watch a configured list of container images for updates
-  description: Prepare diun.yml in the managed configuration folder and set providers.file.filename to
-    /config/images.yml. Add the images to watch to images.yml and configure a notifier in diun.yml if
-    desired. The application checks registries directly.
+  description: Diun starts with a default images.yml in the Configuration folder that watches the Diun
+    image itself. Edit images.yml to list the images to watch. To add a notifier or other settings,
+    create diun.yml in the same folder; Diun reads it on the next start. Existing files are never
+    overwritten. The application checks registries directly.
   category: monitoring
   website: https://crazymax.dev/diun
   source: https://github.com/crazy-max/diun
@@ -18,10 +19,15 @@ x-nex:
     TZ:
       label: Tz
       help: IANA time zone for registry check schedules.
+    SCHEDULE:
+      label: Check schedule
+      help: Cron expression for registry checks, in the time zone above. The default checks every six
+        hours. Diun also checks once at start.
     CONFIG:
-      label: Prepared image configuration
-      help: Select This host. Choose a folder containing diun.yml and images.yml. Include this folder
-        in a stopped Nex backup.
+      label: Configuration folder
+      help: Select This host. Choose a writable folder. Diun creates images.yml here on first start if
+        it is missing; add an optional diun.yml for notifiers. Include this folder in a stopped Nex
+        backup.
     DATA:
       label: Image history
       help: Select This host. Stores the registry state and prior observations. Include this folder in
@@ -31,13 +37,26 @@ services:
     image: crazymax/diun:latest
     environment:
       DIUN_DB_PATH: /data/diun.db
+      DIUN_PROVIDERS_FILE_FILENAME: /config/images.yml
+      DIUN_WATCH_SCHEDULE: ${SCHEDULE:-0 */6 * * *}
       TZ: ${TZ:-Etc/UTC}
-    command:
-    - serve
-    - --config
-    - /config/diun.yml
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      if [ ! -f /config/images.yml ]; then
+        cat > /config/images.yml <<'IMAGES'
+      # Images Diun watches, one entry per image.
+      # Reference: https://crazymax.dev/diun/providers/file/
+      - name: docker.io/crazymax/diun:latest
+      IMAGES
+      fi
+      if [ -f /config/diun.yml ]; then
+        exec diun serve --config /config/diun.yml
+      fi
+      exec diun serve
     volumes:
-    - ${CONFIG}:/config:ro
+    - ${CONFIG}:/config
     - ${DATA}:/data
     deploy:
       replicas: 1

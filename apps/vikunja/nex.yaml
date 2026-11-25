@@ -27,27 +27,46 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3456.
+      help: The app listens on TCP port 3456 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Task database
-      help: Select This host. Stores tasks, projects, and accounts. Include this folder in a stopped Nex
-        backup.
+      help: Select This host. Keeps the SQLite database. A small helper service makes it writable by the
+        application user (UID 1000) on every start. Include this folder in a stopped Nex backup.
     FILES:
       label: Attachments
-      help: Select This host. Stores uploaded files. Include this folder in a stopped Nex backup.
+      help: Select This host. Stores uploaded files and is made writable by the application user (UID
+        1000) on every start. Include it in a stopped Nex backup.
 services:
   vikunja:
     image: vikunja/vikunja:latest
     environment:
       VIKUNJA_SERVICE_PUBLICURL: ${PUBLIC_URL}
-      VIKUNJA_SERVICE_JWTSECRET: ${JWT_SECRET}
+      VIKUNJA_SERVICE_SECRET: ${JWT_SECRET}
       VIKUNJA_DATABASE_TYPE: sqlite
       VIKUNJA_DATABASE_PATH: /db/vikunja.db
     ports:
-    - ${PORT:-8405}:3456/tcp
+    - ${PORT:-3456}:3456/tcp
     volumes:
     - ${DATA}:/db
     - ${FILES}:/app/vikunja/files
+    deploy:
+      replicas: 1
+      # Retry quickly: Vikunja may start before the helper below has made its folders writable.
+      restart_policy:
+        condition: any
+        delay: 1s
+  # The Vikunja image has no shell, so this helper hands the data folders to the app user and waits.
+  data-init:
+    image: docker.io/library/busybox:latest
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown 1000:1000 /db /files
+      exec tail -f /dev/null
+    volumes:
+    - ${DATA}:/db
+    - ${FILES}:/files
     deploy:
       replicas: 1

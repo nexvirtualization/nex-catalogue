@@ -15,8 +15,9 @@ x-nex:
       label: .ollama folder
       help: Nex-managed folder mounted at /root/.ollama. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 11434/tcp.
+      label: TCP port
+      help: The app listens on TCP port 11434 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Use a compatible Ollama client to pull a model and connect to the app on port 11434. This package
     runs on CPU and exposes an unauthenticated API.
 services:

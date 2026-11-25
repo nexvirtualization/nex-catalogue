@@ -19,8 +19,8 @@ x-nex:
       help: Slash settings and SQLite database.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5231.
+      help: The app listens on TCP port 5231 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   slash:
     image: docker.io/yourselfhosted/slash:latest

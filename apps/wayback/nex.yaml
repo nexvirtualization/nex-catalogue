@@ -2,8 +2,7 @@
 x-nex:
   name: Wayback
   summary: Archive pages and serve your saved web references
-  description: Select a folder prepared with the Wayback configuration for your authorized archive sources.
-    Configure the private web endpoint before using the service.
+  description: Run the Wayback web service with managed archive state and optional configuration.
   category: documents
   website: https://github.com/wabarc/wayback
   source: https://github.com/wabarc/wayback
@@ -11,19 +10,26 @@ x-nex:
   primary_service: wayback
   scalable: false
   license: GPL-3.0
+  version: 0.21.1
   web:
     port: 8964
   options:
     DATA:
       label: Archive state and configuration
-      help: Keep archive state and configuration in this managed folder between restarts.
+      help: Keep archive state and optional wayback.conf here. This package stores archive
+        files in /data and disables the onion listener, overriding those settings in the file.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8964.
+      help: The app listens on TCP port 8964 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   wayback:
     image: docker.io/wabarc/wayback:latest
+    command: [wayback, -d, web]
+    working_dir: /data
+    environment:
+      WAYBACK_ONION_DISABLED: "true"
+      WAYBACK_STORAGE_DIR: /data
     volumes:
     - ${DATA}:/data
     ports:

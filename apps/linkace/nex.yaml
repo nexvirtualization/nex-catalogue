@@ -30,7 +30,10 @@ x-nex:
     APP_KEY:
       label: Laravel application key
       type: password
-      help: 'Supply base64: followed by the base64-encoded value of 32 random bytes.'
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead.'
     PUBLIC_URL:
       label: Public web address
       help: Full browser-facing URL, including scheme and any port.
@@ -39,8 +42,8 @@ x-nex:
       help: Keep bookmark backups in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   linkace:
     image: docker.io/linkace/linkace:latest

@@ -13,9 +13,9 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /opt/onedev.
     PORT:
-      label: Published 6610/tcp port
-      help: Host port for application listener 6610/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 6610/tcp
+      help: The app listens on TCP port 6610 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Finish the initial setup and configure the external URL. Configure remote build agents separately
     as this package does not mount the Docker socket.
   web:
@@ -28,4 +28,4 @@ services:
     volumes:
     - ${DATA}:/opt/onedev
     ports:
-    - ${PORT:-19765}:6610/tcp
+    - ${PORT:-6610}:6610/tcp

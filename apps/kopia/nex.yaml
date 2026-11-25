@@ -26,8 +26,9 @@ x-nex:
       help: Choose a strong password for this deployment.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 51515 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 51515 on its default Docker network. Nex does not publish it on host
+        addresses.
     CONFIG:
       label: Kopia configuration
       help: Managed directory mounted at /app/config. Choose storage writable by the application.
@@ -44,7 +45,7 @@ services:
   kopia:
     image: docker.io/kopia/kopia:latest
     ports:
-    - ${PORT:-20256}:51515/tcp
+    - ${PORT:-51515}:51515/tcp
     volumes:
     - ${CONFIG}:/app/config
     - ${CACHE}:/app/cache

@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Website and database
       help: Select This host. Stores site files, configuration and the local SQLite database. Include
@@ -30,7 +30,7 @@ services:
   vvveb-cms:
     image: vvveb/vvvebcms:latest
     ports:
-    - ${PORT:-8114}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html
     deploy:

@@ -23,13 +23,14 @@ x-nex:
       help: Comma-separated browser-facing hostnames without ports or schemes. Include your reverse proxy hostname
         if used.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 8000. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   gitingest:
     image: ghcr.io/coderamp-labs/gitingest:v0.3.1
     ports:
-    - ${PORT:-18115}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     environment:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS}
       GITINGEST_METRICS_ENABLED: 'false'

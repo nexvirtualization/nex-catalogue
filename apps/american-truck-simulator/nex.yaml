@@ -44,6 +44,16 @@ services:
       - 27016/udp
     volumes:
       - ${DATA}:/home/steam/.local/share/American Truck Simulator
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        # A fresh SteamCMD fails the first app_update with "Missing configuration"
+        # until it has fetched the app info, so fetch it before the image updates.
+        /home/steam/steamcmd/steamcmd.sh +login anonymous +app_info_update 1 \
+          +app_info_print "$$APP_ID" +quit > /dev/null \
+          || echo "SteamCMD could not fetch the app info; continuing with the update." >&2
+        exec /entrypoint bash -c "$$EXECUTABLE"
     stop_grace_period: 90s
     deploy:
       replicas: 1

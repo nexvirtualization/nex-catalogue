@@ -23,8 +23,8 @@ x-nex:
       help: IANA time zone for logs and jobs.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5001.
+      help: The app listens on TCP port 5001 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: User configuration
       help: Select This host. Stores preferences and exchange configuration. Include this folder in a
@@ -41,10 +41,11 @@ x-nex:
 services:
   octobot:
     image: drakkarsoftware/octobot:stable
+    command: ["--standalone"]
     environment:
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8810}:5001/tcp
+    - ${PORT:-5001}:5001/tcp
     volumes:
     - ${DATA}:/octobot/user
     - ${ADDONS}:/octobot/tentacles

@@ -3,14 +3,14 @@ x-nex:
   name: InfluxDB
   summary: Store and query time-series data with InfluxDB 3 Core
   description: Use the single-node storage engine with a local filesystem object store. The API listens on
-    TCP 8181.
+    TCP 8181 and requires the administrator token you set at install.
   category: development
   website: https://influxdata.com/
   source: https://github.com/influxdata/influxdb
   docs: https://docs.influxdata.com/influxdb3/core/get-started/setup/
   primary_service: influxdb
-  post_install: Place the upstream-format token.json in Prepared bootstrap tokens before starting. Keep the
-    API on the private Nex network. Supply the operator token to the client.
+  post_install: Keep the API on the private Nex network and give clients the administrator token as apiv3_
+    followed by the value you entered. Create narrower tokens with influxdb3 create token.
   license: Apache-2.0
   architectures:
   - amd64
@@ -18,22 +18,26 @@ x-nex:
   options:
     DATA:
       label: Time-series data
-      help: Managed directory mounted at /var/lib/influxdb3/data. Choose storage writable by the application.
-    TOKEN:
-      label: Prepared bootstrap tokens
-      help: Managed directory mounted at /nex-bootstrap. Choose storage readable by the application.
+      help: Choose This host. If using a share, browse to an existing folder and make sure UID and
+        GID 1500 can write to the folder and its data before installing or updating.
+    ADMIN_TOKEN:
+      label: Administrator token
+      help: Use Generate or enter letters and digits only. Clients send apiv3_ followed by this value.
+        The token is created on the first start; to change it later, use influxdb3 create token.
+      type: password
 services:
   influxdb:
     image: docker.io/library/influxdb:3.12.2-core
     volumes:
-    - ${DATA}:/var/lib/influxdb3/data
-    - ${TOKEN}:/nex-bootstrap:ro
+    - ${DATA}:/var/lib/influxdb3
+    environment:
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
     command:
-    - influxdb3
-    - serve
-    - --node-id=nex
-    - --object-store=file
-    - --data-dir=/var/lib/influxdb3/data
-    - --admin-token-file=/nex-bootstrap/token.json
+    - /bin/sh
+    - -ec
+    - |
+      printf '{"token":"apiv3_%s","name":"_admin","expiry_millis":null}\n' "$$ADMIN_TOKEN" > /tmp/token.json
+      exec influxdb3 serve --node-id=nex --object-store=file --data-dir=/var/lib/influxdb3 \
+        --admin-token-file=/tmp/token.json
     deploy:
       replicas: 1

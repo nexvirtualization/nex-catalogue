@@ -23,8 +23,8 @@ x-nex:
       help: IANA time zone for recordings.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Camera and application configuration
       help: Select This host. Stores Viseron configuration and database. Include this folder in a stopped
@@ -51,7 +51,7 @@ services:
     environment:
       TZ: ${TZ:-Etc/UTC}
     ports:
-    - ${PORT:-8751}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     volumes:
     - ${DATA}:/config
     - ${RECORDINGS}:/recordings

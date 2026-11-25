@@ -18,10 +18,9 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port. No built-in login is enabled; restrict access to your trusted network. Configure
-        engines in the persistent settings.yml file. With Network → Docker and host publishing enabled, use the
-        chosen host web port. On a registered VLAN or private Primary network with its own address, use that address
-        and internal port 8080; host publishing is a separate switch.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses. No built-in login is enabled; restrict access to your trusted network. Configure engines in
+        the persistent settings.yml file.
     CONFIG:
       label: Search configuration
       help: Persistent /etc/searxng with generated settings.yml and instance secret. The image initializes missing
@@ -36,7 +35,7 @@ services:
   searxng:
     image: searxng/searxng:latest
     ports:
-    - ${PORT:-8888}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${CONFIG}:/etc/searxng
     - ${CACHE}:/var/cache/searxng

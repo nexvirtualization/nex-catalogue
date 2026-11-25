@@ -2,8 +2,10 @@
 x-nex:
   name: Kanidm
   summary: Run an identity management and directory service
-  description: Prepare the data folder with Kanidm server.toml, TLS assets and the public origin. Connect
-    to the HTTPS endpoint and follow upstream setup for the initial administrator.
+  description: Starts with no preparation. A helper container writes a self-signed certificate (chain.pem and
+    key.pem) to the data folder when none exists; it downloads OpenSSL, so the first start needs internet
+    access. Replace both files with your own certificate to avoid browser warnings. Set the domain and
+    HTTPS origin clients will use. Follow upstream setup for the initial administrator.
   category: security
   website: https://github.com/kanidm/kanidm
   source: https://github.com/kanidm/kanidm
@@ -11,20 +13,63 @@ x-nex:
   primary_service: kanidm
   scalable: false
   license: MPL-2.0
+  web:
+    port: 8443
+    scheme: https
+  post_install: Kanidm creates its administrator accounts on first start without a known password. From the
+    application's console run kanidmd recover-account admin and kanidmd recover-account idm_admin to set
+    their passwords, then open the HTTPS address.
   options:
+    DOMAIN:
+      label: Domain
+      help: DNS name of the identity service, such as idm.example.com. It is the domain accounts belong to
+        and cannot be changed later.
+    ORIGIN:
+      label: HTTPS origin
+      help: Address clients use to reach the service, starting with https:// and ending with the port if it is
+        not 443, for example https://idm.example.com:8443. It must be a name or address under the domain.
     DATA:
-      label: Prepared identity state and configuration
-      help: Keep prepared identity state and configuration in this managed folder between restarts.
+      label: Data folder
+      help: Holds the identity database and the certificate files chain.pem and key.pem, mounted at /data.
+        Your own chain.pem and key.pem here replace the generated self-signed pair; existing files are
+        never overwritten.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8443.
+      help: The app listens on TCP port 8443 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   kanidm:
     image: docker.io/kanidm/server:latest
+    environment:
+      KANIDM_DOMAIN: ${DOMAIN:-idm.example.com}
+      KANIDM_ORIGIN: ${ORIGIN:-https://idm.example.com:8443}
+      KANIDM_DB_PATH: /data/kanidm.db
+      KANIDM_TLS_CHAIN: /data/chain.pem
+      KANIDM_TLS_KEY: /data/key.pem
+      KANIDM_BINDADDRESS: '[::]:8443'
     volumes:
     - ${DATA}:/data
     ports:
     - ${PORT:-8443}:8443/tcp
+    deploy:
+      replicas: 1
+  certs:
+    image: docker.io/library/alpine:latest
+    entrypoint: [/bin/sh, -ec]
+    command:
+    - |
+      if [ ! -s /data/key.pem ] || [ ! -s /data/chain.pem ]; then
+        apk add --no-cache openssl >/dev/null
+        openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 3650 \
+          -subj "/CN=$$NEX_DOMAIN" -addext "subjectAltName=DNS:$$NEX_DOMAIN" \
+          -keyout /data/key.pem.new -out /data/chain.pem.new
+        mv /data/key.pem.new /data/key.pem
+        mv /data/chain.pem.new /data/chain.pem
+      fi
+      exec sleep 2147483647
+    environment:
+      NEX_DOMAIN: ${DOMAIN:-idm.example.com}
+    volumes:
+    - ${DATA}:/data
     deploy:
       replicas: 1

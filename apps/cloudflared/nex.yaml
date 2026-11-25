@@ -12,7 +12,8 @@ x-nex:
     TUNNEL_TOKEN:
       label: Tunnel token
       type: password
-      help: Use a unique value and keep it with the application backups.
+      help: Connector token of a remotely managed tunnel, copied from the Cloudflare Zero Trust dashboard
+        (a long string beginning eyJ). Cloudflared exits at start if it is not a valid tunnel token.
   post_install: Create a remotely managed tunnel in Cloudflare and supply its connector token. Set each origin
     to the intended service network name and port.
 services:

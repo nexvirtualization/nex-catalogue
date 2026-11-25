@@ -17,6 +17,7 @@ x-nex:
     send it to the app. Keep a backup of the signing key and original images.
   web:
     port: 8888
+    path: /healthcheck
   options:
     SIGNING_KEY:
       label: Signing key
@@ -27,13 +28,14 @@ x-nex:
       help: Folder containing source images, mounted read-only at /image-sources. Files must be readable by
         the container.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 8888. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   thumbor:
     image: ghcr.io/thumbor/thumbor:latest
     ports:
-    - ${PORT:-18124}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     environment:
       THUMBOR_SIGNING_KEY: ${SIGNING_KEY}
     volumes:

@@ -2,15 +2,13 @@
 x-nex:
   name: '015'
   summary: Share temporary files and text with expiring links
-  description: Provision Redis and create config.yaml in Configuration from the upstream example with private
-    signing secrets, Redis URL, and public HTTPS address. Keep the app and worker on one host or shared storage.
+  description: Includes its own Redis. Upload and share files or text through links that expire. Set the public
+    address people will use to open shares and let Generate create the private secrets.
   category: documents
   website: https://send.fudaoyuan.icu
   source: https://github.com/keven1024/015
   docs: https://github.com/keven1024/015#docker
   primary_service: '015'
-  post_install: Provision Redis and create config.yaml in Configuration from the upstream example with private
-    signing secrets, Redis URL, and public HTTPS address. Keep the app and worker on one host or shared storage.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -19,44 +17,141 @@ x-nex:
     port: 80
   options:
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
-    CONFIG:
-      label: Prepared 015 configuration
-      help: Managed directory mounted at /nex-config. Choose storage readable by the application.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
+    SITE_URL:
+      label: Public address
+      help: Full address people use to open the site, for example https://share.example.com. Leave empty
+        for http://localhost:5000. Use a trusted HTTPS reverse proxy for internet access.
+    DOWNLOAD_SECRET:
+      label: Download secret
+      help: Use Generate. Signs download tokens. Letters and digits only.
+      type: password
+    PASSWORD_SALT:
+      label: Share password salt
+      help: Use Generate. Salts share passwords. Letters and digits only.
+      type: password
+    SESSION_SALT:
+      label: Session signing key
+      help: Use Generate. Signs session cookies. Letters and digits only.
+      type: password
+    REDIS_PASSWORD:
+      label: Redis password
+      help: Use Generate. Letters and digits only.
+      type: password
     UPLOADS:
       label: Shared uploaded files
-      help: Managed directory mounted at /uploads. Choose storage writable by the application.
+      help: Choose storage writable by both services. Use shared storage if they can run on different hosts.
+    REDIS_DATA:
+      label: Redis data
+      help: Keeps share records across restarts. Include it in a stopped Nex backup.
 services:
   '015':
     image: docker.io/fudaoyuanicu/015-app:latest
     ports:
-    - ${PORT:-23514}:80/tcp
+    - ${PORT:-80}:80/tcp
+    environment:
+      SITE_URL: ${SITE_URL:-http://localhost:5000}
+      DOWNLOAD_SECRET: ${DOWNLOAD_SECRET}
+      PASSWORD_SALT: ${PASSWORD_SALT}
+      SESSION_SALT: ${SESSION_SALT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
-    - ${CONFIG}:/nex-config:ro
     - ${UPLOADS}:/uploads
     entrypoint:
     - /bin/sh
     command:
     - -ec
     - |-
-      test -r /nex-config/config.yaml
-      ln -sf /nex-config/config.yaml /app/config.yaml
+      cat > /app/config.yaml <<CONFIG
+      share:
+        download_secret: $$DOWNLOAD_SECRET
+        download_window: 12
+        password_salt: $$PASSWORD_SALT
+        session_salt: $$SESSION_SALT
+      upload:
+        path: /uploads
+        maximum: 100GiB
+      redis:
+        url: redis://:$$REDIS_PASSWORD@redis:6379/0
+      features:
+        file-share:
+          enabled: true
+        text-share:
+          enabled: true
+        file-image-compress:
+          enabled: true
+        file-image-convert:
+          enabled: true
+      site:
+        url: "$$SITE_URL"
+        title:
+          en: '015'
+        desc:
+          en: Temporary file and text sharing
+        icon: /logo.webp
+        enable_bg: false
+      CONFIG
       exec /bin/sh /app/015.sh
     deploy:
       replicas: 1
   worker:
     image: docker.io/fudaoyuanicu/015-worker:latest
+    environment:
+      SITE_URL: ${SITE_URL:-http://localhost:5000}
+      DOWNLOAD_SECRET: ${DOWNLOAD_SECRET}
+      PASSWORD_SALT: ${PASSWORD_SALT}
+      SESSION_SALT: ${SESSION_SALT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
-    - ${CONFIG}:/nex-config:ro
     - ${UPLOADS}:/uploads
     entrypoint:
     - /bin/sh
     command:
     - -ec
     - |-
-      test -r /nex-config/config.yaml
-      ln -sf /nex-config/config.yaml /config.yaml
+      cat > /config.yaml <<CONFIG
+      share:
+        download_secret: $$DOWNLOAD_SECRET
+        download_window: 12
+        password_salt: $$PASSWORD_SALT
+        session_salt: $$SESSION_SALT
+      upload:
+        path: /uploads
+        maximum: 100GiB
+      redis:
+        url: redis://:$$REDIS_PASSWORD@redis:6379/0
+      features:
+        file-share:
+          enabled: true
+        text-share:
+          enabled: true
+        file-image-compress:
+          enabled: true
+        file-image-convert:
+          enabled: true
+      site:
+        url: "$$SITE_URL"
+        title:
+          en: '015'
+        desc:
+          en: Temporary file and text sharing
+        icon: /logo.webp
+        enable_bg: false
+      CONFIG
       exec /bin/worker
+    deploy:
+      replicas: 1
+  redis:
+    image: docker.io/library/redis:latest
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command:
+    - sh
+    - -ec
+    - exec docker-entrypoint.sh redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+    volumes:
+    - ${REDIS_DATA}:/data
     deploy:
       replicas: 1

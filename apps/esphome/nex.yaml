@@ -19,9 +19,9 @@ x-nex:
       label: Config folder
       help: Choose the Nex-managed folder mounted at /config.
     PORT:
-      label: Published 6052/tcp port
-      help: Host port for application listener 6052/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 6052/tcp
+      help: The app listens on TCP port 6052 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Connect to ESPHome devices by IP and use over-the-air updates. Hardware that needs first-time
     serial flashing must be provisioned separately.
   web:
@@ -38,4 +38,4 @@ services:
     volumes:
     - ${CONFIG}:/config
     ports:
-    - ${PORT:-19771}:6052/tcp
+    - ${PORT:-6052}:6052/tcp

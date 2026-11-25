@@ -21,8 +21,8 @@ x-nex:
       help: Typesense search collections and indexes.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8108.
+      help: The app listens on TCP port 8108 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   typesense:
     image: docker.io/typesense/typesense:30.2

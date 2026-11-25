@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 7655.
+      help: The app listens on TCP port 7655 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Monitoring configuration
       help: Select This host. Stores remote credentials, tracked systems and monitoring state. Include

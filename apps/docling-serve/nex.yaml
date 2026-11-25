@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5001.
+      help: The app listens on TCP port 5001 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   docling-serve:
     image: ghcr.io/docling-project/docling-serve-cpu:latest

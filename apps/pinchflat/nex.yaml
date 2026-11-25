@@ -18,8 +18,9 @@ x-nex:
       label: Downloads folder
       help: Nex-managed folder mounted at /downloads. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8945/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8945 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8945
   post_install: Open the web UI and add sources you are authorized to download. Back up the config folder,

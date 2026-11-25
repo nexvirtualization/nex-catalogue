@@ -22,8 +22,11 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 random bytes in Base64. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -base64 32 instead. Keep it private; changing it makes
+        stored credentials unreadable.
       type: password
+      generate: {format: base64, bytes: 32}
     DB_HOST:
       label: Db host
       help: Hostname or Nex connection name of the database service.
@@ -41,13 +44,14 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3003 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3003 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   nango:
     image: docker.io/nangohq/nango-server:latest
     ports:
-    - ${PORT:-23597}:3003/tcp
+    - ${PORT:-3003}:3003/tcp
     environment:
       NANGO_SERVER_URL: ${PUBLIC_URL}
       NANGO_ENCRYPTION_KEY: ${ENCRYPTION_KEY}

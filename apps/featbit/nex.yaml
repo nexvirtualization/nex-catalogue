@@ -32,24 +32,29 @@ x-nex:
       type: password
     SIGNING_SECRET:
       label: Signing secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     API_PORT:
-      label: Published backend API port
-      help: Host-published port for the internal 5000/tcp endpoint.
+      label: Backend API port
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
     EVALUATION_PORT:
-      label: Published evaluation port
-      help: Host-published port for the internal 5100/tcp endpoint.
+      label: Evaluation port
+      help: The app listens on TCP port 5100 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   featbit:
     image: docker.io/library/caddy:latest
     ports:
-    - ${PORT:-23592}:80/tcp
-    - ${API_PORT:-24592}:5000/tcp
-    - ${EVALUATION_PORT:-25592}:5100/tcp
+    - ${PORT:-80}:80/tcp
+    - ${API_PORT:-5000}:5000/tcp
+    - ${EVALUATION_PORT:-5100}:5100/tcp
     entrypoint:
     - /bin/sh
     command:

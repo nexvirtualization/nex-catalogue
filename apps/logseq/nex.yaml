@@ -20,12 +20,12 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   logseq:
     image: ghcr.io/logseq/logseq-webapp:latest
     ports:
-    - ${PORT:-8791}:80/tcp
+    - ${PORT:-80}:80/tcp
     deploy:
       replicas: 1

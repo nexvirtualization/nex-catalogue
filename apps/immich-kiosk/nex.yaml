@@ -31,8 +31,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   immich-kiosk:
     image: ghcr.io/damongolding/immich-kiosk:latest
@@ -41,6 +41,6 @@ services:
       KIOSK_IMMICH_API_KEY: ${IMMICH_API_KEY}
       KIOSK_PASSWORD: ${KIOSK_PASSWORD}
     ports:
-    - ${PORT:-8130}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     deploy:
       replicas: 1

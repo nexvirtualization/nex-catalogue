@@ -3,13 +3,13 @@ x-nex:
   name: AdGuard Home
   summary: Filter ads and trackers through your own DNS server
   description: DNS filtering for your LAN. In Install, Network choose Primary network, a registered cluster VLAN
-    reachable by your clients, then Fixed with an unused address/prefix and Default gateway. Leave Also publish
-    ports on host addresses unchecked. After Install open http://APP-IP:3000, create the administrator, choose all
-    DNS interfaces and web port 80; then use http://APP-IP/ for administration. Point router/client DNS to APP-IP
-    on port 53, both TCP and UDP. The shared-network default alone cannot serve LAN DNS. DHCP and encrypted DNS
-    are not configured. On Basics choose Runs on, Only these hosts and one host; keep state folders on This host.
-    This keeps one copy on that host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy
-    option and select all state folders before updates.
+    reachable by your clients, then Fixed with an unused address/prefix and Default gateway. After Install open
+    http://APP-IP:3000, create the administrator, choose all DNS interfaces and web port 80; then use
+    http://APP-IP/ for administration. Point router/client DNS to APP-IP on port 53, both TCP and UDP. The
+    shared-network default alone cannot serve LAN DNS. DHCP and encrypted DNS are not configured. On Basics
+    choose Runs on, Only these hosts and one host; keep state folders on This host. This keeps one copy on that
+    host with no automatic failover. Use ACTIONS, Back up now with the stopped-copy option and select all state
+    folders before updates.
   category: networking
   website: https://adguard.com/en/adguard-home/overview.html
   source: https://github.com/AdguardTeam/AdGuardHome
@@ -22,13 +22,12 @@ x-nex:
   options:
     SETUP_PORT:
       label: Initial setup port
-      help: Only used when Also publish ports on host addresses is checked. For the required dedicated primary network
-        leave that checkbox off and open http://APP-IP:3000 for first setup; select all DNS interfaces and web port
-        80.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT:
       label: Web port
-      help: Only the optional host publication. With a registered cluster VLAN as Primary network and host publishing
-        unchecked, use http://APP-IP/ after the first-run wizard. Configure LAN DNS clients to use APP-IP:53.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses. Configure LAN DNS clients to use APP-IP:53.
     WORK:
       label: DNS data
       help: Keep DNS data on This host. Nex creates /opt/adguardhome/work as persistent storage; no host folder
@@ -41,8 +40,8 @@ services:
   adguard-home:
     image: adguard/adguardhome:latest
     ports:
-    - ${SETUP_PORT:-3003}:3000/tcp
-    - ${PORT:-8082}:80/tcp
+    - ${SETUP_PORT:-3000}:3000/tcp
+    - ${PORT:-80}:80/tcp
     expose:
     - 53/tcp
     - 53/udp

@@ -25,8 +25,9 @@ x-nex:
       label: Media folder
       help: Nex-managed folder mounted at /media. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 25600/tcp.
+      label: TCP port
+      help: The app listens on TCP port 25600 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 25600
   post_install: Create the administrator and add a library using /data or /media. Mount your existing media

@@ -14,9 +14,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Enable the Google Fonts Developer API for your key. Open the helper to download the font assets
     and CSS for local hosting.
   web:
@@ -29,4 +29,4 @@ services:
     environment:
       GOOGLE_FONTS_API_KEY: ${GOOGLE_FONTS_API_KEY}
     ports:
-    - ${PORT:-19874}:8080/tcp
+    - ${PORT:-8080}:8080/tcp

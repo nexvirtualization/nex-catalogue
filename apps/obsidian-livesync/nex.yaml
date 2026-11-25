@@ -26,8 +26,9 @@ x-nex:
       help: Choose a strong password for this deployment.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5984 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5984 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Vault databases
       help: Managed directory mounted at /opt/couchdb/data. Choose storage writable by the application.
@@ -38,7 +39,7 @@ services:
   obsidian-livesync:
     image: docker.io/library/couchdb:latest
     ports:
-    - ${PORT:-20231}:5984/tcp
+    - ${PORT:-5984}:5984/tcp
     volumes:
     - ${DATA}:/opt/couchdb/data
     - ${CONFIG}:/opt/couchdb/etc/local.d

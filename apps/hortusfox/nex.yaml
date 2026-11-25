@@ -42,8 +42,9 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     IMAGES:
       label: Plant photos
       help: Managed directory mounted at /var/www/html/public/img. Choose storage writable by the application.
@@ -60,7 +61,7 @@ services:
   hortusfox:
     image: ghcr.io/danielbrendel/hortusfox-web:latest
     ports:
-    - ${PORT:-23495}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${IMAGES}:/var/www/html/public/img
     - ${BACKUP}:/var/www/html/public/backup
@@ -73,6 +74,7 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-3306}
       DB_DATABASE: ${DB_NAME:-hortusfox}
+      DB_CHARSET: utf8mb4
       DB_USERNAME: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     deploy:

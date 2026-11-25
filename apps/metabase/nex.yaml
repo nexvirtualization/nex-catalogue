@@ -27,9 +27,9 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 3000/tcp port
-      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 3000/tcp
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a PostgreSQL metadata database with its own role. Finish the installer, then connect
     your analytics data source. Back up the metadata database and encryption key.
   web:
@@ -48,4 +48,4 @@ services:
       MB_DB_PASS: ${DB_PASSWORD}
       MB_ENCRYPTION_SECRET_KEY: ${ENCRYPTION_KEY}
     ports:
-    - ${PORT:-19806}:3000/tcp
+    - ${PORT:-3000}:3000/tcp

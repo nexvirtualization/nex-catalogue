@@ -27,8 +27,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   spliit:
     image: ghcr.io/spliit-app/spliit:latest
@@ -36,6 +36,6 @@ services:
       POSTGRES_PRISMA_URL: ${DATABASE_URL}
       POSTGRES_URL_NON_POOLING: ${DATABASE_URL}
     ports:
-    - ${PORT:-8460}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     deploy:
       replicas: 1

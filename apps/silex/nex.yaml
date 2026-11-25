@@ -2,15 +2,16 @@
 x-nex:
   name: Silex
   summary: Build and export websites through a visual editor
-  description: Silex uses local filesystem storage and lets you download exported site files. Keep the editing
-    interface behind an authenticating HTTPS proxy.
+  description: Silex stores editable projects and published site files in separate folders on the managed
+    volume. Keep the editing interface behind an authenticating HTTPS proxy.
   category: development
   website: https://www.silex.me/
   source: https://github.com/silexlabs/Silex
   docs: https://docs.silex.me/developer/self-hosting/docker/
   primary_service: silex
-  post_install: Use the configured public address to open the editor. Download the resulting website when
-    ready and back up the managed Site data folder.
+  post_install: Open the configured editor address and publish to the filesystem. Silex writes the output
+    directly to the hosting subfolder. In the application’s Files view, open Site data and download the
+    generated files from hosting. Back up the managed Site data folder.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -25,16 +26,18 @@ x-nex:
       help: Random key of at least 32 characters.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 6805 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 6805 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Site data
-      help: Managed directory mounted at /data. Choose storage writable by the application.
+      help: Managed directory mounted at /data. The storage subfolder holds projects and hosting holds
+        published files.
 services:
   silex:
     image: docker.io/silexlabs/silex-platform:latest
     ports:
-    - ${PORT:-20262}:6805/tcp
+    - ${PORT:-6805}:6805/tcp
     volumes:
     - ${DATA}:/data
     environment:
@@ -42,7 +45,7 @@ services:
       SILEX_SESSION_SECRET: ${SESSION_SECRET}
       SILEX_HOST: 0.0.0.0
       STORAGE_CONNECTORS: fs
-      HOSTING_CONNECTORS: fs,download
+      HOSTING_CONNECTORS: fs
       SILEX_FS_ROOT: /data/storage
       SILEX_FS_HOSTING_ROOT: /data/hosting
     deploy:

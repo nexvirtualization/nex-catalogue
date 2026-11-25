@@ -2,14 +2,19 @@
 x-nex:
   name: vLLM CPU
   summary: Serve a language model through an OpenAI-compatible API
-  description: Select an x86-64 host with the CPU instruction support and memory described upstream. Use
-    a public or already downloaded model and keep the API on an authenticated private endpoint.
+  description: Select an x86-64 host with the CPU instruction support and memory described upstream. vLLM
+    needs at least 512 MiB of shared memory (/dev/shm). Nex does not apply the size set in this package,
+    so set Shared memory to 512 MiB or more in the app's Nex settings; with the default 64 MiB vLLM stops
+    with "Insufficient space in /dev/shm". The first start downloads the model from Hugging Face, so the
+    host needs internet access. Keep the API on an authenticated private endpoint.
   category: ai
   website: https://vllm.ai/
   source: https://github.com/vllm-project/vllm
   docs: https://docs.vllm.ai/en/latest/getting_started/installation/cpu/
   scalable: false
   primary_service: vllm
+  post_install: If you have not already, set Shared memory to at least 512 MiB in the app's Nex settings,
+    then restart the app. With the default 64 MiB vLLM stops with "Insufficient space in /dev/shm".
   architectures:
   - amd64
   web:
@@ -24,10 +29,15 @@ x-nex:
       label: Inference API key
       help: Use Generate to create a unique secret for this installation.
       type: password
+    KV_CACHE:
+      label: Cache memory in GiB
+      help: Whole GiB that vLLM reserves for request caches. Without a limit it reserves most of the host's
+        memory and is killed. Leave empty for 4, which suits the default small model; raise it for larger
+        models or many requests.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Model cache
       help: Select This host. Stores model weights downloaded from the configured repository. Include
@@ -44,8 +54,10 @@ services:
     - '8000'
     - --api-key
     - ${API_KEY}
+    environment:
+      VLLM_CPU_KVCACHE_SPACE: ${KV_CACHE:-4}
     ports:
-    - ${PORT:-8880}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/root/.cache/huggingface
     tmpfs:

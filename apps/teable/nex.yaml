@@ -31,8 +31,9 @@ x-nex:
       label: Redis url
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Application assets
       help: Managed directory mounted at /app/.assets. Choose storage writable by the application.
@@ -40,7 +41,7 @@ services:
   teable:
     image: ghcr.io/teableio/teable:release.2026-11-13T02-21-01Z.3890
     ports:
-    - ${PORT:-23578}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/app/.assets
     environment:

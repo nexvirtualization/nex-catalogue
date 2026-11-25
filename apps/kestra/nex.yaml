@@ -39,8 +39,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Workflow storage
       help: Select This host. Stores workflow inputs, files and execution data. Include this folder in
@@ -58,11 +58,15 @@ services:
         \      enabled: true\n      username: ${ADMIN_EMAIL}\n      password: ${ADMIN_PASSWORD}\n  repository:\n\
         \    type: postgres\n  queue:\n    type: postgres\n  storage:\n    type: local\n    local:\n \
         \     base-path: /app/storage\n  tasks:\n    tmp-dir:\n      path: /app/work\n"
-    command:
-    - server
-    - standalone
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R kestra:kestra /app/storage /app/work
+      exec setpriv --reuid=kestra --regid=kestra --init-groups docker-entrypoint.sh server standalone
     ports:
-    - ${PORT:-8809}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/app/storage
     - ${WORK}:/app/work

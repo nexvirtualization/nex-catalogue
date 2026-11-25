@@ -16,9 +16,12 @@ x-nex:
     SESSION_SECRET:
       label: Session secret
       type: password
-      help: Use a unique value and keep it with the application backups.
+      help: Use Generate once and keep it with the application backups. Any value of 20 or more characters
+        works; the 64-character signing key asciinema needs is derived from it.
     PUBLIC_HOST:
       label: Public host
+      help: Host name people use to reach asciinema, such as asciinema.example.com. Used in links and
+        cookies.
     PUBLIC_SCHEME:
       label: Public scheme
     PUBLIC_PORT:
@@ -27,11 +30,11 @@ x-nex:
       label: Data folder
       help: Choose the Nex-managed folder mounted at /var/lib/asciinema.
     PORT:
-      label: Published 4000/tcp port
-      help: Host port for application listener 4000/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Provision PostgreSQL. Use a signing secret of at least 64 random characters. Start on a trusted
-    network, then register the first administrator using the login link printed in the app log.
+      label: Port 4000/tcp
+      help: The app listens on TCP port 4000 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Provision PostgreSQL first. Start on a trusted network, then register the first administrator
+    using the login link printed in the app log.
   web:
     port: 4000
 services:
@@ -39,13 +42,20 @@ services:
     image: ghcr.io/asciinema/asciinema-server:latest
     deploy:
       replicas: 1
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      SECRET_KEY_BASE=$$(printf '%s' "$$SESSION_SECRET" | sha512sum | cut -d' ' -f1)
+      export SECRET_KEY_BASE
+      exec /sbin/tini -- /opt/app/bin/server
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY_BASE: ${SESSION_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
       URL_HOST: ${PUBLIC_HOST}
       URL_SCHEME: ${PUBLIC_SCHEME:-https}
       URL_PORT: ${PUBLIC_PORT:-443}
     volumes:
     - ${DATA}:/var/lib/asciinema
     ports:
-    - ${PORT:-19955}:4000/tcp
+    - ${PORT:-4000}:4000/tcp

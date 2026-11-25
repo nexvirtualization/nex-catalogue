@@ -15,9 +15,9 @@ x-nex:
   primary_service: mysql
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 3306 on its default Docker network. Nex does not publish it on host
+        addresses.
     ROOT_PASSWORD:
       label: Initial root password
       help: Generate a separate root password for local database administration. This initializes a new database
@@ -40,7 +40,7 @@ services:
   mysql:
     image: docker.io/library/mysql:latest
     ports:
-      - ${PORT:-3307}:3306/tcp
+      - ${PORT:-3306}:3306/tcp
     environment:
       MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MYSQL_ROOT_HOST: localhost

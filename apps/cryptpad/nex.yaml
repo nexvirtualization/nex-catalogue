@@ -25,38 +25,38 @@ x-nex:
       label: Sandbox HTTPS origin
       help: A distinct HTTPS origin dedicated to CryptPad’s isolated editor frames.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 3000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     BLOB:
       label: Encrypted attachments
-      help: Managed directory mounted at /cryptpad/blob. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/blob.
     BLOCK:
       label: Encrypted login blocks
-      help: Managed directory mounted at /cryptpad/block. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/block.
     DATA:
       label: Service data
-      help: Managed directory mounted at /cryptpad/data. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/data.
     FILES:
       label: Encrypted documents
-      help: Managed directory mounted at /cryptpad/datastore. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/datastore.
     CONFIG:
       label: Service configuration
-      help: Managed directory mounted at /cryptpad/config. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/config.
     CUSTOM:
       label: Customization
-      help: Managed directory mounted at /cryptpad/customize. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/customize.
     OFFICE_DIST:
       label: Office integration assets
-      help: Managed directory mounted at /cryptpad/www/common/onlyoffice/dist. Choose storage writable by
-        the application.
+      help: Managed directory mounted at /cryptpad/www/common/onlyoffice/dist.
     OFFICE_CONF:
       label: Office integration options
-      help: Managed directory mounted at /cryptpad/onlyoffice-conf. Choose storage writable by the application.
+      help: Managed directory mounted at /cryptpad/onlyoffice-conf.
 services:
   cryptpad:
     image: docker.io/cryptpad/cryptpad:latest
     ports:
-    - ${PORT:-20271}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${BLOB}:/cryptpad/blob
     - ${BLOCK}:/cryptpad/block
@@ -66,6 +66,15 @@ services:
     - ${CUSTOM}:/cryptpad/customize
     - ${OFFICE_DIST}:/cryptpad/www/common/onlyoffice/dist
     - ${OFFICE_CONF}:/cryptpad/onlyoffice-conf
+    user: 0:0
+    entrypoint:
+    - /bin/sh
+    - -ec
+    - |
+      chown -R cryptpad:cryptpad /cryptpad/blob /cryptpad/block /cryptpad/data /cryptpad/datastore \
+        /cryptpad/config /cryptpad/customize /cryptpad/www/common/onlyoffice/dist /cryptpad/onlyoffice-conf
+      export HOME=/cryptpad
+      exec setpriv --reuid=cryptpad --regid=cryptpad --init-groups /bin/bash /cryptpad/docker-entrypoint.sh npm start
     environment:
       CPAD_MAIN_DOMAIN: ${MAIN_URL}
       CPAD_SANDBOX_DOMAIN: ${SANDBOX_URL}

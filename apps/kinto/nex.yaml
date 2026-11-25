@@ -31,8 +31,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8888.
+      help: The app listens on TCP port 8888 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   kinto:
     image: kinto/kinto-server:latest
@@ -44,6 +44,6 @@ services:
       KINTO_PERMISSION_URL: ${DATABASE_URL}
       KINTO_USERID_HMAC_SECRET: ${AUTH_SECRET}
     ports:
-    - ${PORT:-8911}:8888/tcp
+    - ${PORT:-8888}:8888/tcp
     deploy:
       replicas: 1

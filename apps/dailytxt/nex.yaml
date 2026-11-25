@@ -26,8 +26,9 @@ x-nex:
       help: Strong password for the administrator panel.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Journal entries and account data
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -35,7 +36,7 @@ services:
   dailytxt:
     image: docker.io/phitux/dailytxt:latest
     ports:
-    - ${PORT:-20241}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/data
     environment:

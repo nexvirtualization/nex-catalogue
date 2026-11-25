@@ -23,8 +23,8 @@ x-nex:
       help: Keep snippet database in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 5000.
+      help: The app listens on TCP port 5000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   bytestash:
     image: ghcr.io/jordan-dalby/bytestash:latest

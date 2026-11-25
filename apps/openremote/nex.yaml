@@ -22,30 +22,37 @@ x-nex:
   options:
     PUBLIC_HOST:
       label: Public host
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Host name browsers use to reach OpenRemote, without scheme or port, for example iot.example.com.
+        The proxy requests a Let's Encrypt certificate for it when port 80 is reachable from the internet;
+        otherwise it serves a self-signed certificate.
     ACME_EMAIL:
-      label: Acme email
-      help: Enter the deployment value described in the upstream setup guide.
+      label: Let's Encrypt email
+      help: Optional contact address for the Let's Encrypt account. Leave empty to skip it.
     ADMIN_PASSWORD:
       label: Admin password
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. Password of the admin user for the manager and Keycloak.
       type: password
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Database password
+      help: Use Generate. Password of the PostgreSQL service inside this app. Keep it unchanged after the first
+        start.
       type: password
     EXTERNAL_HTTPS_PORT:
-      label: External https port
-      help: Enter the deployment value described in the upstream setup guide.
+      label: External HTTPS port
+      help: HTTPS port browsers use in the public URL. Leave empty for 443. Keycloak sign-in links are built
+        from it, so it must match your proxy.
     PORT:
-      label: Published HTTP port
-      help: Host-published HTTPS port. For a reverse proxy, forward to internal TCP port 443.
+      label: HTTP port
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses.
     HTTP_PORT:
-      label: Published HTTP or ACME port
-      help: Host-published port for the internal 80/tcp endpoint.
+      label: HTTP or ACME port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     MQTTS_PORT:
-      label: Published MQTTS port
-      help: Host-published port for the internal 8883/tcp endpoint.
+      label: MQTTS port
+      help: The app listens on TCP port 8883 on its default Docker network. Nex does not publish it on host
+        addresses.
     PROXY_DATA:
       label: TLS and proxy state
       help: Managed directory mounted at /deployment. Choose storage writable by the application.
@@ -59,9 +66,9 @@ services:
   openremote:
     image: docker.io/openremote/proxy:latest
     ports:
-    - ${PORT:-23548}:443/tcp
-    - ${HTTP_PORT:-24548}:80/tcp
-    - ${MQTTS_PORT:-25548}:8883/tcp
+    - ${PORT:-443}:443/tcp
+    - ${HTTP_PORT:-80}:80/tcp
+    - ${MQTTS_PORT:-8883}:8883/tcp
     volumes:
     - ${PROXY_DATA}:/deployment
     environment:
@@ -88,6 +95,13 @@ services:
       KC_DB_PASSWORD: ${DB_PASSWORD}
       KC_HOSTNAME: https://${PUBLIC_HOST}:${EXTERNAL_HTTPS_PORT:-443}/auth
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    # Keycloak exits when the database is not accepting connections yet.
+    entrypoint:
+    - /bin/bash
+    - -c
+    - |
+      until (exec 3<>/dev/tcp/postgresql/5432) 2>/dev/null; do sleep 2; done
+      exec /opt/keycloak/bin/kc.sh $${KEYCLOAK_START_COMMAND:-start} --spi-events-listener-self-register-user-configure-self-registered-user-roles="$${KEYCLOAK_SELF_REGISTERED_USER_ROLES:-}" $${KEYCLOAK_START_OPTS:-}
     deploy:
       replicas: 1
   manager:
@@ -100,6 +114,13 @@ services:
       OR_SSL_PORT: ${EXTERNAL_HTTPS_PORT:-443}
       OR_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       OR_METRICS_ENABLED: 'false'
+    # The manager exits when the database is not accepting connections yet.
+    entrypoint:
+    - /bin/bash
+    - -c
+    - |
+      until (exec 3<>/dev/tcp/postgresql/5432) 2>/dev/null; do sleep 2; done
+      exec /entrypoint.sh
     volumes:
     - ${MANAGER_DATA}:/storage
     deploy:

@@ -41,15 +41,21 @@ x-nex:
         a stopped Nex backup.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   homelable:
     image: ghcr.io/pouzor/homelable-frontend:3.6.0
     environment:
       BACKEND_UPSTREAM: backend:8000
+    command:
+    - sh
+    - -ec
+    - |-
+      until nslookup backend >/dev/null 2>&1; do sleep 2; done
+      exec /docker-entrypoint.sh nginx -g 'daemon off;'
     ports:
-    - ${PORT:-8826}:80/tcp
+    - ${PORT:-80}:80/tcp
     deploy:
       replicas: 1
   backend:

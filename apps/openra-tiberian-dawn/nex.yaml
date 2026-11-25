@@ -24,7 +24,6 @@ x-nex:
     JOIN_PASSWORD:
       label: Join password
       type: password
-      required: false
       help: Leave blank for password-free play on a trusted network.
 services:
   openra-tiberian-dawn:

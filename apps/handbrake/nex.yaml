@@ -28,11 +28,11 @@ x-nex:
       label: Watch folder
       help: Choose the Nex-managed folder mounted at /watch.
     PORT:
-      label: Published 5800/tcp port
-      help: Host port for application listener 5800/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Choose source and output volumes then open the browser interface. Keep host publishing disabled
-    or provide authenticated HTTPS for access outside a trusted network.
+      label: Port 5800/tcp
+      help: The app listens on TCP port 5800 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Choose source and output volumes then open the browser interface. Provide authenticated HTTPS
+    for access outside a trusted network.
   web:
     port: 5800
 services:
@@ -50,4 +50,4 @@ services:
     - ${OUTPUT}:/output
     - ${WATCH}:/watch
     ports:
-    - ${PORT:-19786}:5800/tcp
+    - ${PORT:-5800}:5800/tcp

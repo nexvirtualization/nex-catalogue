@@ -21,17 +21,22 @@ x-nex:
       label: Watch folder
       help: Nex-managed folder mounted at /watch. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 9091/tcp.
+      label: TCP port
+      help: The app listens on TCP port 9091 on its default Docker network. Nex does not publish it on host
+        addresses.
     RPC_USER:
       label: RPC username
     RPC_PASSWORD:
       label: RPC password
       type: password
     PEER_TCP_PORT:
-      label: Published 51413/TCP peer port
+      label: 51413/TCP peer port
+      help: The app listens on TCP port 51413 on its default Docker network. Nex does not publish it on host
+        addresses.
     PEER_UDP_PORT:
-      label: Published 51413/UDP peer port
+      label: 51413/UDP peer port
+      help: The app listens on UDP port 51413 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 9091
   post_install: Sign in to the RPC web interface with the configured username and password. /downloads contains
@@ -51,6 +56,6 @@ services:
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-19196}:9091/tcp
-    - ${PEER_TCP_PORT:-40197}:51413/tcp
+    - ${PORT:-9091}:9091/tcp
+    - ${PEER_TCP_PORT:-51413}:51413/tcp
     - ${PEER_UDP_PORT:-40198}:51413/udp

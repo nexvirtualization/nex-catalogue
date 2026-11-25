@@ -23,8 +23,9 @@ x-nex:
       help: Use the same secret in your document management integration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Document Server data
       help: Managed directory mounted at /var/www/onlyoffice/Data. Choose storage writable by the application.
@@ -38,7 +39,7 @@ services:
   onlyoffice-document-server:
     image: docker.io/onlyoffice/documentserver:latest
     ports:
-    - ${PORT:-20212}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/onlyoffice/Data
     - ${LIB}:/var/lib/onlyoffice

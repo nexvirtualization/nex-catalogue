@@ -39,9 +39,9 @@ x-nex:
       label: Cache folder
       help: Choose the Nex-managed folder mounted at /var/cache/elabftw.
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Provision a MySQL database. In the application console run bin/init db:install once. Create
     the initial operator through HTTPS at a trusted reverse proxy. Keep the database, uploads and encryption
     secret together in backups.
@@ -66,5 +66,5 @@ services:
     - ${EXPORTS}:/var/lib/elabftw/exports
     - ${CACHE}:/var/cache/elabftw
     ports:
-    - ${PORT:-19997}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     user: 8998:8997

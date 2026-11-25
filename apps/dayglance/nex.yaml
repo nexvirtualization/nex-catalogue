@@ -21,13 +21,14 @@ x-nex:
   - dayglance
   options:
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   dayglance:
     image: ghcr.io/krelltunez/dayglance:latest
     ports:
-    - ${PORT:-18132}:80/tcp
+    - ${PORT:-80}:80/tcp
     environment:
       WEBDAV_PROXY_BLOCK_PRIVATE: '1'
     deploy:

@@ -27,11 +27,11 @@ x-nex:
       type: password
       help: Use a unique value and keep it with the application backups.
     PORT:
-      label: Published 3000/tcp port
-      help: Host port for application listener 3000/tcp. Leave host publishing off to use only the assigned
-        app address.
-  post_install: Prepare PostgreSQL and the schema permissions described upstream. Complete the Saltcorn setup
-    in the browser and back up the database.
+      label: Port 3000/tcp
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
+  post_install: Create an empty PostgreSQL database that the database user owns. Saltcorn adds its tables
+    on first start. Create the first administrator in the browser and back up the database.
   web:
     port: 3000
 services:
@@ -46,7 +46,9 @@ services:
       PGUSER: ${DB_USER}
       PGDATABASE: ${DB_NAME:-saltcorn}
       PGPASSWORD: ${DB_PASSWORD}
+      SALTCORN_NWORKERS: '2'
     ports:
-    - ${PORT:-19973}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     command:
     - serve
+    - --addschema

@@ -11,10 +11,12 @@ x-nex:
   options:
     WEBUI_PORT:
       label: Web port
-      help: Published port, container port and WEBUI_PORT change together. Keep CSRF and host-header checks enabled.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses. Keep CSRF and host-header checks enabled.
     TORRENTING_PORT:
       label: TCP peer port
-      help: Published and container peer ports change together. TCP only; current Core cannot publish the same number for UDP as well.
+      help: The app listens on TCP port 6881 on its default Docker network. Nex does not publish it on host
+        addresses.
     PUID:
       label: User ID
       help: Numeric owner of application files. Both selected folders must be writable by this UID and the group below; share ACLs and root squash still apply.

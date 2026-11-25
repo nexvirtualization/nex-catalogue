@@ -24,8 +24,8 @@ x-nex:
       help: Full address users will open, including scheme and port when needed.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Database and attachments
       help: Select This host. Stores database and application state, media, and backups. Include this
@@ -37,7 +37,7 @@ services:
       BASEROW_PUBLIC_URL: ${PUBLIC_URL}
       BASEROW_CADDY_ADDRESSES: :80
     ports:
-    - ${PORT:-8145}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/baserow/data
     deploy:

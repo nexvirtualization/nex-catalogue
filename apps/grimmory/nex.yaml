@@ -35,8 +35,8 @@ x-nex:
       help: Keep import drop folder in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 6060.
+      help: The app listens on TCP port 6060 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   grimmory:
     image: docker.io/grimmory/grimmory:latest

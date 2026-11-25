@@ -24,10 +24,11 @@ x-nex:
       help: Reachable app connection name or hostname.
     DB_NAME:
       label: Database name
-      help: Prepared ToolJet database.
+      help: Prepared ToolJet database. Leave empty for tooljet. ToolJet also uses a second database with
+        _db added to this name (tooljet_db by default); create it too, or let the user create databases.
     DB_USER:
       label: Database user
-      help: Prepared PostgreSQL application user.
+      help: Prepared PostgreSQL application user. Leave empty for tooljet.
     DB_PASSWORD:
       label: Database password
       type: password
@@ -35,15 +36,17 @@ x-nex:
     LOCKBOX_KEY:
       label: Encryption key
       type: password
-      help: Supply the upstream-required hexadecimal encryption key and retain it for restore.
+      generate: {format: hex, length: 64}
+      help: Use Generate, which makes 64 hexadecimal characters. If Generate gives letters and digits only
+        (older Nex), paste the output of openssl rand -hex 32 instead. Retain it for restore.
     SESSION_KEY:
       label: Session signing key
       type: password
       help: Supply the upstream-required random signing secret and retain it for restore.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   tooljet:
     image: docker.io/tooljet/tooljet-ce:ce-lts-latest
@@ -55,8 +58,17 @@ services:
       PG_DB: ${DB_NAME:-tooljet}
       PG_USER: ${DB_USER:-tooljet}
       PG_PASS: ${DB_PASSWORD}
+      TOOLJET_DB: ${DB_NAME:-tooljet}_db
+      TOOLJET_DB_HOST: ${DB_HOST}
+      TOOLJET_DB_PORT: '5432'
+      TOOLJET_DB_USER: ${DB_USER:-tooljet}
+      TOOLJET_DB_PASS: ${DB_PASSWORD}
       LOCKBOX_MASTER_KEY: ${LOCKBOX_KEY}
       SECRET_KEY_BASE: ${SESSION_KEY}
+    command:
+    - npm
+    - run
+    - start:prod
     ports:
     - ${PORT:-80}:80/tcp
     deploy:

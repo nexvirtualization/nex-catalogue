@@ -16,13 +16,13 @@ x-nex:
       label: State folder
       help: Choose the Nex-managed folder mounted at /state.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 443/tcp port
-      help: Host port for application listener 443/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 443/tcp
+      help: The app listens on TCP port 443 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Place traefik.yml and any file-provider configuration in the Configuration folder. Route to
     the Nex application names and listener ports of your backends. This package does not mount a Docker socket.
 services:
@@ -34,5 +34,5 @@ services:
     - ${CONFIG}:/etc/traefik
     - ${STATE}:/state
     ports:
-    - ${PORT:-19852}:80/tcp
-    - ${PORT_2:-20852}:443/tcp
+    - ${PORT:-80}:80/tcp
+    - ${PORT_2:-443}:443/tcp

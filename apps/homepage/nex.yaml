@@ -2,12 +2,11 @@
 x-nex:
   name: Homepage
   summary: A configurable dashboard for your homelab
-  description: >-
-    Dashboard with service links and API widgets. For multiple copies, start with one copy on a cluster
-    share until the dashboard loads and creates its YAML files. Then raise Copies in Basics and use the
-    Docker network with host publishing enabled. Edit the share's YAML files and restart all copies to
-    apply changes. For single-host storage, edit Configuration in Nex File Browser and use Actions >
-    Restart. Homepage has no built-in login; use a trusted network or an authenticating reverse proxy.
+  description: Dashboard with service links and API widgets. For multiple copies, start with one copy on a
+    cluster share until the dashboard loads and creates its YAML files. Then raise Copies in Basics and use the
+    Docker network. Edit the share's YAML files and restart all copies to apply changes. For single-host
+    storage, edit Configuration in Nex File Browser and use Actions > Restart. Homepage has no built-in login;
+    use a trusted network or an authenticating reverse proxy.
   category: management
   website: https://gethomepage.dev
   source: https://github.com/gethomepage/homepage
@@ -19,7 +18,8 @@ x-nex:
   options:
     ALLOWED_HOSTS:
       label: Allowed web addresses
-      help: Required comma-separated browser addresses, without scheme. Use app-IP:3000 for a dedicated app address. If host publishing is enabled, allow the node address and the published port you use. Add the reverse-proxy hostname when applicable. Avoid the wildcard.
+      help: Required comma-separated browser addresses, without scheme. Use app-IP:3000 for a dedicated app
+        address. Add the reverse-proxy hostname when applicable. Avoid the wildcard.
     PUID:
       label: User ID
       help: Numeric UID for the app. Configuration must be writable by this UID or the selected group.
@@ -28,7 +28,8 @@ x-nex:
       help: Numeric GID with write access to the Configuration folder.
     PORT:
       label: Web port
-      help: Include the browser address and port in Allowed web addresses.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses. Include the browser address and port in Allowed web addresses.
     CONFIG:
       label: Configuration
       help: Dashboard YAML files at /app/config. Choose a writable cluster share for multiple copies, or This host and one host for a standalone install. The folder must be writable by the configured UID/GID. Logs go to container stdout. Back up this folder.
@@ -41,7 +42,7 @@ services:
       PGID: "${PGID:-1000}"
       LOG_TARGETS: stdout
     ports:
-      - "${PORT:-3004}:3000/tcp"
+      - "${PORT:-3000}:3000/tcp"
     volumes:
       - "${CONFIG}:/app/config"
     deploy:

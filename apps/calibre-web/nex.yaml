@@ -20,8 +20,9 @@ x-nex:
       label: Books folder
       help: Nex-managed folder mounted at /books. Select storage with suitable access permissions.
     PORT:
-      label: Published TCP port
-      help: Host port for the listener on 8100/tcp.
+      label: TCP port
+      help: The app listens on TCP port 8083 on its default Docker network. Nex does not publish it on host
+        addresses.
   web:
     port: 8083
   post_install: Initialize or point the app at the Calibre library database in /books. Update the initial administrator
@@ -39,4 +40,4 @@ services:
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-8100}:8083/tcp
+    - ${PORT:-8083}:8083/tcp

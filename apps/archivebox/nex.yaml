@@ -21,8 +21,9 @@ x-nex:
       label: Browser address
       help: Full URL of this ArchiveBox instance including scheme and port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 5797 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 5797 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Archive data
       help: Managed directory mounted at /data. Choose storage writable by the application.
@@ -30,7 +31,7 @@ services:
   archivebox:
     image: docker.io/archivebox/archivebox:latest
     ports:
-    - ${PORT:-20190}:5797/tcp
+    - ${PORT:-5797}:5797/tcp
     volumes:
     - ${DATA}:/data
     environment:

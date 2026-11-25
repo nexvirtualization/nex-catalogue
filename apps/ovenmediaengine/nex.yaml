@@ -23,16 +23,16 @@ x-nex:
       help: Keep edge configuration in this managed folder between restarts.
     PORT:
       label: Service port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3333.
+      help: The app listens on TCP port 3333 on its default Docker network. Nex does not publish it on host
+        addresses.
     RTMP_PORT:
       label: RTMP ingest
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 1935.
+      help: The app listens on TCP port 1935 on its default Docker network. Nex does not publish it on host
+        addresses.
     SRT_PORT:
       label: SRT ingest
-      help: Host-published UDP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 9999.
+      help: The app listens on UDP port 9999 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ovenmediaengine:
     image: docker.io/ovenmedialabs/ovenmediaengine:latest

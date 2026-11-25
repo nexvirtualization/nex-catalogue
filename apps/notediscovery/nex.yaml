@@ -20,8 +20,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8000.
+      help: The app listens on TCP port 8000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Notes
       help: Select This host. Stores notes, attachments and related files. Include this folder in a stopped
@@ -30,7 +30,7 @@ services:
   notediscovery:
     image: ghcr.io/gamosoft/notediscovery:latest
     ports:
-    - ${PORT:-8120}:8000/tcp
+    - ${PORT:-8000}:8000/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

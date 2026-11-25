@@ -14,9 +14,9 @@ x-nex:
       label: Content folder
       help: Choose the Nex-managed folder mounted at /usr/share/nginx/html/bl-content.
     PORT:
-      label: Published 80/tcp port
-      help: Host port for application listener 80/tcp. Leave host publishing off to use only the assigned app
-        address.
+      label: Port 80/tcp
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Complete the first-run installer and create the administrator. Back up the content folder to
     keep pages, uploads and user settings.
   web:
@@ -29,4 +29,4 @@ services:
     volumes:
     - ${CONTENT}:/usr/share/nginx/html/bl-content
     ports:
-    - ${PORT:-19999}:80/tcp
+    - ${PORT:-80}:80/tcp

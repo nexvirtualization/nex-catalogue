@@ -2,8 +2,8 @@
 x-nex:
   name: Ziit
   summary: Track coding activity from compatible editors
-  description: Prepare PostgreSQL and configure the HTTPS dashboard URL. Set up the first account on
-    a trusted network before connecting editors.
+  description: Runs Ziit with its own private TimescaleDB database. Configure the HTTPS dashboard URL and
+    set up the first account on a trusted network before connecting editors.
   category: development
   website: https://github.com/0pandadev/ziit
   source: https://github.com/0pandadev/ziit
@@ -14,29 +14,52 @@ x-nex:
   web:
     port: 3000
   options:
-    DATABASE_URL:
-      label: PostgreSQL connection URL
+    DB_PASSWORD:
+      label: Database password
       type: password
-      help: Supply the full connection URL for a prepared database on a reachable network.
-    BETTER_AUTH_SECRET:
-      label: Application signing secret
+      help: Use Generate. Letters and digits only, because it is placed in a URL. Keep it unchanged
+        after the first start.
+    DATA:
+      label: Database folder
+      help: Select This host. Stores the TimescaleDB data. Include this folder in a stopped Nex backup.
+    PASETO_KEY:
+      label: PASETO v4 local key
       type: password
-      help: Use Nex Generate and preserve this secret across upgrades and restores.
+      generate: {format: base64url, bytes: 32, prefix: 'k4.local.'}
+      help: Use Generate, which makes k4.local. followed by 32 random bytes in URL-safe Base64. If Generate
+        gives letters and digits only (older Nex), paste the output of echo k4.local.$(openssl rand -base64 32 |
+        tr '+/' '-_' | tr -d '=') instead. Without the k4.local. prefix Ziit starts but cannot sign anyone in.
+        Keep the PASETO key across upgrades and restores. Back up the database before updating; upgrading from
+        Ziit 1.2 runs a one-way database migration.
     PUBLIC_URL:
       label: Public web address
       help: Full browser-facing URL, including scheme and any port.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   ziit:
     image: ghcr.io/0pandadev/ziit:latest
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${PUBLIC_URL}
+      ZIIT_DATABASE_URL: postgresql://ziit:${DB_PASSWORD}@database:5432/ziit
+      ZIIT_PASETO_KEY: ${PASETO_KEY}
+      ZIIT_BASE_URL: ${PUBLIC_URL}
     ports:
     - ${PORT:-3000}:3000/tcp
+    deploy:
+      replicas: 1
+  database:
+    image: docker.io/timescale/timescaledb:latest-pg17
+    command:
+    - postgres
+    - -c
+    - shared_preload_libraries=timescaledb,pg_stat_statements
+    environment:
+      POSTGRES_USER: ziit
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ziit
+    volumes:
+    - ${DATA}:/var/lib/postgresql/data
     deploy:
       replicas: 1

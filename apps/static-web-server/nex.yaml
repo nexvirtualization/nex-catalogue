@@ -22,13 +22,14 @@ x-nex:
       label: Website files
       help: Static content at /public. Start with index.html. Make all content readable by the server.
     PORT:
-      label: Published HTTP port
-      help: Internal HTTP port 80. This setting is used when host port publishing is enabled.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   static-web-server:
     image: docker.io/joseluisq/static-web-server:latest
     ports:
-    - ${PORT:-18126}:80/tcp
+    - ${PORT:-80}:80/tcp
     environment:
       SERVER_ROOT: /public
       SERVER_PORT: '80'

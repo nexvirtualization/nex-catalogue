@@ -27,8 +27,8 @@ x-nex:
       help: Retention period. A bare number is months. See upstream docs for duration units.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8428.
+      help: The app listens on TCP port 8428 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Metrics data
       help: Select This host. Stores the single-node time-series database. Include this folder in a stopped

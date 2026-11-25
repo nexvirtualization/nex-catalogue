@@ -17,7 +17,8 @@ x-nex:
     SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN:
       label: ClickHouse connection URL
       type: password
-      help: Use an authenticated DSN pointing to the migrated telemetry store.
+      help: 'Address of the ClickHouse server in the form tcp://user:password@host:9000. SigNoz starts as
+        soon as ClickHouse accepts the login; the telemetry schema is created by the SigNoz schema migrator.'
     SIGNOZ_TOKENIZER_JWT_SECRET:
       label: Application signing secret
       type: password
@@ -27,8 +28,8 @@ x-nex:
       help: Keep dashboard database and local state in this managed folder between restarts.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   signoz:
     image: docker.io/signoz/signoz:latest

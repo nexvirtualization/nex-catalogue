@@ -14,22 +14,27 @@ x-nex:
   web:
     port: 18083
   options:
+    ERLANG_COOKIE:
+      label: Erlang cluster cookie
+      type: password
+      help: Generate a unique cookie for this broker and reuse it when restoring the application.
     DATA:
       label: Broker configuration and data
       help: Broker data, retained messages and runtime settings.
     PORT:
       label: Web port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 18083.
+      help: The app listens on TCP port 18083 on its default Docker network. Nex does not publish it on host
+        addresses.
     MQTT_PORT:
       label: MQTT client port
-      help: Host-published TCP port. With a dedicated Primary network and host publishing off, use the
-        application address on port 1883.
+      help: The app listens on TCP port 1883 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   emqx:
     image: docker.io/emqx/emqx:latest
     environment:
       EMQX_NODE__NAME: emqx@127.0.0.1
+      EMQX_NODE__COOKIE: ${ERLANG_COOKIE}
     volumes:
     - ${DATA}:/opt/emqx/data
     ports:

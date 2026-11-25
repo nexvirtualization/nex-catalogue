@@ -23,8 +23,10 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes exactly 32 letters and digits. If Generate gives only 24 characters
+        (older Nex), paste the output of openssl rand -hex 16 instead.
       type: password
+      generate: {format: alnum, length: 32, max_length: 32}
     SIGNING_SECRET:
       label: Signing secret
       help: Use the credential or secret required by the upstream configuration.
@@ -56,13 +58,14 @@ x-nex:
       help: Use the credential or secret required by the upstream configuration.
       type: password
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   activepieces:
     image: ghcr.io/activepieces/activepieces:latest
     ports:
-    - ${PORT:-23571}:80/tcp
+    - ${PORT:-80}:80/tcp
     environment:
       AP_FRONTEND_URL: ${PUBLIC_URL}
       AP_ENCRYPTION_KEY: ${ENCRYPTION_KEY}

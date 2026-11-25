@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 3000.
+      help: The app listens on TCP port 3000 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Gallery data
       help: Select This host. Holds the database, settings, session secrets and local photos. Include
@@ -31,7 +31,7 @@ services:
   chronoframe:
     image: ghcr.io/hoshinosuzumi/chronoframe:latest
     ports:
-    - ${PORT:-8105}:3000/tcp
+    - ${PORT:-3000}:3000/tcp
     volumes:
     - ${DATA}:/app/data
     deploy:

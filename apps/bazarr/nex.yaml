@@ -18,7 +18,8 @@ x-nex:
       help: Media and writable subtitles under /data/movies and /data/tv. Select the same existing folder on the same share as Sonarr/Radarr for shared media.
     PORT:
       label: Web port
-      help: Use an unused port. Configure application authentication before allowing access beyond a trusted network.
+      help: The app listens on TCP port 6767 on its default Docker network. Nex does not publish it on host
+        addresses. Configure application authentication before allowing access beyond a trusted network.
     PUID:
       label: User ID
       help: Numeric owner of the application files. Ensure both selected folders are writable by this user or group.

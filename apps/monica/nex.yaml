@@ -39,12 +39,15 @@ x-nex:
       help: Full URL clients will open, including scheme and any non-default port.
     LARAVEL_KEY:
       label: Laravel application key
-      help: 'Enter base64: followed by a base64-encoded 32-byte random key.'
+      help: 'Use Generate, which makes base64: followed by 32 random bytes in Base64. If Generate gives
+        letters and digits only (older Nex), paste the output of echo base64:$(openssl rand -base64 32)
+        instead.'
       type: password
+      generate: {format: base64, bytes: 32, prefix: 'base64:'}
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 80.
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Monica storage
       help: Select This host. Keeps application files, uploads, and logs. Include this folder in a stopped
@@ -60,7 +63,7 @@ services:
       APP_URL: ${PUBLIC_URL}
       APP_KEY: ${LARAVEL_KEY}
     ports:
-    - ${PORT:-8428}:80/tcp
+    - ${PORT:-80}:80/tcp
     volumes:
     - ${DATA}:/var/www/html/storage
     deploy:

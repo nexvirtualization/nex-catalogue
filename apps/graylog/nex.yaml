@@ -21,9 +21,10 @@ x-nex:
     port: 9000
   options:
     SEARCH_URI:
-      label: Search uri
-      help: Use the credential or secret required by the upstream configuration.
-      type: password
+      label: OpenSearch URL
+      help: OpenSearch address with scheme and port, for example http://opensearch.example.invalid:9200.
+        Include user:password@ when OpenSearch requires a login. Graylog keeps retrying until it can reach
+        OpenSearch.
     MONGO_URI:
       label: Mongo uri
       help: Use the credential or secret required by the upstream configuration.
@@ -40,11 +41,13 @@ x-nex:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 9000 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 9000 on its default Docker network. Nex does not publish it on host
+        addresses.
     GELF_PORT:
-      label: Published GELF TCP input
-      help: Host-published port for the internal 12201/tcp endpoint.
+      label: GELF TCP input
+      help: The app listens on TCP port 12201 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Graylog configuration and journal
       help: Managed directory mounted at /usr/share/graylog/data. Choose storage writable by the application.
@@ -52,8 +55,8 @@ services:
   graylog:
     image: docker.io/graylog/graylog:7.2
     ports:
-    - ${PORT:-23568}:9000/tcp
-    - ${GELF_PORT:-24568}:12201/tcp
+    - ${PORT:-9000}:9000/tcp
+    - ${GELF_PORT:-12201}:12201/tcp
     volumes:
     - ${DATA}:/usr/share/graylog/data
     environment:

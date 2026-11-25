@@ -2,9 +2,10 @@
 x-nex:
   name: Sharry
   summary: Share files using resumable transfers
-  description: Prepare a PostgreSQL database and a managed folder containing sharry.conf before installation.
-    Configure base-url, the external database connection and the initial administrator according to upstream
-    guidance. Serve the client interface through HTTPS.
+  description: Starts with a built-in database in the data folder, an administrator named admin and public
+    sign-up closed, so nothing needs preparing. Serve the web interface through HTTPS and set Public address to
+    that address. To change further settings, such as an external PostgreSQL database, put a sharry.conf in the
+    data folder; its settings are applied on top of the defaults and the file is never modified.
   category: tools
   website: https://github.com/eikek/sharry
   source: https://github.com/eikek/sharry
@@ -23,20 +24,56 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 9090.
+      help: The app listens on TCP port 9090 on its default Docker network. Nex does not publish it on host
+        addresses.
+    BASE_URL:
+      label: Public address
+      help: Address users open in the browser, with no trailing slash, for example https://share.example.com.
+    ADMIN_PASSWORD:
+      label: Administrator password
+      help: Password of the administrator account admin. Use Generate for a strong value.
+      type: password
+    SERVER_SECRET:
+      label: Session signing secret
+      help: Secret that signs login sessions. Use Generate and keep the same value across restarts.
+      type: password
     DATA:
-      label: Prepared Sharry configuration
-      help: Select This host. Select a folder containing sharry.conf. Configure the mount paths according
-        to the upstream manual. Include this folder in a stopped Nex backup.
+      label: Data folder
+      help: Writable folder mounted at /data. It holds the database and uploaded files, and an optional
+        sharry.conf with extra settings. Include this folder in a stopped Nex backup.
 services:
   sharry:
     image: eikek0/sharry:latest
+    user: '0:0'
+    entrypoint: [/bin/sh, -ec]
     command:
-    - /settings/sharry.conf
+    - |
+      cat > /tmp/sharry.conf <<'CONF'
+      sharry.restserver {
+        base-url = $${SHARRY_BASE_URL}
+        bind { address = "0.0.0.0", port = 9090 }
+        backend {
+          auth {
+            server-secret = $${SHARRY_SERVER_SECRET}
+            fixed { enabled = true, user = "admin", password = $${SHARRY_ADMIN_PASSWORD} }
+          }
+          jdbc { url = "jdbc:h2:///data/sharry.db;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE" }
+          signup { mode = "closed" }
+        }
+      }
+      CONF
+      if [ -f /data/sharry.conf ]; then
+        echo 'include file("/data/sharry.conf")' >> /tmp/sharry.conf
+      fi
+      chown 10001:10001 /data
+      exec su -s /bin/sh user -c 'exec /opt/sharry/bin/sharry-restserver /tmp/sharry.conf'
+    environment:
+      SHARRY_BASE_URL: ${BASE_URL}
+      SHARRY_SERVER_SECRET: ${SERVER_SECRET}
+      SHARRY_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
-    - ${PORT:-8463}:9090/tcp
+    - ${PORT:-9090}:9090/tcp
     volumes:
-    - ${DATA}:/settings:ro
+    - ${DATA}:/data
     deploy:
       replicas: 1

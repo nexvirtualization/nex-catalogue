@@ -18,10 +18,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Published HTTP port. Open it on a trusted network and create the administrator before exposing it to
-        other users. With Network → Docker and host publishing enabled, use the chosen host web port. On a registered
-        VLAN or private Primary network with its own address, use that address and internal port 4533; host publishing
-        is a separate switch.
+      help: The app listens on TCP port 4533 on its default Docker network. Nex does not publish it on host
+        addresses. Open it on a trusted network and create the administrator before exposing it to other users.
     DATA:
       label: Settings and database
       help: Persistent /data for the database, playlists and artwork cache. Must be writable by the image default

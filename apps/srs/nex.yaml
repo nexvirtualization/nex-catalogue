@@ -11,17 +11,17 @@ x-nex:
   primary_service: srs
   options:
     PORT:
-      label: Published 8080/tcp port
-      help: Host port for application listener 8080/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8080/tcp
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_2:
-      label: Published 1935/tcp port
-      help: Host port for application listener 1935/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 1935/tcp
+      help: The app listens on TCP port 1935 on its default Docker network. Nex does not publish it on host
+        addresses.
     PORT_3:
-      label: Published 1985/tcp port
-      help: Host port for application listener 1985/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 1985/tcp
+      help: The app listens on TCP port 1985 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Publish RTMP on 1935 and use 8080 for HTTP playback. Keep the HTTP API on a trusted network
     or restrict it at a reverse proxy. WebRTC is outside this TCP profile.
   web:
@@ -32,6 +32,6 @@ services:
     deploy:
       replicas: 1
     ports:
-    - ${PORT:-19675}:8080/tcp
-    - ${PORT_2:-20675}:1935/tcp
-    - ${PORT_3:-21675}:1985/tcp
+    - ${PORT:-8080}:8080/tcp
+    - ${PORT_2:-1935}:1935/tcp
+    - ${PORT_3:-1985}:1985/tcp

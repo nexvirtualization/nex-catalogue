@@ -23,18 +23,23 @@ x-nex:
       type: password
     AUTH_SECRET:
       label: Auth secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate, which makes 32 letters and digits. It must be at least 32 characters. If Generate
+        gives only 24 characters (older Nex), paste the output of openssl rand -hex 32 instead.
       type: password
+      generate: {format: alnum, length: 32, min_length: 32}
     PUBLIC_URL:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 2099 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 2099 on its default Docker network. Nex does not publish it on host
+        addresses.
     RECORDINGS:
       label: Request recordings
       help: Managed directory mounted at /data/request-recordings. Choose storage writable by the application.
@@ -42,7 +47,7 @@ services:
   manifest:
     image: docker.io/manifestdotbuild/manifest:latest
     ports:
-    - ${PORT:-23552}:2099/tcp
+    - ${PORT:-2099}:2099/tcp
     volumes:
     - ${RECORDINGS}:/data/request-recordings
     environment:

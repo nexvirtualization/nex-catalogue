@@ -18,9 +18,9 @@ x-nex:
       label: Media folder
       help: Choose the Nex-managed folder mounted at /media.
     PORT:
-      label: Published 8095/tcp port
-      help: Host port for application listener 8095/tcp. Leave host publishing off to use only the assigned
-        app address.
+      label: Port 8095/tcp
+      help: The app listens on TCP port 8095 on its default Docker network. Nex does not publish it on host
+        addresses.
   post_install: Complete setup and configure a media provider. Use a client-reachable primary network and manually
     addressed players when multicast discovery is unavailable.
   web:
@@ -36,4 +36,4 @@ services:
     - ${DATA}:/data
     - ${MEDIA}:/media:ro
     ports:
-    - ${PORT:-19586}:8095/tcp
+    - ${PORT:-8095}:8095/tcp

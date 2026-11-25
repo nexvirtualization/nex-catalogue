@@ -2,15 +2,14 @@
 x-nex:
   name: Aptabase
   summary: Measure application usage with privacy-focused analytics
-  description: Provision PostgreSQL and ClickHouse with dedicated credentials. Create your account using
-    the verification link in the app logs or configure SMTP.
+  description: Provide a PostgreSQL database; ClickHouse for the event data runs inside this app. Create
+    your account using the verification link in the app logs or configure SMTP.
   category: monitoring
   website: https://aptabase.com/
   source: https://github.com/aptabase/aptabase
   docs: https://github.com/aptabase/self-hosting
   primary_service: aptabase
-  post_install: Provision PostgreSQL and ClickHouse with dedicated credentials. Create your account using
-    the verification link in the app logs or configure SMTP.
+  post_install: Create your account using the verification link in the app logs or configure SMTP.
   license: AGPL-3.0
   architectures:
   - amd64
@@ -23,28 +22,46 @@ x-nex:
       help: Full browser-facing URL, including scheme and any nonstandard port.
     AUTH_SECRET:
       label: Auth secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret. Keep it unchanged, or every user is signed out.
       type: password
     POSTGRES_CONNECTION:
       label: PostgreSQL connection string
       help: Use the Npgsql format Server=db;Port=5432;User Id=aptabase;Password=…;Database=aptabase.
       type: password
-    CLICKHOUSE_CONNECTION:
-      label: ClickHouse connection string
-      help: Use the format Host=clickhouse;Port=8123;Username=aptabase;Password=….
+    CLICKHOUSE_PASSWORD:
+      label: ClickHouse password
+      help: Use Generate. Letters and digits only, because it is placed in a connection string. Keep it
+        unchanged after the first start.
       type: password
+    CLICKHOUSE_DATA:
+      label: ClickHouse event data
+      help: Select This host. Stores the analytics events. Include this folder in a stopped Nex backup.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 8080 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   aptabase:
     image: ghcr.io/aptabase/aptabase:main
     ports:
-    - ${PORT:-23508}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     environment:
       BASE_URL: ${PUBLIC_URL}
       AUTH_SECRET: ${AUTH_SECRET}
       DATABASE_URL: ${POSTGRES_CONNECTION}
-      CLICKHOUSE_URL: ${CLICKHOUSE_CONNECTION}
+      CLICKHOUSE_URL: Host=clickhouse;Port=8123;Username=aptabase;Password=${CLICKHOUSE_PASSWORD}
+    deploy:
+      replicas: 1
+      # ClickHouse may still be starting on first start, so retry quickly instead of staying down.
+      restart_policy:
+        condition: any
+        delay: 5s
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server:latest
+    environment:
+      CLICKHOUSE_USER: aptabase
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+    - ${CLICKHOUSE_DATA}:/var/lib/clickhouse
     deploy:
       replicas: 1

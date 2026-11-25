@@ -14,9 +14,9 @@ x-nex:
   primary_service: valkey
   options:
     PORT:
-      label: Published port
-      help: Keep host publishing off for access only through the Nex application network. If host publishing
-        is enabled, restrict the endpoint to trusted networks.
+      label: Port
+      help: The app listens on TCP port 6379 on its default Docker network. Nex does not publish it on host
+        addresses.
     ACCESS_PASSWORD:
       label: Access password
       help: Generate a password and configure it in each client. Changing it requires updating the clients.

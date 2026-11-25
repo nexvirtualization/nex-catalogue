@@ -21,8 +21,8 @@ x-nex:
   options:
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 8080.
+      help: The app listens on TCP port 8080 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Cart database and configuration
       help: Select This host. Choose the initialized myCart base folder. Include this folder in a stopped
@@ -43,7 +43,7 @@ services:
   mycart:
     image: ghcr.io/shurco/mycart:latest
     ports:
-    - ${PORT:-8842}:8080/tcp
+    - ${PORT:-8080}:8080/tcp
     volumes:
     - ${DATA}:/lc_base
     - ${DIGITALS}:/lc_digitals

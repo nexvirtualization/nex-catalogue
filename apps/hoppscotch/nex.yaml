@@ -2,15 +2,14 @@
 x-nex:
   name: Hoppscotch Community Edition
   summary: Design and share API requests in Hoppscotch
-  description: Prepare PostgreSQL and run the upstream migrations before deployment. Use the configured HTTPS
-    origin and the administration endpoint for setup.
+  description: Prepare PostgreSQL first; the database schema is applied on every start. Use the configured
+    HTTPS origin and the administration endpoint for setup.
   category: development
   website: https://hoppscotch.io
   source: https://github.com/hoppscotch/hoppscotch
   docs: https://docs.hoppscotch.io/documentation/self-host/community-edition/install-and-build
   primary_service: hoppscotch
-  post_install: Prepare PostgreSQL and run the upstream migrations before deployment. Use the configured
-    HTTPS origin and the administration endpoint for setup.
+  post_install: Open the administration endpoint at the configured HTTPS origin to finish setup.
   license: MIT
   architectures:
   - amd64
@@ -35,7 +34,8 @@ x-nex:
       type: password
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Secret that protects stored settings; Nex Generate works. A value of exactly 32 characters is used
+        as is, any other length is hashed to 32. Keep it across upgrades and restores.
       type: password
     PUBLIC_HOST:
       label: Public host
@@ -47,20 +47,28 @@ x-nex:
       label: From email
       help: Enter the deployment value described in the upstream setup guide.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
 services:
   hoppscotch:
     image: docker.io/hoppscotch/hoppscotch:latest
     ports:
-    - ${PORT:-23525}:80/tcp
+    - ${PORT:-80}:80/tcp
+    command:
+    - sh
+    - -c
+    - |
+      if [ "$${#ENCRYPTION_KEY}" -ne 32 ]; then ENCRYPTION_KEY="$$(printf %s "$$ENCRYPTION_KEY" | sha256sum | cut -c1-32)"; fi
+      export DATA_ENCRYPTION_KEY="$$ENCRYPTION_KEY"
+      ./node_modules/.bin/prisma migrate deploy && exec node /usr/src/app/aio_run.mjs
     environment:
       DATABASE_URL: ${DATABASE_URL}
       VITE_BASE_URL: ${PUBLIC_URL}
       VITE_ALLOWED_AUTH_PROVIDERS: EMAIL
       JWT_SECRET: ${JWT_SECRET}
       SESSION_SECRET: ${SESSION_SECRET}
-      DATA_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       VITE_SHORTCODE_BASE_URL: ${PUBLIC_URL}
       VITE_ADMIN_URL: ${PUBLIC_URL}/admin
       VITE_BACKEND_GQL_URL: ${PUBLIC_URL}/backend/graphql

@@ -29,8 +29,8 @@ x-nex:
       type: password
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 5984.
+      help: The app listens on TCP port 5984 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Database data
       help: Select This host. Stores persisted CouchDB data and indexes. Include this folder in a stopped

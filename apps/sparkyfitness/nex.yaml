@@ -2,15 +2,15 @@
 x-nex:
   name: SparkyFitness
   summary: Track nutrition, exercise, and personal health metrics
-  description: Prepare PostgreSQL and the two roles described in the upstream Docker guide. Use HTTPS, retain
-    the encryption key, and sign up with the administrator email before restricting signups.
+  description: PostgreSQL runs inside this app and the server creates its own database roles. Use HTTPS,
+    retain the encryption key, and sign up with the administrator email before restricting signups.
   category: home-automation
   website: https://codewithcj.github.io/SparkyFitness/
   source: https://github.com/CodeWithCJ/SparkyFitness
   docs: https://github.com/CodeWithCJ/SparkyFitness/blob/main/docker/docker-compose.prod.yml
   primary_service: sparkyfitness
-  post_install: Prepare PostgreSQL and the two roles described in the upstream Docker guide. Use HTTPS, retain
-    the encryption key, and sign up with the administrator email before restricting signups.
+  post_install: Sign up with the administrator email before restricting signups. Retain the encryption
+    key; encrypted data cannot be read without it.
   license: Non-commercial license
   architectures:
   - amd64
@@ -21,46 +21,36 @@ x-nex:
     PUBLIC_URL:
       label: Public url
       help: Full browser-facing URL, including scheme and any nonstandard port.
-    DB_HOST:
-      label: Db host
-      help: Hostname or Nex connection name of the database service.
-    DB_PORT:
-      label: Db port
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_NAME:
-      label: Db name
-      help: Enter the deployment value described in the upstream setup guide.
-    DB_USER:
-      label: Db user
-      help: Enter the deployment value described in the upstream setup guide.
     DB_PASSWORD:
-      label: Db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Database owner password
+      help: Use Generate to create a unique secret for the PostgreSQL database that runs inside this app.
       type: password
-    APP_DB_USER:
-      label: App db user
-      help: Enter the deployment value described in the upstream setup guide.
     APP_DB_PASSWORD:
-      label: App db password
-      help: Use the credential or secret required by the upstream configuration.
+      label: Application database password
+      help: Use Generate to create a unique secret. The server creates a restricted database role with it.
       type: password
+    DB_DATA:
+      label: Database folder
+      help: Select This host. Stores the PostgreSQL data. Include this folder in a stopped Nex backup.
     ENCRYPTION_KEY:
       label: Encryption key
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate. A value of exactly 64 hexadecimal characters is used as it is; any other value is
+        hashed into one. Keep it unchanged, because stored secrets cannot be read without it.
       type: password
     AUTH_SECRET:
       label: Auth secret
-      help: Use the credential or secret required by the upstream configuration.
+      help: Use Generate to create a unique secret. Keep it unchanged, or every user is signed out.
       type: password
     ADMIN_EMAIL:
       label: Admin email
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Email address of the administrator account. Sign up with this address first.
     DISABLE_SIGNUP:
       label: Disable signup
-      help: Enter the deployment value described in the upstream setup guide.
+      help: Enter true to refuse new sign-ups after the administrator has signed up. Leave empty for false.
     PORT:
-      label: Published HTTP port
-      help: Host-published port. The app listens on TCP port 80 inside Nex.
+      label: HTTP port
+      help: The app listens on TCP port 80 on its default Docker network. Nex does not publish it on host
+        addresses.
     BACKUP:
       label: Server backups
       help: Managed directory mounted at /app/SparkyFitnessServer/backup. Choose storage writable by the
@@ -73,7 +63,7 @@ services:
   sparkyfitness:
     image: docker.io/codewithcj/sparkyfitness:latest
     ports:
-    - ${PORT:-23588}:80/tcp
+    - ${PORT:-80}:80/tcp
     environment:
       SPARKY_FITNESS_FRONTEND_URL: ${PUBLIC_URL}
       SPARKY_FITNESS_SERVER_HOST: sparkyfitness-server
@@ -85,20 +75,45 @@ services:
     environment:
       SPARKY_FITNESS_FRONTEND_URL: ${PUBLIC_URL}
       SPARKY_FITNESS_SERVER_PORT: '3010'
-      SPARKY_FITNESS_DB_HOST: ${DB_HOST}
-      SPARKY_FITNESS_DB_PORT: ${DB_PORT:-5432}
-      SPARKY_FITNESS_DB_NAME: ${DB_NAME:-sparkyfitness_db}
-      SPARKY_FITNESS_DB_USER: ${DB_USER}
+      SPARKY_FITNESS_DB_HOST: db
+      SPARKY_FITNESS_DB_PORT: '5432'
+      SPARKY_FITNESS_DB_NAME: sparkyfitness_db
+      SPARKY_FITNESS_DB_USER: sparky
       SPARKY_FITNESS_DB_PASSWORD: ${DB_PASSWORD}
-      SPARKY_FITNESS_APP_DB_USER: ${APP_DB_USER}
+      SPARKY_FITNESS_APP_DB_USER: sparky_app
       SPARKY_FITNESS_APP_DB_PASSWORD: ${APP_DB_PASSWORD}
-      SPARKY_FITNESS_API_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       BETTER_AUTH_SECRET: ${AUTH_SECRET}
       SPARKY_FITNESS_ADMIN_EMAIL: ${ADMIN_EMAIL}
       SPARKY_FITNESS_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
       NODE_ENV: production
+    command:
+    - sh
+    - -c
+    - |
+      k="$$ENCRYPTION_KEY"
+      if ! printf '%s' "$$k" | grep -Eq '^[0-9a-fA-F]{64}$$'; then
+        k=$$(printf '%s' "$$k" | sha256sum | cut -d' ' -f1)
+      fi
+      export SPARKY_FITNESS_API_ENCRYPTION_KEY="$$k"
+      exec node --import tsx index.ts
     volumes:
     - ${BACKUP}:/app/SparkyFitnessServer/backup
     - ${UPLOADS}:/app/SparkyFitnessServer/uploads
+    # The first start applies all database migrations, which takes longer than the image's own health window.
+    healthcheck:
+      start_period: 10m
+    deploy:
+      replicas: 1
+  db:
+    image: docker.io/postgres:16-alpine
+    environment:
+      POSTGRES_USER: sparky
+      POSTGRES_DB: sparkyfitness_db
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+    - ${DB_DATA}:/var/lib/postgresql/data
+    tmpfs:
+    - /dev/shm:size=134217728
     deploy:
       replicas: 1

@@ -35,8 +35,8 @@ x-nex:
         a stopped Nex backup.
     PORT:
       label: Web port
-      help: Host-published HTTP port when publishing is enabled. With a dedicated Primary network, use
-        the application address on port 2283.
+      help: The app listens on TCP port 2283 on its default Docker network. Nex does not publish it on host
+        addresses.
     DATA:
       label: Photos, videos and generated media
       help: Select This host. Stores the upload library, thumbnails and transcoded assets. Include this
